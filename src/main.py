@@ -73,27 +73,30 @@ def check_for_new_transactions(scanner, distributor_address, last_tx_hash):
         return True, None
 
 def main():
-    # Load environment variables
-    load_dotenv()
+    # Don't use dotenv in Railway - it uses actual environment variables
+    # load_dotenv()  # Comment this out
     
-    # Debug: Print what we're actually getting
-    print("Environment variables check:")
-    print(f"BASE_RPC_URL exists: {bool(os.getenv('BASE_RPC_URL'))}")
-    print(f"BASE_RPC_URL starts with https: {str(os.getenv('BASE_RPC_URL', '')).startswith('https')}")
-    print(f"GITHUB_REPO value: {os.getenv('GITHUB_REPO')}")
-    print(f"All env keys: {list(os.environ.keys())}")
+    # Configuration - Railway provides these as actual env vars
+    rpc_url = os.environ.get('BASE_RPC_URL')  # Use environ, not getenv
+    explorer_api_key = os.environ.get('BASE_EXPLORER_API_KEY')
+    github_token = os.environ.get('GITHUB_TOKEN')
+    github_repo = os.environ.get('GITHUB_REPO')
+    github_branch = os.environ.get('GITHUB_BRANCH', 'main')
+    distributor_address = os.environ.get('EPOCH_STAKING_DISTRIBUTOR')
+    force_update = os.environ.get('FORCE_UPDATE', 'false').lower() == 'true'
     
-    # Configuration
-    rpc_url = os.getenv('BASE_RPC_URL')
-    explorer_api_key = os.getenv('BASE_EXPLORER_API_KEY')
-    github_token = os.getenv('GITHUB_TOKEN')
-    github_repo = os.getenv('GITHUB_REPO')
-    github_branch = os.getenv('GITHUB_BRANCH', 'main')
-    distributor_address = os.getenv('EPOCH_STAKING_DISTRIBUTOR')
-    force_update = os.getenv('FORCE_UPDATE', 'false').lower() == 'true'
+    # Debug logging
+    logger.info(f"Config check - RPC URL present: {bool(rpc_url)}, starts with http: {str(rpc_url or '').startswith('http')}")
+    logger.info(f"Config check - GitHub repo: {github_repo}")
+    logger.info(f"Config check - Explorer API key present: {bool(explorer_api_key)}")
     
     if not all([rpc_url, explorer_api_key, github_token, github_repo, distributor_address]):
         logger.error("Missing required environment variables")
+        logger.error(f"RPC URL: {'SET' if rpc_url else 'MISSING'}")
+        logger.error(f"Explorer API: {'SET' if explorer_api_key else 'MISSING'}")
+        logger.error(f"GitHub Token: {'SET' if github_token else 'MISSING'}")
+        logger.error(f"GitHub Repo: {github_repo if github_repo else 'MISSING'}")
+        logger.error(f"Distributor: {distributor_address if distributor_address else 'MISSING'}")
         return
     
     logger.info(f"Processing rewards for distributor: {distributor_address}")
