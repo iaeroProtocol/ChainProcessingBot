@@ -4,6 +4,7 @@ import logging
 import requests
 from datetime import datetime, timezone
 from dotenv import load_dotenv
+import base64
 
 from chain_scanner import ChainScanner
 from github_updater import GitHubUpdater
@@ -29,6 +30,18 @@ def save_last_state(state, file_path='last_state.json'):
     """Save the current state"""
     with open(file_path, 'w') as f:
         json.dump(state, f)
+        
+def load_last_state_from_github(repo, branch='main'):
+    """Load state from the main reward tokens file"""
+    try:
+        from github import Github
+        file = repo.get_contents('data/reward_tokens.json', ref=branch)
+        content = base64.b64decode(file.content).decode('utf-8')
+        data = json.loads(content)
+        return data.get('state', {'last_block': 0, 'last_tx_hash': None, 'last_update': 0})
+    except Exception as e:
+        logger.info(f"No existing state found in GitHub: {e}")
+        return {'last_block': 0, 'last_tx_hash': None, 'last_update': 0}
 
 def check_for_new_transactions(scanner, distributor_address, last_tx_hash):
     """Quick check for new incoming ERC20 transactions"""
@@ -73,11 +86,8 @@ def check_for_new_transactions(scanner, distributor_address, last_tx_hash):
         return True, None
 
 def main():
-    # Don't use dotenv in Railway - it uses actual environment variables
-    # load_dotenv()  # Comment this out
-    
-    # Configuration - Railway provides these as actual env vars
-    rpc_url = os.environ.get('BASE_RPC_URL')  # Use environ, not getenv
+    # Configuration
+    rpc_url = os.environ.get('BASE_RPC_URL')
     explorer_api_key = os.environ.get('BASE_EXPLORER_API_KEY')
     github_token = os.environ.get('GITHUB_TOKEN')
     github_repo = os.environ.get('GITHUB_REPO')
@@ -86,24 +96,24 @@ def main():
     force_update = os.environ.get('FORCE_UPDATE', 'false').lower() == 'true'
     
     # Debug logging
-    logger.info(f"Config check - RPC URL present: {bool(rpc_url)}, starts with http: {str(rpc_url or '').startswith('http')}")
+    logger.info(f"Config check - RPC URL present: {bool(rpc_url)}")
     logger.info(f"Config check - GitHub repo: {github_repo}")
-    logger.info(f"Config check - Explorer API key present: {bool(explorer_api_key)}")
     
     if not all([rpc_url, explorer_api_key, github_token, github_repo, distributor_address]):
         logger.error("Missing required environment variables")
-        logger.error(f"RPC URL: {'SET' if rpc_url else 'MISSING'}")
-        logger.error(f"Explorer API: {'SET' if explorer_api_key else 'MISSING'}")
-        logger.error(f"GitHub Token: {'SET' if github_token else 'MISSING'}")
-        logger.error(f"GitHub Repo: {github_repo if github_repo else 'MISSING'}")
-        logger.error(f"Distributor: {distributor_address if distributor_address else 'MISSING'}")
         return
     
     logger.info(f"Processing rewards for distributor: {distributor_address}")
     
     try:
-        # Load last state
-        state = load_last_state()
+        # Initialize GitHub connection first to load state
+        from github import Github
+        g = Github(github_token)
+        repo = g.get_repo(github_repo)
+        
+        # Load state from GitHub
+        state = load_last_state_from_github(repo, github_branch)
+        logger.info(f"Loaded state: last_block={state.get('last_block')}, last_update={state.get('last_update')}")
         
         # Initialize scanner
         scanner = ChainScanner(rpc_url, explorer_api_key)
@@ -123,15 +133,19 @@ def main():
             if has_new_tx and detected_tx_hash:
                 new_tx_hash = detected_tx_hash
             
-            # Check if it's been more than 7 days since last update (force weekly update)
-            days_since_update = (datetime.now(timezone.utc).timestamp() - state.get('last_update', 0)) / 86400
-            
-            if not has_new_tx and days_since_update < 7:
-                logger.info("No new transactions and less than 7 days since last update. Skipping.")
-                return
-            
-            if days_since_update >= 7:
-                logger.info("Force update: 7 days since last update")
+            # Fixed time check logic
+            last_update = state.get('last_update', 0)
+            if last_update == 0:
+                logger.info("First run detected, proceeding with update")
+            else:
+                days_since_update = (datetime.now(timezone.utc).timestamp() - last_update) / 86400
+                
+                if not has_new_tx and days_since_update < 7:
+                    logger.info(f"No new transactions and {days_since_update:.1f} days since last update. Skipping.")
+                    return
+                
+                if days_since_update >= 7:
+                    logger.info(f"Force update: {days_since_update:.1f} days since last update")
         
         # Extract reward funded events
         start_block = state.get('last_block', 0)
@@ -146,7 +160,16 @@ def main():
         current_epoch = (current_timestamp // 604800) * 604800
         previous_epoch = current_epoch - 604800
         
-        # Prepare output data
+        # Calculate new state values
+        if rewards_data:
+            max_block = max(
+                data.get('block_number', 0)
+                for data in rewards_data.values()
+            )
+        else:
+            max_block = state.get('last_block', 0)
+        
+        # Prepare output data WITH STATE INCLUDED
         output = {
             'distributorAddress': distributor_address.lower(),
             'currentEpoch': current_epoch,
@@ -156,32 +179,25 @@ def main():
                 'totalEpochs': len(rewards_data),
                 'currentEpochTokens': rewards_data.get(str(current_epoch), {}).get('tokens', []),
                 'previousEpochTokens': rewards_data.get(str(previous_epoch), {}).get('tokens', [])
+            },
+            'state': {  # Include state in the output
+                'last_block': max_block,
+                'last_tx_hash': new_tx_hash,
+                'last_update': int(datetime.now(timezone.utc).timestamp())
             }
         }
         
-        # Update GitHub
+        # Update GitHub - NOW create the updater
         logger.info("Updating GitHub repository")
         updater = GitHubUpdater(github_token, github_repo, github_branch)
         updater.update_json('data/reward_tokens.json', output)
         
-        # Save state with the correct new_tx_hash
-        if rewards_data:
-            max_block = max(
-                data.get('block_number', 0)
-                for data in rewards_data.values()
-            )
-            save_last_state({
-                'last_block': max_block,
-                'last_tx_hash': new_tx_hash,  # This now always has a value
-                'last_update': int(datetime.now(timezone.utc).timestamp())
-            })
-            logger.info(f"Saved state with last_block: {max_block}, last_tx_hash: {new_tx_hash}")
-        
-        logger.info("Successfully completed update")
+        logger.info(f"Successfully completed update with state: block={max_block}, tx={new_tx_hash}")
         
     except Exception as e:
         logger.error(f"Error in main process: {e}")
         raise
+
 
 if __name__ == "__main__":
     main()
