@@ -2,7 +2,7 @@ import os
 import json
 import logging
 import requests
-from datetime import datetime
+from datetime import datetime, timezone
 from dotenv import load_dotenv
 
 from chain_scanner import ChainScanner
@@ -76,6 +76,13 @@ def main():
     # Load environment variables
     load_dotenv()
     
+    # Debug: Print what we're actually getting
+    print("Environment variables check:")
+    print(f"BASE_RPC_URL exists: {bool(os.getenv('BASE_RPC_URL'))}")
+    print(f"BASE_RPC_URL starts with https: {str(os.getenv('BASE_RPC_URL', '')).startswith('https')}")
+    print(f"GITHUB_REPO value: {os.getenv('GITHUB_REPO')}")
+    print(f"All env keys: {list(os.environ.keys())}")
+    
     # Configuration
     rpc_url = os.getenv('BASE_RPC_URL')
     explorer_api_key = os.getenv('BASE_EXPLORER_API_KEY')
@@ -114,7 +121,7 @@ def main():
                 new_tx_hash = detected_tx_hash
             
             # Check if it's been more than 7 days since last update (force weekly update)
-            days_since_update = (datetime.utcnow().timestamp() - state.get('last_update', 0)) / 86400
+            days_since_update = (datetime.now(timezone.utc).timestamp() - state.get('last_update', 0)) / 86400
             
             if not has_new_tx and days_since_update < 7:
                 logger.info("No new transactions and less than 7 days since last update. Skipping.")
@@ -132,7 +139,7 @@ def main():
         )
         
         # Get current and previous epoch for easy filtering
-        current_timestamp = int(datetime.utcnow().timestamp())
+        current_timestamp = int(datetime.now(timezone.utc).timestamp())
         current_epoch = (current_timestamp // 604800) * 604800
         previous_epoch = current_epoch - 604800
         
