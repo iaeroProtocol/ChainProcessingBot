@@ -173,7 +173,7 @@ def main():
             save_last_state({
                 'last_block': max_block,
                 'last_tx_hash': new_tx_hash,  # This now always has a value
-                'last_update': int(datetime.utcnow().timestamp())
+                'last_update': int(datetime.now(timezone.utc).timestamp())
             })
             logger.info(f"Saved state with last_block: {max_block}, last_tx_hash: {new_tx_hash}")
         
