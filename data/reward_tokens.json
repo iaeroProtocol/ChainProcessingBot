@@ -1,18 +1,28 @@
 {
   "currentEpoch": 1758758400,
-  "distributorAddress": "0x781a80fa817b5a146c440f03ef8643f4aca6588a",
-  "epochs": {},
-  "lastUpdated": "2025-09-26T10:43:33.664021",
+  "distributorAddress": "0xb569ba2502a268e5d66666a8425cfb56e566cc70",
+  "epochs": {
+    "1756944000": {
+      "block_number": 35325122,
+      "date": "2025-09-09T17:39:51",
+      "timestamp": 1757439591,
+      "tokens": [
+        "0x0000000000000000000000000000000000000000",
+        "0xc75e5fb1d95cdaf1d669caf2b6e49c7292125213"
+      ]
+    }
+  },
+  "lastUpdated": "2025-09-26T11:08:30.535388",
   "previousEpoch": 1758153600,
   "state": {
-    "last_block": 35985737,
+    "last_block": 35164965,
     "last_tx_hash": null,
-    "last_update": 1758883412
+    "last_update": 1758884909
   },
   "summary": {
     "currentEpochTokens": [],
     "previousEpochTokens": [],
-    "totalEpochs": 0
+    "totalEpochs": 1
   },
-  "updateTimestamp": 1758897813
+  "updateTimestamp": 1758899310
 }
