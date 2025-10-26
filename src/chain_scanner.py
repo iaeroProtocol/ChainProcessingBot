@@ -1,232 +1,174 @@
+import os
 import requests
-import json
-import time
-from datetime import datetime
 from web3 import Web3
 import logging
+import time
+from typing import List, Dict
 
 logger = logging.getLogger(__name__)
 
+REGISTRY_ABI = [
+    {"inputs": [], "name": "allTokens", "outputs": [{"internalType":"address[]","name":"out","type":"address[]"}], "stateMutability":"view", "type":"function"}
+]
+ERC20_ABI = [
+    {"inputs":[{"internalType":"address","name":"account","type":"address"}], "name":"balanceOf", "outputs":[{"internalType":"uint256","name":"","type":"uint256"}], "stateMutability":"view", "type":"function"}
+]
+
+MULTICALL3_ABI = [
+    {
+        "inputs":[
+            {"components":[
+                {"internalType":"address","name":"target","type":"address"},
+                {"internalType":"bool","name":"allowFailure","type":"bool"},
+                {"internalType":"bytes","name":"callData","type":"bytes"}
+            ],"internalType":"struct Multicall3.Call3[]","name":"calls","type":"tuple[]"}
+        ],
+        "name":"aggregate3","outputs":[
+            {"components":[
+                {"internalType":"bool","name":"success","type":"bool"},
+                {"internalType":"bytes","name":"returnData","type":"bytes"}
+            ],"internalType":"struct Multicall3.Result[]","name":"returnData","type":"tuple[]"}
+        ],
+        "stateMutability":"payable","type":"function"
+    }
+]
+
+DEFAULT_MULTICALL3 = os.environ.get("MULTICALL3", "0xCA11bde05977b3631167028862bE2a173976CA11")
+
+# Function selectors
+SEL_BALANCE_OF = bytes.fromhex("70a08231")  # balanceOf(address)
+SEL_DECIMALS   = bytes.fromhex("313ce567")  # decimals()
+
 class ChainScanner:
-    def __init__(self, rpc_url, explorer_api_key, chain_id=8453):
-        self.w3 = Web3(Web3.HTTPProvider(rpc_url))
+    """
+    - probe new incoming ERC-20s via Etherscan v2 (for triggers)
+    - read RewardTokenRegistry
+    - multicall balances & decimals
+    """
+
+    def __init__(self, rpc_url: str, explorer_api_key: str, chain_id: int = 8453, multicall3: str | None = None):
+        self.w3 = Web3(Web3.HTTPProvider(rpc_url, request_kwargs={"timeout": 20}))
         self.explorer_api_key = explorer_api_key
         self.chain_id = chain_id
-        # Use Etherscan v2 unified endpoint
+        # Etherscan v2 supports multi-chain via the 'chainid' param; keep base URL static.
         self.explorer_base_url = "https://api.etherscan.io/v2/api"
-    
-    def get_recent_block_range(self):
-        """Get current block and calculate range for last 30 days"""
+        self.multicall3_addr = self.w3.to_checksum_address(multicall3 or DEFAULT_MULTICALL3)
+        self._multicall = self.w3.eth.contract(address=self.multicall3_addr, abi=MULTICALL3_ABI)
+
+    # ---------- trigger probe ----------
+    def check_for_new_incoming_erc20(self, distributor_address: str, last_seen_tx: str | None = None) -> tuple[bool, str | None]:
+        """
+        Returns (has_new, newest_tx_hash).
+        - If Etherscan returns a head tx equal to last_seen_tx, returns (False, None).
+        - If there is a newer inbound token transfer to distributor_address, returns (True, <hash>).
+        - On probe failure, returns (False, None) to avoid spamming updates.
+        """
         try:
-            current_block = self.w3.eth.block_number
-            blocks_per_day = 43200  # Base has ~2 second block time
-            start_block = max(1, current_block - (blocks_per_day * 30))
-            logger.info(f"Current block: {current_block}, Starting from block: {start_block}")
-            return start_block, current_block
+            to_addr_lc = distributor_address.lower()
+            params = {
+                "chainid": self.chain_id,
+                "module": "account",
+                "action": "tokentx",
+                "address": distributor_address,
+                "page": 1,
+                "offset": 1,         # only need the newest tx
+                "sort": "desc",
+                "apikey": self.explorer_api_key,
+            }
+            r = requests.get(self.explorer_base_url, params=params, timeout=30)
+            if r.status_code != 200:
+                logger.warning(f"Etherscan probe HTTP {r.status_code}: {r.text[:200]}")
+                return False, None
+
+            data = r.json()
+            if data.get("status") != "1" or "result" not in data or not data["result"]:
+                # No token txs found or API returned empty; treat as no new activity.
+                return False, None
+
+            head = data["result"][0]
+            # must be inbound to the distributor (defensive filter)
+            if head.get("to", "").lower() != to_addr_lc:
+                return False, None
+
+            head_hash = head.get("hash")
+            if not head_hash:
+                return False, None
+
+            # Idempotence: compare with last_seen_tx
+            if last_seen_tx and str(head_hash).lower() == str(last_seen_tx).lower():
+                return False, None
+
+            return True, head_hash
+
         except Exception as e:
-            logger.error(f"Error getting block range: {e}")
-            return 35000000, 99999999
-    
-    def get_token_transactions(self, contract_address, start_block=0):
-        """Fetch ERC20 token transactions using Etherscan v2 API"""
-        all_txs = []
-        page = 1
-        
-        if start_block == 0:
-            start_block, end_block = self.get_recent_block_range()
-        else:
-            end_block = 99999999
-        
-        while True:
-            params = {
-                'chainid': self.chain_id,
-                'module': 'account',
-                'action': 'tokentx',
-                'address': contract_address,
-                'startblock': start_block,
-                'endblock': end_block,
-                'page': page,
-                'offset': 10000,
-                'sort': 'asc',
-                'apikey': self.explorer_api_key
-            }
-            
-            try:
-                response = requests.get(self.explorer_base_url, params=params, timeout=30)
-                
-                if response.status_code != 200:
-                    logger.error(f"API returned status {response.status_code}: {response.text[:500]}")
-                    break
-                
-                data = response.json()
-                
-                if data.get('status') != '1':
-                    if data.get('message') == 'No transactions found':
-                        logger.info(f"No transactions found for this range")
-                        break
-                    else:
-                        logger.error(f"API Error: {data}")
-                        break
-                
-                txs = data.get('result', [])
-                if not txs:
-                    break
-                
-                logger.info(f"Page {page}: Got {len(txs)} transactions")
-                all_txs.extend(txs)
-                
-                if len(txs) < 10000:
-                    break
-                    
-                page += 1
-                time.sleep(0.1)  # v2 has better rate limits
-                
-            except Exception as e:
-                logger.error(f"Error fetching token transactions: {e}")
-                break
-        
-        logger.info(f"Total token transactions fetched: {len(all_txs)}")
-        return all_txs
-    
-    def get_contract_transactions(self, contract_address, start_block=0):
-        """Fetch all transactions to a contract address using Etherscan v2 API"""
-        all_txs = []
-        page = 1
-        
-        if start_block == 0:
-            start_block, end_block = self.get_recent_block_range()
-        else:
-            end_block = 99999999
-        
-        while True:
-            params = {
-                'chainid': self.chain_id,
-                'module': 'account',
-                'action': 'txlist',
-                'address': contract_address,
-                'startblock': start_block,
-                'endblock': end_block,
-                'page': page,
-                'offset': 10000,
-                'sort': 'asc',
-                'apikey': self.explorer_api_key
-            }
-            
-            try:
-                response = requests.get(self.explorer_base_url, params=params, timeout=30)
-                
-                if response.status_code != 200:
-                    logger.error(f"API returned status {response.status_code}")
-                    break
-                    
-                data = response.json()
-                
-                if data.get('status') != '1':
-                    if data.get('message') == 'No transactions found':
-                        logger.info(f"No transactions found for this range")
-                    else:
-                        logger.error(f"API Error: {data}")
-                    break
-                    
-                txs = data.get('result', [])
-                if not txs:
-                    break
-                    
-                all_txs.extend(txs)
-                
-                if len(txs) < 10000:
-                    break
-                    
-                page += 1
-                time.sleep(0.1)
-                
-            except Exception as e:
-                logger.error(f"Error fetching transactions: {e}")
-                break
-                
-        return all_txs
-    
-    # Rest of your extract_reward_funded_events method remains the same
-    def extract_reward_funded_events(self, distributor_address, start_block=0):
-        """Extract RewardFunded events from the distributor contract"""
-        
-        rewards_by_epoch = {}
-        distributor_lower = distributor_address.lower()
-        
-        logger.info("Using transaction parsing method...")
-        
-        # Get token transfers
-        token_txs = self.get_token_transactions(distributor_address, start_block)
-        logger.info(f"Found {len(token_txs)} token transfers")
-        
-        # Process token transfers - look for INCOMING transfers only
-        incoming_count = 0
-        for tx in token_txs:
-            # IMPORTANT: Check if this is TO the distributor (incoming rewards)
-            if tx.get('to', '').lower() == distributor_lower:
-                incoming_count += 1
-                
-                token = tx.get('contractAddress', '').lower()
-                timestamp = int(tx.get('timeStamp', '0'))
-                epoch_id = (timestamp // 604800) * 604800
-                
-                if epoch_id not in rewards_by_epoch:
-                    rewards_by_epoch[epoch_id] = {
-                        'tokens': set(),
-                        'block_number': int(tx.get('blockNumber', '0')),
-                        'timestamp': timestamp
-                    }
-                
-                rewards_by_epoch[epoch_id]['tokens'].add(token)
-                
-                # Log for debugging
-                logger.info(f"Found incoming token {tx.get('tokenSymbol', 'UNKNOWN')} ({token[:10]}...) for epoch {epoch_id}")
-        
-        logger.info(f"Found {incoming_count} incoming token transfers out of {len(token_txs)} total")
-        
-        # Add delay between API calls to avoid rate limit
-        time.sleep(1)
-        
-        # Also check for ETH transfers
-        txs = self.get_contract_transactions(distributor_address, start_block)
-        logger.info(f"Found {len(txs)} total transactions")
-        
-        eth_incoming = 0
-        for tx in txs:
-            # Skip failed transactions
-            if tx.get('isError', '0') == '1':
-                continue
-                
-            # Check for incoming ETH with value
-            value = int(tx.get('value', '0'))
-            if value > 0 and tx.get('to', '').lower() == distributor_lower:
-                eth_incoming += 1
-                token = '0x0000000000000000000000000000000000000000'
-                timestamp = int(tx.get('timeStamp', '0'))
-                epoch_id = (timestamp // 604800) * 604800
-                
-                if epoch_id not in rewards_by_epoch:
-                    rewards_by_epoch[epoch_id] = {
-                        'tokens': set(),
-                        'block_number': int(tx.get('blockNumber', '0')),
-                        'timestamp': timestamp
-                    }
-                
-                rewards_by_epoch[epoch_id]['tokens'].add(token)
-                logger.info(f"Found ETH transfer for epoch {epoch_id}")
-        
-        logger.info(f"Found {eth_incoming} incoming ETH transfers")
-        
-        # Convert sets to lists for JSON serialization
-        result = {}
-        for epoch_id, data in rewards_by_epoch.items():
-            result[str(epoch_id)] = {
-                'tokens': list(data['tokens']),
-                'block_number': data['block_number'],
-                'timestamp': data['timestamp'],
-                'date': datetime.fromtimestamp(data['timestamp']).isoformat()
-            }
-        
-        logger.info(f"Total epochs with rewards: {len(result)}")
-        
-        return result
+            logger.warning(f"[check_for_new_incoming_erc20] probe failed: {e}")
+            # fail-closed to avoid noisy commits on transient errors
+            return False, None
+
+    # ---------- registry ----------
+    def registry_all_tokens(self, registry_address: str) -> List[str]:
+        try:
+            reg = self.w3.eth.contract(address=self.w3.to_checksum_address(registry_address), abi=REGISTRY_ABI)
+            tokens = reg.functions.allTokens().call()
+            return [t.lower() for t in tokens]
+        except Exception as e:
+            logger.error(f"registry_all_tokens failed: {e}")
+            return []
+
+    # ---------- multicall helpers ----------
+    def _call_chunk(self, calls: List[dict]) -> List[tuple]:
+        # returns list of (success: bool, returnData: bytes)
+        try:
+            return self._multicall.functions.aggregate3(calls).call()
+        except Exception as e:
+            logger.warning(f"Multicall aggregate3 failed for chunk({len(calls)}): {e}")
+            raise
+
+    def balances_map(self, holder: str, token_addrs: List[str], chunk_size: int = 50) -> Dict[str, int]:
+        holder_cs = self.w3.to_checksum_address(holder)
+        results: Dict[str, int] = {}
+        total = len(token_addrs)
+        for i in range(0, total, chunk_size):
+            chunk = token_addrs[i:i+chunk_size]
+            calls = []
+            for a in chunk:
+                try:
+                    target = self.w3.to_checksum_address(a)
+                except Exception:
+                    continue
+                # ABI encode balanceOf(address)
+                addr32 = bytes(12) + bytes.fromhex(holder_cs[2:])
+                calldata = SEL_BALANCE_OF + addr32.rjust(32, b"\x00")
+                calls.append({"target": target, "allowFailure": True, "callData": calldata})
+            ret = self._call_chunk(calls)
+            for addr, res in zip(chunk, ret):
+                success, data = bool(res[0]), bytes(res[1])
+                if not success or len(data) < 32:
+                    continue
+                bal = int.from_bytes(data[-32:], "big")
+                results[addr.lower()] = bal
+        return results
+
+    def decimals_map(self, token_addrs: List[str], chunk_size: int = 50, default_decimals: int = 18) -> Dict[str, int]:
+        out: Dict[str, int] = {}
+        total = len(token_addrs)
+        for i in range(0, total, chunk_size):
+            chunk = token_addrs[i:i+chunk_size]
+            calls = []
+            for a in chunk:
+                try:
+                    target = self.w3.to_checksum_address(a)
+                except Exception:
+                    continue
+                calldata = SEL_DECIMALS  # no args
+                calls.append({"target": target, "allowFailure": True, "callData": calldata})
+            ret = self._call_chunk(calls)
+            for addr, res in zip(chunk, ret):
+                success, data = bool(res[0]), bytes(res[1])
+                dec = default_decimals
+                if success and len(data) >= 32:
+                    dec = int.from_bytes(data[-32:], "big") & 0xFF  # uint8 in the low byte
+                    if dec == 0:  # guard against broken tokens
+                        dec = default_decimals
+                out[addr.lower()] = dec
+        return out
