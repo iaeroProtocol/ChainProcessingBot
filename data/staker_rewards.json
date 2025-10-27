@@ -1,0 +1,124 @@
+{
+  "activeTokensNow": [
+    "0x806041b6473da60abbe1b256d9a2749a151be6c6"
+  ],
+  "asOf": 1761607369,
+  "chainId": 8453,
+  "distributor": "0x781A80fA817b5a146C440F03EF8643f4aca6588A",
+  "fundedEpochs": [
+    1757548800,
+    1758153600,
+    1758758400,
+    1759363200,
+    1759968000,
+    1760572800,
+    1761177600
+  ],
+  "holderCount": 7,
+  "holders": [
+    {
+      "address": "0x010b23b2f2a5f6bc4ce0c68a5f65c248c1129831",
+      "pending": [
+        {
+          "amount": "22282461",
+          "amountHuman": 0.022282461,
+          "decimals": 9,
+          "priceUsd": 0.0,
+          "token": "0x806041b6473da60abbe1b256d9a2749a151be6c6",
+          "usd": 0.0
+        }
+      ],
+      "pendingTokenCount": 1,
+      "totalUsd": 0.0
+    },
+    {
+      "address": "0x2fbb24544a6ecb47a404ba7cb85f7d1de9441c0c",
+      "pending": [
+        {
+          "amount": "331",
+          "amountHuman": 3.31e-07,
+          "decimals": 9,
+          "priceUsd": 0.0,
+          "token": "0x806041b6473da60abbe1b256d9a2749a151be6c6",
+          "usd": 0.0
+        }
+      ],
+      "pendingTokenCount": 1,
+      "totalUsd": 0.0
+    },
+    {
+      "address": "0x9402cec8e19cfbdc3fab9898f49ff91351d47a98",
+      "pending": [
+        {
+          "amount": "265",
+          "amountHuman": 2.65e-07,
+          "decimals": 9,
+          "priceUsd": 0.0,
+          "token": "0x806041b6473da60abbe1b256d9a2749a151be6c6",
+          "usd": 0.0
+        }
+      ],
+      "pendingTokenCount": 1,
+      "totalUsd": 0.0
+    },
+    {
+      "address": "0xa1dbd1973af714c1a45a83d989b3ce889c9070f1",
+      "pending": [
+        {
+          "amount": "33",
+          "amountHuman": 3.3e-08,
+          "decimals": 9,
+          "priceUsd": 0.0,
+          "token": "0x806041b6473da60abbe1b256d9a2749a151be6c6",
+          "usd": 0.0
+        }
+      ],
+      "pendingTokenCount": 1,
+      "totalUsd": 0.0
+    },
+    {
+      "address": "0xa9e0ab6697f239cd274fd772f31bd819efcf3e50",
+      "pending": [
+        {
+          "amount": "66",
+          "amountHuman": 6.6e-08,
+          "decimals": 9,
+          "priceUsd": 0.0,
+          "token": "0x806041b6473da60abbe1b256d9a2749a151be6c6",
+          "usd": 0.0
+        }
+      ],
+      "pendingTokenCount": 1,
+      "totalUsd": 0.0
+    },
+    {
+      "address": "0xe6e7d3c6379ad80de02f26ccc72605d0f70d5201",
+      "pending": [
+        {
+          "amount": "6469080",
+          "amountHuman": 0.00646908,
+          "decimals": 9,
+          "priceUsd": 0.0,
+          "token": "0x806041b6473da60abbe1b256d9a2749a151be6c6",
+          "usd": 0.0
+        }
+      ],
+      "pendingTokenCount": 1,
+      "totalUsd": 0.0
+    },
+    {
+      "address": "0xeb06308b1c2194988baa4f5626d5e3d3f228ae5a",
+      "pending": [],
+      "pendingTokenCount": 0,
+      "totalUsd": 0.0
+    }
+  ],
+  "lastUpdated": "2025-10-27T23:22:49.752055",
+  "summary": {
+    "totalByTokenUsd": {
+      "0x806041b6473da60abbe1b256d9a2749a151be6c6": 0.0
+    },
+    "totalUsd": 0.0
+  },
+  "updateTimestamp": 1761621769
+}
