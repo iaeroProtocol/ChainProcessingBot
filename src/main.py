@@ -429,7 +429,7 @@ def main():
     Default behaviour: LISTEN & LOOP.
     Set LOOP=0 to run once and exit.
     """
-    loop = os.environ.get("LOOP", "1") != "0"
+    loop = os.environ.get("LOOP", "0") == "1"
     delay = int(os.environ.get("POLL_INTERVAL", "60"))
 
     if not loop:
