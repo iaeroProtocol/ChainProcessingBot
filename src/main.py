@@ -53,6 +53,14 @@ def _load_stakers_state(repo, branch: str, path: str) -> dict:
     except Exception:
         return {}
 
+def _load_json(repo, branch: str, path: str) -> dict:
+    try:
+        f = repo.get_contents(path, ref=branch)
+        import base64, json
+        return json.loads(base64.b64decode(f.content).decode("utf-8"))
+    except Exception:
+        return {}
+
 def _update_stakers(repo, updater: GitHubUpdater, scanner: ChainScanner) -> bool:
     """
     Incrementally track stiAERO holders via Transfer logs and publish balances.
@@ -155,7 +163,94 @@ def _update_stakers(repo, updater: GitHubUpdater, scanner: ChainScanner) -> bool
     # Use the same normalized, “only push if changed” helper you added earlier
     return _push_if_changed(repo, updater, path, payload)
 
+def _update_epochs(repo, updater: GitHubUpdater, scanner: ChainScanner) -> bool:
+    path = os.environ.get("EPOCHS_JSON_PATH", "data/epochs.json")
+    distributor = os.environ.get("EPOCH_STAKING_DISTRIBUTOR")
+    if not distributor:
+        return False
 
+    tip = scanner.latest_block()
+    cur = _load_json(repo, updater.branch, path)
+
+    # bootstrap or continue from last scanned block
+    state = cur.get("state", {}) or {}
+    last_scanned = int(state.get("last_block", 0))
+    if last_scanned <= 0 or last_scanned > tip:
+        lookback = int(os.environ.get("EPOCHS_BOOTSTRAP_BLOCKS", "200000"))
+        last_scanned = max(0, tip - lookback)
+
+    from_block = last_scanned + 1 if last_scanned > 0 else last_scanned
+    if from_block > tip:
+        return False
+
+    epochs, epoch_tokens = scanner.funded_epochs_and_tokens(distributor, from_block, tip)
+    if not epoch_tokens:
+        # still advance last_block to avoid rescanning the same span
+        cur.setdefault("state", {})["last_block"] = tip
+        return _push_if_changed(repo, updater, path, cur)
+
+    # merge into file (append-only per epoch)
+    cur.setdefault("distributorAddress", distributor.lower())
+    cur.setdefault("epochs", {})
+
+    for eid, tokens in epoch_tokens.items():
+        key = str(eid)
+        # normalize to lowercase + dedupe + sort
+        new_lc = sorted({ (t or "").lower() for t in tokens if t })
+        cur.setdefault("epochs", {})
+        if key not in cur["epochs"]:
+            cur["epochs"][key] = {"tokens": new_lc}
+        else:
+            prev = { (t or "").lower() for t in cur["epochs"][key].get("tokens", []) }
+            cur["epochs"][key]["tokens"] = sorted(prev.union(new_lc))
+
+
+    # nice-to-have: current/previous epoch markers (based on wall-clock)
+    WEEK = 7 * 24 * 60 * 60
+    now_epoch = (int(time.time()) // WEEK) * WEEK
+    cur["currentEpoch"] = now_epoch
+    cur["previousEpoch"] = now_epoch - WEEK
+
+    cur["state"] = {"last_block": tip, "last_update": int(time.time())}
+    cur["summary"] = {
+        "totalEpochs": len(cur["epochs"])
+    }
+
+    return _push_if_changed(repo, updater, path, cur)
+
+def _update_staker_rewards(repo, updater: GitHubUpdater) -> bool:
+    DATA_DIR = "data"
+    out_path = f"{DATA_DIR}/staker_rewards.json"
+
+    # envs (reuse the ones you already set)
+    rpc_url = os.environ.get("BASE_RPC_URL") or os.environ.get("RPC_URL")
+    chain_id = int(os.environ.get("CHAIN_ID", "8453"))
+    use_prices = os.environ.get("USE_PRICES", "false").lower() == "true"
+    aerodrome_factory = os.environ.get("AERODROME_FACTORY")
+    usdc_addr = os.environ.get("USDC_ADDRESS") or "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+    weth_addr = os.environ.get("WETH_ADDRESS") or "0x4200000000000000000000000000000000000006"
+    max_price_usd = float(os.environ.get("MAX_PRICE_USD", "50000"))
+
+    from staker_rewards import build_staker_rewards
+    payload = build_staker_rewards(
+        rpc=rpc_url,
+        chain_id=chain_id,
+        epochs_path=f"{DATA_DIR}/epochs.json",
+        stakers_path=f"{DATA_DIR}/stakers.json",
+        active_path=f"{DATA_DIR}/active_reward_tokens.json",
+        use_prices=use_prices,
+        aerodrome_factory=aerodrome_factory,
+        usdc_addr=usdc_addr,
+        weth_addr=weth_addr,
+        max_price_usd=max_price_usd,
+    )
+    # write locally
+    os.makedirs(DATA_DIR, exist_ok=True)
+    with open(out_path, "w") as f:
+        json.dump(payload, f, indent=2)
+
+    # push only if changed
+    return _push_if_changed(repo, updater, out_path, payload)
 
 def _stable_json_bytes(obj) -> bytes:
     # stable formatting ensures reproducible hashes
@@ -264,6 +359,16 @@ def _run_once() -> bool:
     scanner = ChainScanner(rpc_url, explorer_api_key, chain_id=8453, multicall3=multicall3_addr)
 
     updater = GitHubUpdater(github_token, github_repo, github_branch)
+
+    epochs_changed = False
+    try:
+        epochs_changed = _update_epochs(repo, updater, scanner)
+        if epochs_changed:
+            logger.info("[epochs] Published/updated epochs.json")
+        else:
+            logger.info("[epochs] No new funded epochs; skipped commit.")
+    except Exception as e:
+        logger.exception(f"[epochs] failed: {e}")
 
     # >>> REPLACE your current “Decide whether to update” block with this one <<<
         # Decide whether to update rewards (but do not return early)
@@ -420,7 +525,17 @@ def _run_once() -> bool:
     except Exception as e:
         logger.exception(f"[stakers] failed: {e}")
 
-    return changed_rewards or st_changed
+    sr_changed = False
+    try:
+        sr_changed = _update_staker_rewards(repo, updater)
+        if sr_changed:
+            logger.info("[staker_rewards] Published/updated staker_rewards.json")
+        else:
+            logger.info("[staker_rewards] No change; skipped commit.")
+    except Exception as e:
+        logger.exception(f"[staker_rewards] failed: {e}")
+
+    return changed_rewards or st_changed or epochs_changed or sr_changed
 
 
 

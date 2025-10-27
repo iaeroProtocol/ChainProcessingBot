@@ -41,6 +41,10 @@ SEL_BALANCE_OF = bytes.fromhex("70a08231")  # balanceOf(address)
 SEL_DECIMALS   = bytes.fromhex("313ce567")  # decimals()
 SEL_TOTAL_SUPPLY = bytes.fromhex("18160ddd")  # totalSupply()
 TRANSFER_TOPIC = "0x" + keccak(text="Transfer(address,address,uint256)").hex()
+REWARDFUNDED_TOPIC = "0x" + keccak(text="RewardFunded(address,uint256,uint256)").hex()
+
+def _topic_to_uint256(topic_hex: str) -> int:
+    return int(topic_hex, 16)
 
 class ChainScanner:
     """
@@ -114,6 +118,27 @@ class ChainScanner:
         except Exception as e:
             logger.warning(f"latest_block failed: {e}")
             return 0
+
+    def funded_epochs_and_tokens(self, distributor: str, from_block: int, to_block: int):
+        """
+        Scan RewardFunded logs for the distributor and return:
+        epochs: sorted list of epochIds (int)
+        epoch_tokens: dict[int, list[str]] epochId -> unique token list (checksum addresses)
+        """
+        distributor = self.w3.to_checksum_address(distributor)
+        epochs = set()
+        epoch_tokens: dict[int, set[str]] = {}
+
+        for lg in self._get_logs_chunked(distributor, [REWARDFUNDED_TOPIC], from_block, to_block):
+            # topics[1]=token (indexed address); topics[2]=epochId (indexed uint256)
+            token = "0x" + lg["topics"][1].hex()[-40:]
+            epoch_id = _topic_to_uint256(lg["topics"][2].hex())
+            epochs.add(epoch_id)
+            s = epoch_tokens.setdefault(epoch_id, set())
+            s.add(self.w3.to_checksum_address(token))
+
+        return sorted(epochs), {e: sorted(list(ts)) for e, ts in epoch_tokens.items()}
+
     
     def _get_logs_chunked(self, address: str, topics: list, from_block: int, to_block: int, step: int = 50_000):
         """
