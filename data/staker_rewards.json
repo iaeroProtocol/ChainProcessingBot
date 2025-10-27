@@ -2,7 +2,7 @@
   "activeTokensNow": [
     "0x806041b6473da60abbe1b256d9a2749a151be6c6"
   ],
-  "asOf": 1761607369,
+  "asOf": 1761609048,
   "chainId": 8453,
   "distributor": "0x781A80fA817b5a146C440F03EF8643f4aca6588A",
   "fundedEpochs": [
@@ -22,14 +22,16 @@
         {
           "amount": "22282461",
           "amountHuman": 0.022282461,
+          "amountHumanStr": "0.022282461",
           "decimals": 9,
-          "priceUsd": 0.0,
+          "priceUsd": 515.6502454873176,
+          "symbol": "stTAO",
           "token": "0x806041b6473da60abbe1b256d9a2749a151be6c6",
-          "usd": 0.0
+          "usd": 11.489956484711582
         }
       ],
       "pendingTokenCount": 1,
-      "totalUsd": 0.0
+      "totalUsd": 11.489956484711582
     },
     {
       "address": "0x2fbb24544a6ecb47a404ba7cb85f7d1de9441c0c",
@@ -37,14 +39,16 @@
         {
           "amount": "331",
           "amountHuman": 3.31e-07,
+          "amountHumanStr": "0.000000331",
           "decimals": 9,
-          "priceUsd": 0.0,
+          "priceUsd": 515.6502454873176,
+          "symbol": "stTAO",
           "token": "0x806041b6473da60abbe1b256d9a2749a151be6c6",
-          "usd": 0.0
+          "usd": 0.00017068023125630212
         }
       ],
       "pendingTokenCount": 1,
-      "totalUsd": 0.0
+      "totalUsd": 0.00017068023125630212
     },
     {
       "address": "0x9402cec8e19cfbdc3fab9898f49ff91351d47a98",
@@ -52,14 +56,16 @@
         {
           "amount": "265",
           "amountHuman": 2.65e-07,
+          "amountHumanStr": "0.000000265",
           "decimals": 9,
-          "priceUsd": 0.0,
+          "priceUsd": 515.6502454873176,
+          "symbol": "stTAO",
           "token": "0x806041b6473da60abbe1b256d9a2749a151be6c6",
-          "usd": 0.0
+          "usd": 0.00013664731505413918
         }
       ],
       "pendingTokenCount": 1,
-      "totalUsd": 0.0
+      "totalUsd": 0.00013664731505413918
     },
     {
       "address": "0xa1dbd1973af714c1a45a83d989b3ce889c9070f1",
@@ -67,14 +73,16 @@
         {
           "amount": "33",
           "amountHuman": 3.3e-08,
+          "amountHumanStr": "0.000000033",
           "decimals": 9,
-          "priceUsd": 0.0,
+          "priceUsd": 515.6502454873176,
+          "symbol": "stTAO",
           "token": "0x806041b6473da60abbe1b256d9a2749a151be6c6",
-          "usd": 0.0
+          "usd": 1.701645810108148e-05
         }
       ],
       "pendingTokenCount": 1,
-      "totalUsd": 0.0
+      "totalUsd": 1.701645810108148e-05
     },
     {
       "address": "0xa9e0ab6697f239cd274fd772f31bd819efcf3e50",
@@ -82,14 +90,16 @@
         {
           "amount": "66",
           "amountHuman": 6.6e-08,
+          "amountHumanStr": "0.000000066",
           "decimals": 9,
-          "priceUsd": 0.0,
+          "priceUsd": 515.6502454873176,
+          "symbol": "stTAO",
           "token": "0x806041b6473da60abbe1b256d9a2749a151be6c6",
-          "usd": 0.0
+          "usd": 3.403291620216296e-05
         }
       ],
       "pendingTokenCount": 1,
-      "totalUsd": 0.0
+      "totalUsd": 3.403291620216296e-05
     },
     {
       "address": "0xe6e7d3c6379ad80de02f26ccc72605d0f70d5201",
@@ -97,14 +107,16 @@
         {
           "amount": "6469080",
           "amountHuman": 0.00646908,
+          "amountHumanStr": "0.00646908",
           "decimals": 9,
-          "priceUsd": 0.0,
+          "priceUsd": 515.6502454873176,
+          "symbol": "stTAO",
           "token": "0x806041b6473da60abbe1b256d9a2749a151be6c6",
-          "usd": 0.0
+          "usd": 3.335782690077097
         }
       ],
       "pendingTokenCount": 1,
-      "totalUsd": 0.0
+      "totalUsd": 3.335782690077097
     },
     {
       "address": "0xeb06308b1c2194988baa4f5626d5e3d3f228ae5a",
@@ -113,12 +125,12 @@
       "totalUsd": 0.0
     }
   ],
-  "lastUpdated": "2025-10-27T23:22:49.752055",
+  "lastUpdated": "2025-10-27T23:50:48.516992",
   "summary": {
     "totalByTokenUsd": {
-      "0x806041b6473da60abbe1b256d9a2749a151be6c6": 0.0
+      "0x806041b6473da60abbe1b256d9a2749a151be6c6": 14.826097551709292
     },
-    "totalUsd": 0.0
+    "totalUsd": 14.826097551709292
   },
-  "updateTimestamp": 1761621769
+  "updateTimestamp": 1761609048
 }
