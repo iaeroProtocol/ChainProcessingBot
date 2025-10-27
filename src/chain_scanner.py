@@ -4,6 +4,7 @@ from web3 import Web3
 import logging
 import time
 from typing import List, Dict
+from eth_utils import keccak
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +39,8 @@ DEFAULT_MULTICALL3 = os.environ.get("MULTICALL3", "0xCA11bde05977b3631167028862b
 # Function selectors
 SEL_BALANCE_OF = bytes.fromhex("70a08231")  # balanceOf(address)
 SEL_DECIMALS   = bytes.fromhex("313ce567")  # decimals()
+SEL_TOTAL_SUPPLY = bytes.fromhex("18160ddd")  # totalSupply()
+TRANSFER_TOPIC = "0x" + keccak(text="Transfer(address,address,uint256)").hex()
 
 class ChainScanner:
     """
@@ -104,6 +107,64 @@ class ChainScanner:
             logger.warning(f"[check_for_new_incoming_erc20] probe failed: {e}")
             # fail-closed to avoid noisy commits on transient errors
             return False, None
+
+    def latest_block(self) -> int:
+        try:
+            return int(self.w3.eth.block_number)
+        except Exception as e:
+            logger.warning(f"latest_block failed: {e}")
+            return 0
+    
+    def _get_logs_chunked(self, address: str, topics: list, from_block: int, to_block: int, step: int = 50_000):
+        """
+        Yield logs in chunks to avoid provider limits.
+        """
+        address = self.w3.to_checksum_address(address)
+        fb = max(0, int(from_block))
+        tb = int(to_block)
+        while fb <= tb:
+            end = min(tb, fb + step)
+            try:
+                logs = self.w3.eth.get_logs({
+                    "address": address,
+                    "fromBlock": fb,
+                    "toBlock": end,
+                    "topics": topics
+                })
+                for lg in logs:
+                    yield lg
+            except Exception as e:
+                logger.warning(f"get_logs chunk {fb}-{end} failed: {e}")
+                # back off to smaller step
+                if step > 5_000:
+                    step //= 2
+                    continue
+                else:
+                    # give up this slice, advance to avoid infinite loop
+                    pass
+            fb = end + 1
+
+    def erc20_transfer_logs(self, token: str, from_block: int, to_block: int):
+        """
+        Return iterator of Transfer logs (any from/to) for token in [from_block, to_block].
+        """
+        topic0 = TRANSFER_TOPIC
+        return self._get_logs_chunked(token, [topic0], from_block, to_block)
+
+    def total_supply(self, token: str) -> int:
+        try:
+            token_cs = self.w3.to_checksum_address(token)
+            # single call (no multicall)
+            data = self.w3.eth.call({
+                "to": token_cs,
+                "data": SEL_TOTAL_SUPPLY
+            })
+            if not data or len(data) < 32:
+                return 0
+            return int.from_bytes(data[-32:], "big")
+        except Exception as e:
+            logger.warning(f"total_supply({token}) failed: {e}")
+            return 0
 
     # ---------- registry ----------
     def registry_all_tokens(self, registry_address: str) -> List[str]:
