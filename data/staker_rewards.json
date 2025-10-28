@@ -2,7 +2,7 @@
   "activeTokensNow": [
     "0x806041b6473da60abbe1b256d9a2749a151be6c6"
   ],
-  "asOf": 1761646301,
+  "asOf": 1761652906,
   "chainId": 8453,
   "distributor": "0x781A80fA817b5a146C440F03EF8643f4aca6588A",
   "fundedEpochs": [
@@ -18,20 +18,9 @@
   "holders": [
     {
       "address": "0x010b23b2f2a5f6bc4ce0c68a5f65c248c1129831",
-      "pending": [
-        {
-          "amount": "22282461",
-          "amountHuman": 0.022282461,
-          "amountHumanStr": "0.022282461",
-          "decimals": 9,
-          "priceUsd": 549.2729865253808,
-          "symbol": "stTAO",
-          "token": "0x806041b6473da60abbe1b256d9a2749a151be6c6",
-          "usd": 12.239153900605324
-        }
-      ],
-      "pendingTokenCount": 1,
-      "totalUsd": 12.239153900605324
+      "pending": [],
+      "pendingTokenCount": 0,
+      "totalUsd": 0.0
     },
     {
       "address": "0x2fbb24544a6ecb47a404ba7cb85f7d1de9441c0c",
@@ -125,12 +114,12 @@
       "totalUsd": 0.0
     }
   ],
-  "lastUpdated": "2025-10-28T10:11:41.168494",
+  "lastUpdated": "2025-10-28T12:01:46.765850",
   "summary": {
     "totalByTokenUsd": {
-      "0x806041b6473da60abbe1b256d9a2749a151be6c6": 15.792826537002572
+      "0x806041b6473da60abbe1b256d9a2749a151be6c6": 3.553672636397246
     },
-    "totalUsd": 15.79282653700257
+    "totalUsd": 3.553672636397246
   },
-  "updateTimestamp": 1761646301
+  "updateTimestamp": 1761652906
 }
