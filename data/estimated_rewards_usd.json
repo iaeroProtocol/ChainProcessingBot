@@ -1,12 +1,14 @@
 {
   "epochStart": 0,
   "splitBps": { "protocol": 1000, "peg": 1000, "stakers": 8000 },
-  "estimatedWeeklyUSD_1e18": "5649000000000000000000",
-  "estimatedWeeklyUSD_human": "5649.0000",
-  "stakersWeeklyUSD_1e18": "4519200000000000000000",
-  "stakersWeeklyUSD_human": "4519.2000",
-  "estimatedAnnualUSD_1e18": "293748000000000000000000",
-  "estimatedAnnualUSD_human": "293748.0000",
-  "updatedAt": "2025-10-23T17:00:00.000Z",
-  "source": "ManualOverride"
+  "protocolWeeklyUSD_1e18": "836312490000000000000",
+  "pegWeeklyUSD_1e18": "836312490000000000000",
+  "estimatedWeeklyUSD_1e18": "8363124900000000000000",
+  "estimatedWeeklyUSD_human": "8363.1249",
+  "stakersWeeklyUSD_1e18": "6690499920000000000000",
+  "stakersWeeklyUSD_human": "6690.4999",
+  "estimatedAnnualUSD_1e18": "434882494800000000000000",
+  "estimatedAnnualUSD_human": "434882.4948",
+  "updatedAt": "2025-10-30T09:17:00.000Z",
+  "source": "EnhancedOptimizedVotesKeeper"
 }
