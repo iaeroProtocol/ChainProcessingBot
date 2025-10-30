@@ -370,8 +370,8 @@ def _run_once() -> bool:
     except Exception as e:
         logger.exception(f"[epochs] failed: {e}")
 
-    # >>> REPLACE your current “Decide whether to update” block with this one <<<
-        # Decide whether to update rewards (but do not return early)
+
+    # Decide whether to update rewards (but do not return early)
     new_epoch_tx = epoch_state.get("last_tx_hash")
     new_liq_tx   = liq_state.get("last_tx_hash")
 
@@ -413,7 +413,7 @@ def _run_once() -> bool:
     st_changed = False
     if rewards_needed:
         # 1) registry tokens
-        reg_tokens = scanner.registry_all_tokens(registry_address)
+        reg_tokens = sorted({ (t or "").lower() for t in scanner.registry_all_tokens(registry_address) })
         logger.info(f"Registry tokens: {len(reg_tokens)}")
 
         # 2) decimals (shared) & balances (per distributor)
@@ -446,6 +446,8 @@ def _run_once() -> bool:
                 dec = int(decimals.get(a, 18))
                 px = float(price_map.get(a, {}).get("priceUsd", 0.0))  # never null
                 usd = (bal / (10 ** dec)) * px if px > 0 else 0.0
+                if usd:
+                    usd = float(f"{usd:.12f}")
                 if usd >= min_usd:
                     active.append(a)
                 snap.append({
@@ -505,6 +507,7 @@ def _run_once() -> bool:
         changed_rewards = _push_if_changed(repo, updater, "data/active_reward_tokens.json", active_payload)
 
         if changed_rewards:
+            rewards_needed = True
             logger.info(
                 f"Pushed data/active_reward_tokens.json "
                 f"(epoch_active={len(active_epoch)}, liq_active={len(active_liq)}, "
@@ -527,7 +530,8 @@ def _run_once() -> bool:
 
     sr_changed = False
     try:
-        sr_changed = _update_staker_rewards(repo, updater)
+        if rewards_needed or changed_rewards or epochs_changed or st_changed or force_update:
+            sr_changed = _update_staker_rewards(repo, updater)
         if sr_changed:
             logger.info("[staker_rewards] Published/updated staker_rewards.json")
         else:
