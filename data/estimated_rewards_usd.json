@@ -1,14 +1,18 @@
 {
-  "epochStart": 0,
-  "splitBps": { "protocol": 1000, "peg": 1000, "stakers": 8000 },
-  "protocolWeeklyUSD_1e18": "2436312490000000000000",
-  "pegWeeklyUSD_1e18": "2436312490000000000000",
-  "estimatedWeeklyUSD_1e18": "24363124900000000000000",
-  "estimatedWeeklyUSD_human": "24363.1249",
-  "stakersWeeklyUSD_1e18": "18690499920000000000000",
-  "stakersWeeklyUSD_human": "18690.4999",
-  "estimatedAnnualUSD_1e18": "1234882494800000000000000",
-  "estimatedAnnualUSD_human": "1234882.4948",
-  "updatedAt": "2025-10-30T09:17:00.000Z",
+  "epochStart": 1761786000,
+  "splitBps": {
+    "protocol": 1000,
+    "peg": 1000,
+    "stakers": 8000
+  },
+  "protocolWeeklyUSD_1e18": "2098019961150966909958",
+  "pegWeeklyUSD_1e18": "2098019961150966909958",
+  "estimatedWeeklyUSD_1e18": "20980199611509669099580",
+  "estimatedWeeklyUSD_human": "20980.1996",
+  "stakersWeeklyUSD_1e18": "16784159689207735279664",
+  "stakersWeeklyUSD_human": "16784.1597",
+  "estimatedAnnualUSD_1e18": "1090970379798502793178160",
+  "estimatedAnnualUSD_human": "1090970.3798",
+  "updatedAt": "2025-11-05T15:46:23.941Z",
   "source": "EnhancedOptimizedVotesKeeper"
 }
