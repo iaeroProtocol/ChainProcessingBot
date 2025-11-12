@@ -9,7 +9,7 @@
     "0xc9d23ed2adb0f551369946bd377f8644ce1ca5c4",
     "0xe0023e73aab4fe9a22f059a9d27e857e027ee3dc"
   ],
-  "asOf": 1762991174,
+  "asOf": 1762991477,
   "chainId": 8453,
   "distributor": "0x781A80fA817b5a146C440F03EF8643f4aca6588A",
   "fundedEpochs": [
@@ -33,10 +33,10 @@
           "amountHuman": 60.43619,
           "amountHumanStr": "60.43619",
           "decimals": 6,
-          "priceUsd": 0.7678431640537692,
+          "priceUsd": 0.7678745996354779,
           "symbol": "XSGD",
           "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
-          "usd": 46.405515352954765
+          "usd": 46.407415199743674
         },
         {
           "amount": "1603473683034388156100",
@@ -100,7 +100,7 @@
         }
       ],
       "pendingTokenCount": 7,
-      "totalUsd": 222.53471123872302
+      "totalUsd": 222.53661108551194
     },
     {
       "address": "0x2fbb24544a6ecb47a404ba7cb85f7d1de9441c0c",
@@ -120,10 +120,10 @@
           "amountHuman": 0.000952,
           "amountHumanStr": "0.000952",
           "decimals": 6,
-          "priceUsd": 0.7678431640537692,
+          "priceUsd": 0.7678745996354779,
           "symbol": "XSGD",
           "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
-          "usd": 0.0007309866921791883
+          "usd": 0.000731016618852975
         },
         {
           "amount": "27931419555799022",
@@ -187,7 +187,7 @@
         }
       ],
       "pendingTokenCount": 8,
-      "totalUsd": 0.003845900890287907
+      "totalUsd": 0.0038459308169616936
     },
     {
       "address": "0x9402cec8e19cfbdc3fab9898f49ff91351d47a98",
@@ -207,10 +207,10 @@
           "amountHuman": 0.000761,
           "amountHumanStr": "0.000761",
           "decimals": 6,
-          "priceUsd": 0.7678431640537692,
+          "priceUsd": 0.7678745996354779,
           "symbol": "XSGD",
           "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
-          "usd": 0.0005843286478449183
+          "usd": 0.0005843525703225986
         },
         {
           "amount": "22368681625297425",
@@ -274,7 +274,7 @@
         }
       ],
       "pendingTokenCount": 8,
-      "totalUsd": 0.003079392701161462
+      "totalUsd": 0.0030794166236391422
     },
     {
       "address": "0xa1dbd1973af714c1a45a83d989b3ce889c9070f1",
@@ -294,10 +294,10 @@
           "amountHuman": 9.5e-05,
           "amountHumanStr": "0.000095",
           "decimals": 6,
-          "priceUsd": 0.7678431640537692,
+          "priceUsd": 0.7678745996354779,
           "symbol": "XSGD",
           "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
-          "usd": 7.294510058510807e-05
+          "usd": 7.29480869653704e-05
         },
         {
           "amount": "2796085203162177",
@@ -361,7 +361,7 @@
         }
       ],
       "pendingTokenCount": 8,
-      "totalUsd": 0.0003838970750024143
+      "totalUsd": 0.0003839000613826766
     },
     {
       "address": "0xa9e0ab6697f239cd274fd772f31bd819efcf3e50",
@@ -381,10 +381,10 @@
           "amountHuman": 0.000179,
           "amountHumanStr": "0.000179",
           "decimals": 6,
-          "priceUsd": 0.7678431640537692,
+          "priceUsd": 0.7678745996354779,
           "symbol": "XSGD",
           "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
-          "usd": 0.00013744392636562468
+          "usd": 0.00013744955333475054
         },
         {
           "amount": "4760355772195543",
@@ -448,7 +448,7 @@
         }
       ],
       "pendingTokenCount": 8,
-      "totalUsd": 0.0006894378633680232
+      "totalUsd": 0.0006894434903371491
     },
     {
       "address": "0xe6e7d3c6379ad80de02f26ccc72605d0f70d5201",
@@ -468,10 +468,10 @@
           "amountHuman": 17.540892,
           "amountHumanStr": "17.540892",
           "decimals": 6,
-          "priceUsd": 0.7678431640537692,
+          "priceUsd": 0.7678745996354779,
           "symbol": "XSGD",
           "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
-          "usd": 13.468654013605446
+          "usd": 13.469205421749157
         },
         {
           "amount": "465389361009010573407",
@@ -535,7 +535,7 @@
         }
       ],
       "pendingTokenCount": 8,
-      "totalUsd": 67.50464280612061
+      "totalUsd": 67.50519421426432
     },
     {
       "address": "0xeb06308b1c2194988baa4f5626d5e3d3f228ae5a",
@@ -601,10 +601,10 @@
       "totalUsd": 0.0
     }
   ],
-  "lastUpdated": "2025-11-12T23:46:14.496595",
+  "lastUpdated": "2025-11-12T23:51:17.792926",
   "summary": {
     "totalByTokenUsd": {
-      "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b": 59.87569507092718,
+      "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b": 59.87814638832231,
       "0x1111111111166b7fe7bd91427724b487980afc69": 114.10268243579084,
       "0x1c4cca7c5db003824208adda61bd749e55f463a3": 72.7789350991376,
       "0x806041b6473da60abbe1b256d9a2749a151be6c6": 2.9168770026947732,
@@ -613,7 +613,7 @@
       "0xc9d23ed2adb0f551369946bd377f8644ce1ca5c4": 13.266985707796964,
       "0xe0023e73aab4fe9a22f059a9d27e857e027ee3dc": 11.701640909491944
     },
-    "totalUsd": 290.04735572680767
+    "totalUsd": 290.0498070442028
   },
-  "updateTimestamp": 1762991174
+  "updateTimestamp": 1762991477
 }
