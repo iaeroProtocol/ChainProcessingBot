@@ -9,7 +9,7 @@
     "0xc9d23ed2adb0f551369946bd377f8644ce1ca5c4",
     "0xe0023e73aab4fe9a22f059a9d27e857e027ee3dc"
   ],
-  "asOf": 1762956263,
+  "asOf": 1762957434,
   "chainId": 8453,
   "distributor": "0x781A80fA817b5a146C440F03EF8643f4aca6588A",
   "fundedEpochs": [
@@ -33,30 +33,30 @@
           "amountHuman": 60.43619,
           "amountHumanStr": "60.43619",
           "decimals": 6,
-          "priceUsd": 0.7680670603722756,
+          "priceUsd": 0.7681442433458584,
           "symbol": "XSGD",
           "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
-          "usd": 46.41904679340032
+          "usd": 46.42371143825654
         },
         {
           "amount": "1603473683034388156100",
           "amountHuman": 1603.4736830343882,
           "amountHumanStr": "1603.4736830343881561",
           "decimals": 18,
-          "priceUsd": 0.059366266758203924,
+          "priceUsd": 0.059215250361927194,
           "symbol": "ZORA",
           "token": "0x1111111111166b7fe7bd91427724b487980afc69",
-          "usd": 95.19224640677922
+          "usd": 94.95009558964279
         },
         {
           "amount": "1479312820989810252368",
           "amountHuman": 1479.3128209898102,
           "amountHumanStr": "1479.312820989810252368",
           "decimals": 18,
-          "priceUsd": 0.040885454515479855,
+          "priceUsd": 0.04080447980095134,
           "symbol": "GAME",
           "token": "0x1c4cca7c5db003824208adda61bd749e55f463a3",
-          "usd": 60.48237705674508
+          "usd": 60.362590123367056
         },
         {
           "amount": "4399663033517152895",
@@ -100,7 +100,7 @@
         }
       ],
       "pendingTokenCount": 7,
-      "totalUsd": 231.48168754930538
+      "totalUsd": 231.12441444364714
     },
     {
       "address": "0x2fbb24544a6ecb47a404ba7cb85f7d1de9441c0c",
@@ -120,30 +120,30 @@
           "amountHuman": 0.000952,
           "amountHumanStr": "0.000952",
           "decimals": 6,
-          "priceUsd": 0.7680670603722756,
+          "priceUsd": 0.7681442433458584,
           "symbol": "XSGD",
           "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
-          "usd": 0.0007311998414744064
+          "usd": 0.0007312733196652572
         },
         {
           "amount": "27931419555799022",
           "amountHuman": 0.02793141955579902,
           "amountHumanStr": "0.027931419555799022",
           "decimals": 18,
-          "priceUsd": 0.059366266758203924,
+          "priceUsd": 0.059215250361927194,
           "symbol": "ZORA",
           "token": "0x1111111111166b7fe7bd91427724b487980afc69",
-          "usd": 0.0016581841042848783
+          "usd": 0.0016539660019606682
         },
         {
           "amount": "23550236224396339",
           "amountHuman": 0.02355023622439634,
           "amountHumanStr": "0.023550236224396339",
           "decimals": 18,
-          "priceUsd": 0.040885454515479855,
+          "priceUsd": 0.04080447980095134,
           "symbol": "GAME",
           "token": "0x1c4cca7c5db003824208adda61bd749e55f463a3",
-          "usd": 0.0009628621119813626
+          "usd": 0.000960955138326013
         },
         {
           "amount": "74861433491421",
@@ -187,7 +187,7 @@
         }
       ],
       "pendingTokenCount": 8,
-      "totalUsd": 0.004008109559025614
+      "totalUsd": 0.004002057961236905
     },
     {
       "address": "0x9402cec8e19cfbdc3fab9898f49ff91351d47a98",
@@ -207,30 +207,30 @@
           "amountHuman": 0.000761,
           "amountHumanStr": "0.000761",
           "decimals": 6,
-          "priceUsd": 0.7680670603722756,
+          "priceUsd": 0.7681442433458584,
           "symbol": "XSGD",
           "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
-          "usd": 0.0005844990329433017
+          "usd": 0.0005845577691861982
         },
         {
           "amount": "22368681625297425",
           "amountHuman": 0.022368681625297426,
           "amountHumanStr": "0.022368681625297425",
           "decimals": 18,
-          "priceUsd": 0.059366266758203924,
+          "priceUsd": 0.059215250361927194,
           "symbol": "ZORA",
           "token": "0x1111111111166b7fe7bd91427724b487980afc69",
-          "usd": 0.0013279451203967415
+          "usd": 0.0013245670827082277
         },
         {
           "amount": "18860041654943327",
           "amountHuman": 0.018860041654943326,
           "amountHumanStr": "0.018860041654943327",
           "decimals": 18,
-          "priceUsd": 0.040885454515479855,
+          "priceUsd": 0.04080447980095134,
           "symbol": "GAME",
           "token": "0x1c4cca7c5db003824208adda61bd749e55f463a3",
-          "usd": 0.0007711013752432407
+          "usd": 0.0007695741887542358
         },
         {
           "amount": "59952254429378",
@@ -274,7 +274,7 @@
         }
       ],
       "pendingTokenCount": 8,
-      "totalUsd": 0.0032092936425388323
+      "totalUsd": 0.0032044471546042105
     },
     {
       "address": "0xa1dbd1973af714c1a45a83d989b3ce889c9070f1",
@@ -294,30 +294,30 @@
           "amountHuman": 9.5e-05,
           "amountHumanStr": "0.000095",
           "decimals": 6,
-          "priceUsd": 0.7680670603722756,
+          "priceUsd": 0.7681442433458584,
           "symbol": "XSGD",
           "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
-          "usd": 7.296637073536619e-05
+          "usd": 7.297370311785655e-05
         },
         {
           "amount": "2796085203162177",
           "amountHuman": 0.002796085203162177,
           "amountHumanStr": "0.002796085203162177",
           "decimals": 18,
-          "priceUsd": 0.059366266758203924,
+          "priceUsd": 0.059215250361927194,
           "symbol": "ZORA",
           "token": "0x1111111111166b7fe7bd91427724b487980afc69",
-          "usd": 0.0001659931400495926
+          "usd": 0.00016557088533852838
         },
         {
           "amount": "2357505206867915",
           "amountHuman": 0.002357505206867915,
           "amountHumanStr": "0.002357505206867915",
           "decimals": 18,
-          "priceUsd": 0.040885454515479855,
+          "priceUsd": 0.04080447980095134,
           "symbol": "GAME",
           "token": "0x1c4cca7c5db003824208adda61bd749e55f463a3",
-          "usd": 9.638767190540506e-05
+          "usd": 9.619677359427944e-05
         },
         {
           "amount": "7494031803671",
@@ -361,7 +361,7 @@
         }
       ],
       "pendingTokenCount": 8,
-      "totalUsd": 0.00040012958174354655
+      "totalUsd": 0.00039952376110384715
     },
     {
       "address": "0xa9e0ab6697f239cd274fd772f31bd819efcf3e50",
@@ -381,30 +381,30 @@
           "amountHuman": 0.000179,
           "amountHumanStr": "0.000179",
           "decimals": 6,
-          "priceUsd": 0.7680670603722756,
+          "priceUsd": 0.7681442433458584,
           "symbol": "XSGD",
           "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
-          "usd": 0.00013748400380663732
+          "usd": 0.00013749781955890865
         },
         {
           "amount": "4760355772195543",
           "amountHuman": 0.004760355772195543,
           "amountHumanStr": "0.004760355772195543",
           "decimals": 18,
-          "priceUsd": 0.059366266758203924,
+          "priceUsd": 0.059215250361927194,
           "symbol": "ZORA",
           "token": "0x1111111111166b7fe7bd91427724b487980afc69",
-          "usd": 0.0002826045506361164
+          "usd": 0.0002818856588624043
         },
         {
           "amount": "4389412258612336",
           "amountHuman": 0.004389412258612336,
           "amountHumanStr": "0.004389412258612336",
           "decimals": 18,
-          "priceUsd": 0.040885454515479855,
+          "priceUsd": 0.04080447980095134,
           "symbol": "GAME",
           "token": "0x1c4cca7c5db003824208adda61bd749e55f463a3",
-          "usd": 0.00017946311524918437
+          "usd": 0.00017910768384459525
         },
         {
           "amount": "13059745136706",
@@ -448,7 +448,7 @@
         }
       ],
       "pendingTokenCount": 8,
-      "totalUsd": 0.0007183425956205538
+      "totalUsd": 0.0007172820881945239
     },
     {
       "address": "0xe6e7d3c6379ad80de02f26ccc72605d0f70d5201",
@@ -468,30 +468,30 @@
           "amountHuman": 17.540892,
           "amountHumanStr": "17.540892",
           "decimals": 6,
-          "priceUsd": 0.7680670603722756,
+          "priceUsd": 0.7681442433458584,
           "symbol": "XSGD",
           "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
-          "usd": 13.472581354747565
+          "usd": 13.473935212951421
         },
         {
           "amount": "465389361009010573407",
           "amountHuman": 465.3893610090106,
           "amountHumanStr": "465.389361009010573407",
           "decimals": 18,
-          "priceUsd": 0.059366266758203924,
+          "priceUsd": 0.059215250361927194,
           "symbol": "ZORA",
           "token": "0x1111111111166b7fe7bd91427724b487980afc69",
-          "usd": 27.628428952090992
+          "usd": 27.55814752792588
         },
         {
           "amount": "429353132375743503293",
           "amountHuman": 429.3531323757435,
           "amountHumanStr": "429.353132375743503293",
           "decimals": 18,
-          "priceUsd": 0.040885454515479855,
+          "priceUsd": 0.04080447980095134,
           "symbol": "GAME",
           "token": "0x1c4cca7c5db003824208adda61bd749e55f463a3",
-          "usd": 17.55429796482726
+          "usd": 17.51953121750121
         },
         {
           "amount": "1276950404292728816",
@@ -535,7 +535,7 @@
         }
       ],
       "pendingTokenCount": 8,
-      "totalUsd": 70.3316704945668
+      "totalUsd": 70.22797618127949
     },
     {
       "address": "0xeb06308b1c2194988baa4f5626d5e3d3f228ae5a",
@@ -545,20 +545,20 @@
           "amountHuman": 2.9432475822759e-05,
           "amountHumanStr": "0.000029432475822759",
           "decimals": 18,
-          "priceUsd": 0.059366266758203924,
+          "priceUsd": 0.059215250361927194,
           "symbol": "ZORA",
           "token": "0x1111111111166b7fe7bd91427724b487980afc69",
-          "usd": 1.7472962110482984e-06
+          "usd": 1.7428514246160433e-06
         },
         {
           "amount": "24815844282819",
           "amountHuman": 2.4815844282819e-05,
           "amountHumanStr": "0.000024815844282819",
           "decimals": 18,
-          "priceUsd": 0.040885454515479855,
+          "priceUsd": 0.04080447980095134,
           "symbol": "GAME",
           "token": "0x1c4cca7c5db003824208adda61bd749e55f463a3",
-          "usd": 1.0146070726884271e-06
+          "usd": 1.0125976167818416e-06
         },
         {
           "amount": "78884545301",
@@ -592,7 +592,7 @@
         }
       ],
       "pendingTokenCount": 5,
-      "totalUsd": 3.2116681779895363e-06
+      "totalUsd": 3.2052139356506954e-06
     },
     {
       "address": "0xf6e0efd25be6f4302190ea44db596719aa400588",
@@ -601,19 +601,19 @@
       "totalUsd": 0.0
     }
   ],
-  "lastUpdated": "2025-11-12T14:04:23.213742",
+  "lastUpdated": "2025-11-12T14:23:54.672400",
   "summary": {
     "totalByTokenUsd": {
-      "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b": 59.89315429739685,
-      "0x1111111111166b7fe7bd91427724b487980afc69": 122.82411183308179,
-      "0x1c4cca7c5db003824208adda61bd749e55f463a3": 78.0386858504538,
+      "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b": 59.89917295381949,
+      "0x1111111111166b7fe7bd91427724b487980afc69": 122.51167085004897,
+      "0x1c4cca7c5db003824208adda61bd749e55f463a3": 77.8841281872504,
       "0x806041b6473da60abbe1b256d9a2749a151be6c6": 3.1471748772749666,
       "0xa3d1a8deb97b111454b294e2324efad13a9d8396": 6.387508349555456,
       "0xb79dd08ea68a908a97220c76d19a6aa9cbde4376": 5.455689270079654,
       "0xc9d23ed2adb0f551369946bd377f8644ce1ca5c4": 13.891379955632834,
       "0xe0023e73aab4fe9a22f059a9d27e857e027ee3dc": 12.18399269744397
     },
-    "totalUsd": 301.8216971309193
+    "totalUsd": 301.3607171411057
   },
-  "updateTimestamp": 1762956263
+  "updateTimestamp": 1762957434
 }
