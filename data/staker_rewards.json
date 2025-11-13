@@ -50,7 +50,7 @@
     "0xf544251d25f3d243a36b07e7e7962a678f952691",
     "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2"
   ],
-  "asOf": 1763021724,
+  "asOf": 1763022439,
   "chainId": 8453,
   "distributor": "0x781A80fA817b5a146C440F03EF8643f4aca6588A",
   "fundedEpochs": [
@@ -115,20 +115,20 @@
           "amountHuman": 1818.4819236615513,
           "amountHumanStr": "1818.48192366155117832",
           "decimals": 18,
-          "priceUsd": 0.03994644403802261,
+          "priceUsd": 0.03999666776438456,
           "symbol": "MAMO",
           "token": "0x7300b37dfdfab110d83290a29dfb31b1740219fe",
-          "usd": 72.64188639770187
+          "usd": 72.73321733623
         },
         {
           "amount": "480947248",
           "amountHuman": 480.947248,
           "amountHumanStr": "480.947248",
           "decimals": 6,
-          "priceUsd": 0.9997107897440886,
+          "priceUsd": 0.9997024296852948,
           "symbol": "USDC",
           "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-          "usd": 480.808153123326
+          "usd": 480.80413237605603
         },
         {
           "amount": "33621737",
@@ -175,10 +175,10 @@
           "amountHuman": 79.21773531279361,
           "amountHumanStr": "79.217735312793606802",
           "decimals": 18,
-          "priceUsd": 1.2986521152045258,
+          "priceUsd": 1.3012860362788488,
           "symbol": "VIRTUAL",
           "token": "0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b",
-          "usd": 102.87627952567168
+          "usd": 103.08493278817218
         },
         {
           "amount": "146573259170041498860",
@@ -215,10 +215,10 @@
           "amountHuman": 450.72319353501615,
           "amountHumanStr": "450.723193535016135486",
           "decimals": 18,
-          "priceUsd": 0.04585658277033012,
+          "priceUsd": 0.04592128515198447,
           "symbol": "DRV",
           "token": "0x9d0e8f5b25384c7310cb8c6ae32c8fbeb645d083",
-          "usd": 20.66862543084599
+          "usd": 20.69778829493456
         },
         {
           "amount": "85397283006186390257",
@@ -235,20 +235,20 @@
           "amountHuman": 0.006936497808692411,
           "amountHumanStr": "0.006936497808692411",
           "decimals": 18,
-          "priceUsd": 4307.363590884533,
+          "priceUsd": 4310.901813113437,
           "symbol": "wstETH",
           "token": "0xc1cba3fcea344f92d9239c08c0568f6f2f0ee452",
-          "usd": 29.878018109412032
+          "usd": 29.902560980149495
         },
         {
           "amount": "31428273678456406937",
           "amountHuman": 31.428273678456407,
           "amountHumanStr": "31.428273678456406937",
           "decimals": 18,
-          "priceUsd": 0.2950908751723766,
+          "priceUsd": 0.296127248382627,
           "symbol": "GHST",
           "token": "0xcd2f22236dd9dfe2356d7c543161d4d260fd9bcb",
-          "usd": 9.274196784932668
+          "usd": 9.306768205817438
         },
         {
           "amount": "1621071855561096475482",
@@ -265,20 +265,20 @@
           "amountHuman": 60.43619,
           "amountHumanStr": "60.43619",
           "decimals": 6,
-          "priceUsd": 0.7682290542034089,
+          "priceUsd": 0.7679875010800752,
           "symbol": "XSGD",
           "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
-          "usd": 46.42883708335752
+          "usd": 46.41423853290063
         },
         {
           "amount": "1603473683034388156100",
           "amountHuman": 1603.4736830343882,
           "amountHumanStr": "1603.4736830343881561",
           "decimals": 18,
-          "priceUsd": 0.06691129282730782,
+          "priceUsd": 0.06769973617623035,
           "symbol": "ZORA",
           "token": "0x1111111111166b7fe7bd91427724b487980afc69",
-          "usd": 107.29049714639571
+          "usd": 108.55474530695648
         },
         {
           "amount": "1479312820989810252368",
@@ -305,10 +305,10 @@
           "amountHuman": 4.22683,
           "amountHumanStr": "4.22683",
           "decimals": 6,
-          "priceUsd": 0.999853419042419,
+          "priceUsd": 1.0001144912314455,
           "symbol": "USD+",
           "token": "0xb79dd08ea68a908a97220c76d19a6aa9cbde4376",
-          "usd": 4.226210427211067
+          "usd": 4.22731393497181
         },
         {
           "amount": "62302065861458941434",
@@ -332,7 +332,7 @@
         }
       ],
       "pendingTokenCount": 26,
-      "totalUsd": 1522.4089385134846
+      "totalUsd": 1524.0419322408184
     },
     {
       "address": "0x2fbb24544a6ecb47a404ba7cb85f7d1de9441c0c",
@@ -352,30 +352,30 @@
           "amountHuman": 1.2755798308084e-05,
           "amountHumanStr": "0.000012755798308084",
           "decimals": 18,
-          "priceUsd": 3541.326239449698,
+          "priceUsd": 3545.233747420528,
           "symbol": "WETH",
           "token": "0x4200000000000000000000000000000000000006",
-          "usd": 0.04517244325354593
+          "usd": 0.04522228663710907
         },
         {
           "amount": "893550114423140",
           "amountHuman": 0.00089355011442314,
           "amountHumanStr": "0.00089355011442314",
           "decimals": 18,
-          "priceUsd": 1.1018402001940069,
+          "priceUsd": 1.1012318047673177,
           "symbol": "wBLT",
           "token": "0x4e74d4db6c0726ccded4656d0bce448876bb4c7a",
-          "usd": 0.0009845494369593703
+          "usd": 0.0009840058051562377
         },
         {
           "amount": "13969",
           "amountHuman": 0.00013969,
           "amountHumanStr": "0.00013969",
           "decimals": 8,
-          "priceUsd": 0.6640429901914338,
+          "priceUsd": 0.6651680838925249,
           "symbol": "SPX",
           "token": "0x50da645f148798f68ef2d7db7c1cb22a6819bb2c",
-          "usd": 9.276016529984139e-05
+          "usd": 9.291732963894681e-05
         },
         {
           "amount": "167678254894347",
@@ -392,10 +392,10 @@
           "amountHuman": 0.000582904243486631,
           "amountHumanStr": "0.000582904243486631",
           "decimals": 18,
-          "priceUsd": 0.320094599502632,
+          "priceUsd": 0.32035908377829053,
           "symbol": "ENA",
           "token": "0x58538e6a46e07434d7e7375bc268d3cb839c0133",
-          "usd": 0.00018658450036723785
+          "usd": 0.0001867386693738547
         },
         {
           "amount": "3423138751496654",
@@ -422,30 +422,30 @@
           "amountHuman": 0.0461972929702727,
           "amountHumanStr": "0.0461972929702727",
           "decimals": 18,
-          "priceUsd": 0.03994644403802261,
+          "priceUsd": 0.03999666776438456,
           "symbol": "MAMO",
           "token": "0x7300b37dfdfab110d83290a29dfb31b1740219fe",
-          "usd": 0.001845417578345134
+          "usd": 0.0018477377785459357
         },
         {
           "amount": "41808",
           "amountHuman": 0.041808,
           "amountHumanStr": "0.041808",
           "decimals": 6,
-          "priceUsd": 0.9997107897440886,
+          "priceUsd": 0.9997024296852948,
           "symbol": "USDC",
           "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-          "usd": 0.04179590869762085
+          "usd": 0.0417955591802828
         },
         {
           "amount": "11020719934230994",
           "amountHuman": 0.011020719934230995,
           "amountHumanStr": "0.011020719934230994",
           "decimals": 18,
-          "priceUsd": 1.015287855457027,
+          "priceUsd": 1.0100329489416175,
           "symbol": "AERO",
           "token": "0x940181a94a35a4569e4529a3cdfb74e38fd98631",
-          "usd": 0.011189203107617895
+          "usd": 0.011131290254631
         },
         {
           "amount": "854320325504273",
@@ -502,10 +502,10 @@
           "amountHuman": 0.001956413179334342,
           "amountHumanStr": "0.001956413179334342",
           "decimals": 18,
-          "priceUsd": 12.997477120067645,
+          "priceUsd": 12.97934972555086,
           "symbol": "ZEN",
           "token": "0xf43eb8de897fbc7f2502483b2bef7bb9ea179229",
-          "usd": 0.025428435535796906
+          "usd": 0.025392970862257273
         },
         {
           "amount": "3963159377352987",
@@ -582,10 +582,10 @@
           "amountHuman": 0.001788731573097937,
           "amountHumanStr": "0.001788731573097937",
           "decimals": 18,
-          "priceUsd": 1.2986521152045258,
+          "priceUsd": 1.3012860362788488,
           "symbol": "VIRTUAL",
           "token": "0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b",
-          "usd": 0.0023229400409367548
+          "usd": 0.0023276514187234444
         },
         {
           "amount": "12578843000154456",
@@ -642,10 +642,10 @@
           "amountHuman": 0.014120214708607038,
           "amountHumanStr": "0.014120214708607039",
           "decimals": 18,
-          "priceUsd": 0.04585658277033012,
+          "priceUsd": 0.04592128515198447,
           "symbol": "DRV",
           "token": "0x9d0e8f5b25384c7310cb8c6ae32c8fbeb645d083",
-          "usd": 0.0006475047945200714
+          "usd": 0.0006484184060411892
         },
         {
           "amount": "4232535457726383",
@@ -662,20 +662,20 @@
           "amountHuman": 1.57820563486e-07,
           "amountHumanStr": "0.000000157820563486",
           "decimals": 18,
-          "priceUsd": 4307.363590884533,
+          "priceUsd": 4310.901813113437,
           "symbol": "wstETH",
           "token": "0xc1cba3fcea344f92d9239c08c0568f6f2f0ee452",
-          "usd": 0.0006797905490524773
+          "usd": 0.0006803489532783817
         },
         {
           "amount": "1852548761871829",
           "amountHuman": 0.001852548761871829,
           "amountHumanStr": "0.001852548761871829",
           "decimals": 18,
-          "priceUsd": 0.2950908751723766,
+          "priceUsd": 0.296127248382627,
           "symbol": "GHST",
           "token": "0xcd2f22236dd9dfe2356d7c543161d4d260fd9bcb",
-          "usd": 0.0005466702354402607
+          "usd": 0.0005485901673477472
         },
         {
           "amount": "40149956564834684",
@@ -692,20 +692,20 @@
           "amountHuman": 0.001319,
           "amountHumanStr": "0.001319",
           "decimals": 6,
-          "priceUsd": 0.7682290542034089,
+          "priceUsd": 0.7679875010800752,
           "symbol": "XSGD",
           "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
-          "usd": 0.0010132941224942965
+          "usd": 0.0010129755139246192
         },
         {
           "amount": "52683082023089355",
           "amountHuman": 0.052683082023089356,
           "amountHumanStr": "0.052683082023089355",
           "decimals": 18,
-          "priceUsd": 0.06691129282730782,
+          "priceUsd": 0.06769973617623035,
           "symbol": "ZORA",
           "token": "0x1111111111166b7fe7bd91427724b487980afc69",
-          "usd": 0.003525093128292008
+          "usd": 0.003566630753913853
         },
         {
           "amount": "23550236224396339",
@@ -732,10 +732,10 @@
           "amountHuman": 6.8e-05,
           "amountHumanStr": "0.000068",
           "decimals": 6,
-          "priceUsd": 0.999853419042419,
+          "priceUsd": 1.0001144912314455,
           "symbol": "USD+",
           "token": "0xb79dd08ea68a908a97220c76d19a6aa9cbde4376",
-          "usd": 6.799003249488449e-05
+          "usd": 6.800778540373829e-05
         },
         {
           "amount": "1056146346484710",
@@ -772,10 +772,10 @@
           "amountHuman": 0.01364588252377448,
           "amountHumanStr": "0.013645882523774481",
           "decimals": 18,
-          "priceUsd": 0.17711023098456913,
+          "priceUsd": 0.17716583109682388,
           "symbol": "RECALL",
           "token": "0x1f16e03c1a5908818f47f6ee7bb16690b40d0671",
-          "usd": 0.0024168254057739934
+          "usd": 0.0024175841183741303
         },
         {
           "amount": "640432712516692",
@@ -802,10 +802,10 @@
           "amountHuman": 0.017952917429966513,
           "amountHumanStr": "0.017952917429966511",
           "decimals": 18,
-          "priceUsd": 0.3179534175456809,
+          "priceUsd": 0.3178004834090985,
           "symbol": "LMTS",
           "token": "0x9eadbe35f3ee3bf3e28180070c429298a1b02f93",
-          "usd": 0.0057081914517732755
+          "usd": 0.005705445837846988
         },
         {
           "amount": "120",
@@ -829,7 +829,7 @@
         }
       ],
       "pendingTokenCount": 49,
-      "totalUsd": 0.19860898189782608
+      "totalUsd": 0.1986145393333441
     },
     {
       "address": "0x9402cec8e19cfbdc3fab9898f49ff91351d47a98",
@@ -849,30 +849,30 @@
           "amountHuman": 1.0273466860664e-05,
           "amountHumanStr": "0.000010273466860664",
           "decimals": 18,
-          "priceUsd": 3541.326239449698,
+          "priceUsd": 3545.233747420528,
           "symbol": "WETH",
           "token": "0x4200000000000000000000000000000000000006",
-          "usd": 0.03638169776378634
+          "usd": 0.03642184141743244
         },
         {
           "amount": "718361050630407",
           "amountHuman": 0.000718361050630407,
           "amountHumanStr": "0.000718361050630407",
           "decimals": 18,
-          "priceUsd": 1.1018402001940069,
+          "priceUsd": 1.1012318047673177,
           "symbol": "wBLT",
           "token": "0x4e74d4db6c0726ccded4656d0bce448876bb4c7a",
-          "usd": 0.0007915190838381847
+          "usd": 0.0007910820362602697
         },
         {
           "amount": "11387",
           "amountHuman": 0.00011387,
           "amountHumanStr": "0.00011387",
           "decimals": 8,
-          "priceUsd": 0.6640429901914338,
+          "priceUsd": 0.6651680838925249,
           "symbol": "SPX",
           "token": "0x50da645f148798f68ef2d7db7c1cb22a6819bb2c",
-          "usd": 7.561457529309857e-05
+          "usd": 7.574268971284182e-05
         },
         {
           "amount": "134725016123775",
@@ -889,10 +889,10 @@
           "amountHuman": 0.000470170775592062,
           "amountHumanStr": "0.000470170775592062",
           "decimals": 18,
-          "priceUsd": 0.320094599502632,
+          "priceUsd": 0.32035908377829053,
           "symbol": "ENA",
           "token": "0x58538e6a46e07434d7e7375bc268d3cb839c0133",
-          "usd": 0.00015049912611098297
+          "usd": 0.00015062347888800123
         },
         {
           "amount": "2760569102612093",
@@ -919,30 +919,30 @@
           "amountHuman": 0.03708743550934532,
           "amountHumanStr": "0.037087435509345319",
           "decimals": 18,
-          "priceUsd": 0.03994644403802261,
+          "priceUsd": 0.03999666776438456,
           "symbol": "MAMO",
           "token": "0x7300b37dfdfab110d83290a29dfb31b1740219fe",
-          "usd": 0.0014815111670878353
+          "usd": 0.0014833738363003231
         },
         {
           "amount": "33540",
           "amountHuman": 0.03354,
           "amountHumanStr": "0.03354",
           "decimals": 6,
-          "priceUsd": 0.9997107897440886,
+          "priceUsd": 0.9997024296852948,
           "symbol": "USDC",
           "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-          "usd": 0.03353029988801673
+          "usd": 0.03353001949164479
         },
         {
           "amount": "8974153382180250",
           "amountHuman": 0.00897415338218025,
           "amountHumanStr": "0.00897415338218025",
           "decimals": 18,
-          "priceUsd": 1.015287855457027,
+          "priceUsd": 1.0100329489416175,
           "symbol": "AERO",
           "token": "0x940181a94a35a4569e4529a3cdfb74e38fd98631",
-          "usd": 0.009111348941936211
+          "usd": 0.009064190604857908
         },
         {
           "amount": "685155418423731",
@@ -999,10 +999,10 @@
           "amountHuman": 0.001566959069822615,
           "amountHumanStr": "0.001566959069822615",
           "decimals": 18,
-          "priceUsd": 12.997477120067645,
+          "priceUsd": 12.97934972555086,
           "symbol": "ZEN",
           "token": "0xf43eb8de897fbc7f2502483b2bef7bb9ea179229",
-          "usd": 0.02036651465810192
+          "usd": 0.02033810977285159
         },
         {
           "amount": "3177842476220844",
@@ -1079,10 +1079,10 @@
           "amountHuman": 0.001432493146000454,
           "amountHumanStr": "0.001432493146000454",
           "decimals": 18,
-          "priceUsd": 1.2986521152045258,
+          "priceUsd": 1.3012860362788488,
           "symbol": "VIRTUAL",
           "token": "0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b",
-          "usd": 0.0018603102540694753
+          "usd": 0.001864083327955549
         },
         {
           "amount": "10073678271988817",
@@ -1139,10 +1139,10 @@
           "amountHuman": 0.011308075003731663,
           "amountHumanStr": "0.011308075003731664",
           "decimals": 18,
-          "priceUsd": 0.04585658277033012,
+          "priceUsd": 0.04592128515198447,
           "symbol": "DRV",
           "token": "0x9d0e8f5b25384c7310cb8c6ae32c8fbeb645d083",
-          "usd": 0.0005185496773817221
+          "usd": 0.0005192813367663896
         },
         {
           "amount": "3389596362352002",
@@ -1159,20 +1159,20 @@
           "amountHuman": 1.26389492359e-07,
           "amountHumanStr": "0.000000126389492359",
           "decimals": 18,
-          "priceUsd": 4307.363590884533,
+          "priceUsd": 4310.901813113437,
           "symbol": "wstETH",
           "token": "0xc1cba3fcea344f92d9239c08c0568f6f2f0ee452",
-          "usd": 0.0005444054976575355
+          "usd": 0.0005448526917689
         },
         {
           "amount": "1483600694438979",
           "amountHuman": 0.001483600694438979,
           "amountHumanStr": "0.001483600694438979",
           "decimals": 18,
-          "priceUsd": 0.2950908751723766,
+          "priceUsd": 0.296127248382627,
           "symbol": "GHST",
           "token": "0xcd2f22236dd9dfe2356d7c543161d4d260fd9bcb",
-          "usd": 0.000437797027328344
+          "usd": 0.00043933459134276945
         },
         {
           "amount": "32153811369098377",
@@ -1189,20 +1189,20 @@
           "amountHuman": 0.001055,
           "amountHumanStr": "0.001055",
           "decimals": 6,
-          "priceUsd": 0.7682290542034089,
+          "priceUsd": 0.7679875010800752,
           "symbol": "XSGD",
           "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
-          "usd": 0.0008104816521845964
+          "usd": 0.0008102268136394793
         },
         {
           "amount": "42190877068016765",
           "amountHuman": 0.04219087706801677,
           "amountHumanStr": "0.042190877068016765",
           "decimals": 18,
-          "priceUsd": 0.06691129282730782,
+          "priceUsd": 0.06769973617623035,
           "symbol": "ZORA",
           "token": "0x1111111111166b7fe7bd91427724b487980afc69",
-          "usd": 0.0028230461301390164
+          "usd": 0.002856311246548502
         },
         {
           "amount": "18860041654943327",
@@ -1229,10 +1229,10 @@
           "amountHuman": 5.5e-05,
           "amountHumanStr": "0.000055",
           "decimals": 6,
-          "priceUsd": 0.999853419042419,
+          "priceUsd": 1.0001144912314455,
           "symbol": "USD+",
           "token": "0xb79dd08ea68a908a97220c76d19a6aa9cbde4376",
-          "usd": 5.499193804733304e-05
+          "usd": 5.5006297017729505e-05
         },
         {
           "amount": "845807400767523",
@@ -1269,10 +1269,10 @@
           "amountHuman": 0.010928209397332567,
           "amountHumanStr": "0.010928209397332567",
           "decimals": 18,
-          "priceUsd": 0.17711023098456913,
+          "priceUsd": 0.17716583109682388,
           "symbol": "RECALL",
           "token": "0x1f16e03c1a5908818f47f6ee7bb16690b40d0671",
-          "usd": 0.00193549769060931
+          "usd": 0.0019361053002785451
         },
         {
           "amount": "512886050066055",
@@ -1299,10 +1299,10 @@
           "amountHuman": 0.014377468120942621,
           "amountHumanStr": "0.014377468120942622",
           "decimals": 18,
-          "priceUsd": 0.3179534175456809,
+          "priceUsd": 0.3178004834090985,
           "symbol": "LMTS",
           "token": "0x9eadbe35f3ee3bf3e28180070c429298a1b02f93",
-          "usd": 0.004571365124707786
+          "usd": 0.0045691663190344685
         },
         {
           "amount": "96",
@@ -1326,7 +1326,7 @@
         }
       ],
       "pendingTokenCount": 49,
-      "totalUsd": 0.15952330252541597
+      "totalUsd": 0.15952720358142014
     },
     {
       "address": "0xa1dbd1973af714c1a45a83d989b3ce889c9070f1",
@@ -1346,30 +1346,30 @@
           "amountHuman": 1.629700033944e-06,
           "amountHumanStr": "0.000001629700033944",
           "decimals": 18,
-          "priceUsd": 3541.326239449698,
+          "priceUsd": 3545.233747420528,
           "symbol": "WETH",
           "token": "0x4200000000000000000000000000000000000006",
-          "usd": 0.005771299492637951
+          "usd": 0.0057776675585106485
         },
         {
           "amount": "99834204794686",
           "amountHuman": 9.9834204794686e-05,
           "amountHumanStr": "0.000099834204794686",
           "decimals": 18,
-          "priceUsd": 1.1018402001940069,
+          "priceUsd": 1.1012318047673177,
           "symbol": "wBLT",
           "token": "0x4e74d4db6c0726ccded4656d0bce448876bb4c7a",
-          "usd": 0.0001100013401971863
+          "usd": 0.00010994060152356207
         },
         {
           "amount": "2667",
           "amountHuman": 2.667e-05,
           "amountHumanStr": "0.00002667",
           "decimals": 8,
-          "priceUsd": 0.6640429901914338,
+          "priceUsd": 0.6651680838925249,
           "symbol": "SPX",
           "token": "0x50da645f148798f68ef2d7db7c1cb22a6819bb2c",
-          "usd": 1.7710026548405538e-05
+          "usd": 1.774003279741364e-05
         },
         {
           "amount": "16785494430939",
@@ -1386,10 +1386,10 @@
           "amountHuman": 9.5593896028745e-05,
           "amountHumanStr": "0.000095593896028745",
           "decimals": 18,
-          "priceUsd": 0.320094599502632,
+          "priceUsd": 0.32035908377829053,
           "symbol": "ENA",
           "token": "0x58538e6a46e07434d7e7375bc268d3cb839c0133",
-          "usd": 3.0599089864217375e-05
+          "usd": 3.062437294656591e-05
         },
         {
           "amount": "545914871714103",
@@ -1416,30 +1416,30 @@
           "amountHuman": 0.006071760679407634,
           "amountHumanStr": "0.006071760679407634",
           "decimals": 18,
-          "priceUsd": 0.03994644403802261,
+          "priceUsd": 0.03999666776438456,
           "symbol": "MAMO",
           "token": "0x7300b37dfdfab110d83290a29dfb31b1740219fe",
-          "usd": 0.0002425452481922232
+          "usd": 0.00024285019463912103
         },
         {
           "amount": "4345",
           "amountHuman": 0.004345,
           "amountHumanStr": "0.004345",
           "decimals": 6,
-          "priceUsd": 0.9997107897440886,
+          "priceUsd": 0.9997024296852948,
           "symbol": "USDC",
           "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-          "usd": 0.004343743381438065
+          "usd": 0.004343707056982606
         },
         {
           "amount": "1195372839010841",
           "amountHuman": 0.001195372839010841,
           "amountHumanStr": "0.001195372839010841",
           "decimals": 18,
-          "priceUsd": 1.015287855457027,
+          "priceUsd": 1.0100329489416175,
           "symbol": "AERO",
           "token": "0x940181a94a35a4569e4529a3cdfb74e38fd98631",
-          "usd": 0.0012136475261908947
+          "usd": 0.001207365953670833
         },
         {
           "amount": "85522055767022",
@@ -1496,10 +1496,10 @@
           "amountHuman": 0.000195847473168348,
           "amountHumanStr": "0.000195847473168348",
           "decimals": 18,
-          "priceUsd": 12.997477120067645,
+          "priceUsd": 12.97934972555086,
           "symbol": "ZEN",
           "token": "0xf43eb8de897fbc7f2502483b2bef7bb9ea179229",
-          "usd": 0.002545523051528665
+          "usd": 0.002541972847117427
         },
         {
           "amount": "410540211630976",
@@ -1576,10 +1576,10 @@
           "amountHuman": 0.000179061643250054,
           "amountHumanStr": "0.000179061643250054",
           "decimals": 18,
-          "priceUsd": 1.2986521152045258,
+          "priceUsd": 1.3012860362788488,
           "symbol": "VIRTUAL",
           "token": "0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b",
-          "usd": 0.00023253878175868084
+          "usd": 0.00023301041599444003
         },
         {
           "amount": "1259209783998600",
@@ -1636,10 +1636,10 @@
           "amountHuman": 0.001413509375466458,
           "amountHumanStr": "0.001413509375466458",
           "decimals": 18,
-          "priceUsd": 0.04585658277033012,
+          "priceUsd": 0.04592128515198447,
           "symbol": "DRV",
           "token": "0x9d0e8f5b25384c7310cb8c6ae32c8fbeb645d083",
-          "usd": 6.481870967271526e-05
+          "usd": 6.49101670957987e-05
         },
         {
           "amount": "423699545293999",
@@ -1656,20 +1656,20 @@
           "amountHuman": 1.5798686544e-08,
           "amountHumanStr": "0.000000015798686544",
           "decimals": 18,
-          "priceUsd": 4307.363590884533,
+          "priceUsd": 4310.901813113437,
           "symbol": "wstETH",
           "token": "0xc1cba3fcea344f92d9239c08c0568f6f2f0ee452",
-          "usd": 6.805068720342298e-05
+          "usd": 6.810658646734046e-05
         },
         {
           "amount": "185450086804871",
           "amountHuman": 0.000185450086804871,
           "amountHumanStr": "0.000185450086804871",
           "decimals": 18,
-          "priceUsd": 0.2950908751723766,
+          "priceUsd": 0.296127248382627,
           "symbol": "GHST",
           "token": "0xcd2f22236dd9dfe2356d7c543161d4d260fd9bcb",
-          "usd": 5.472462841604259e-05
+          "usd": 5.4916823917845774e-05
         },
         {
           "amount": "4019226421137295",
@@ -1686,20 +1686,20 @@
           "amountHuman": 0.000131,
           "amountHumanStr": "0.000131",
           "decimals": 6,
-          "priceUsd": 0.7682290542034089,
+          "priceUsd": 0.7679875010800752,
           "symbol": "XSGD",
           "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
-          "usd": 0.00010063800610064658
+          "usd": 0.00010060636264148985
         },
         {
           "amount": "5273859633502094",
           "amountHuman": 0.005273859633502094,
           "amountHumanStr": "0.005273859633502094",
           "decimals": 18,
-          "priceUsd": 0.06691129282730782,
+          "priceUsd": 0.06769973617623035,
           "symbol": "ZORA",
           "token": "0x1111111111166b7fe7bd91427724b487980afc69",
-          "usd": 0.0003528807662673769
+          "usd": 0.00035703890581856263
         },
         {
           "amount": "2357505206867915",
@@ -1726,10 +1726,10 @@
           "amountHuman": 6e-06,
           "amountHumanStr": "0.000006",
           "decimals": 6,
-          "priceUsd": 0.999853419042419,
+          "priceUsd": 1.0001144912314455,
           "symbol": "USD+",
           "token": "0xb79dd08ea68a908a97220c76d19a6aa9cbde4376",
-          "usd": 5.999120514254514e-06
+          "usd": 6.000686947388673e-06
         },
         {
           "amount": "105725925095940",
@@ -1766,10 +1766,10 @@
           "amountHuman": 0.00136602617466657,
           "amountHumanStr": "0.00136602617466657",
           "decimals": 18,
-          "priceUsd": 0.17711023098456913,
+          "priceUsd": 0.17716583109682388,
           "symbol": "RECALL",
           "token": "0x1f16e03c1a5908818f47f6ee7bb16690b40d0671",
-          "usd": 0.00024193721132616358
+          "usd": 0.00024201316253481798
         },
         {
           "amount": "64110756258256",
@@ -1796,10 +1796,10 @@
           "amountHuman": 0.001797183515117827,
           "amountHumanStr": "0.001797183515117827",
           "decimals": 18,
-          "priceUsd": 0.3179534175456809,
+          "priceUsd": 0.3178004834090985,
           "symbol": "LMTS",
           "token": "0x9eadbe35f3ee3bf3e28180070c429298a1b02f93",
-          "usd": 0.000571420640588473
+          "usd": 0.0005711457898793083
         },
         {
           "amount": "12",
@@ -1823,7 +1823,7 @@
         }
       ],
       "pendingTokenCount": 49,
-      "totalUsd": 0.02193144125547061
+      "totalUsd": 0.0219329810665104
     },
     {
       "address": "0xa9e0ab6697f239cd274fd772f31bd819efcf3e50",
@@ -1843,30 +1843,30 @@
           "amountHuman": 1.319604842653e-06,
           "amountHumanStr": "0.000001319604842653",
           "decimals": 18,
-          "priceUsd": 3541.326239449698,
+          "priceUsd": 3545.233747420528,
           "symbol": "WETH",
           "token": "0x4200000000000000000000000000000000000006",
-          "usd": 0.0046731512549919585
+          "usd": 0.004678307621432971
         },
         {
           "amount": "137065538641912",
           "amountHuman": 0.000137065538641912,
           "amountHumanStr": "0.000137065538641912",
           "decimals": 18,
-          "priceUsd": 1.1018402001940069,
+          "priceUsd": 1.1012318047673177,
           "symbol": "wBLT",
           "token": "0x4e74d4db6c0726ccded4656d0bce448876bb4c7a",
-          "usd": 0.0001510243205369037
+          "usd": 0.00015094093049003728
         },
         {
           "amount": "14",
           "amountHuman": 1.4e-07,
           "amountHumanStr": "0.00000014",
           "decimals": 8,
-          "priceUsd": 0.6640429901914338,
+          "priceUsd": 0.6651680838925249,
           "symbol": "SPX",
           "token": "0x50da645f148798f68ef2d7db7c1cb22a6819bb2c",
-          "usd": 9.296601862680073e-08
+          "usd": 9.31235317449535e-08
         },
         {
           "amount": "24332045120178",
@@ -1883,10 +1883,10 @@
           "amountHuman": 6.14229972061e-07,
           "amountHumanStr": "0.000000614229972061",
           "decimals": 18,
-          "priceUsd": 0.320094599502632,
+          "priceUsd": 0.32035908377829053,
           "symbol": "ENA",
           "token": "0x58538e6a46e07434d7e7375bc268d3cb839c0133",
-          "usd": 1.9661169690937864e-07
+          "usd": 1.9677415107862695e-07
         },
         {
           "amount": "446098866123380",
@@ -1913,30 +1913,30 @@
           "amountHuman": 0.007595241210574577,
           "amountHumanStr": "0.007595241210574577",
           "decimals": 18,
-          "priceUsd": 0.03994644403802261,
+          "priceUsd": 0.03999666776438456,
           "symbol": "MAMO",
           "token": "0x7300b37dfdfab110d83290a29dfb31b1740219fe",
-          "usd": 0.0003034028779735004
+          "usd": 0.0003037843392897134
         },
         {
           "amount": "5867",
           "amountHuman": 0.005867,
           "amountHumanStr": "0.005867",
           "decimals": 6,
-          "priceUsd": 0.9997107897440886,
+          "priceUsd": 0.9997024296852948,
           "symbol": "USDC",
           "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-          "usd": 0.005865303203428567
+          "usd": 0.005865254154963624
         },
         {
           "amount": "1681113121383308",
           "amountHuman": 0.001681113121383308,
           "amountHumanStr": "0.001681113121383308",
           "decimals": 18,
-          "priceUsd": 1.015287855457027,
+          "priceUsd": 1.0100329489416175,
           "symbol": "AERO",
           "token": "0x940181a94a35a4569e4529a3cdfb74e38fd98631",
-          "usd": 0.0017068137357899276
+          "usd": 0.00169797964349523
         },
         {
           "amount": "108471421464530",
@@ -1993,10 +1993,10 @@
           "amountHuman": 1.2951815413539e-05,
           "amountHumanStr": "0.000012951815413539",
           "decimals": 18,
-          "priceUsd": 12.997477120067645,
+          "priceUsd": 12.97934972555086,
           "symbol": "ZEN",
           "token": "0xf43eb8de897fbc7f2502483b2bef7bb9ea179229",
-          "usd": 0.0001683409245008126
+          "usd": 0.0001681061418331028
         },
         {
           "amount": "573540521270017",
@@ -2073,10 +2073,10 @@
           "amountHuman": 0.000244390849707847,
           "amountHumanStr": "0.000244390849707847",
           "decimals": 18,
-          "priceUsd": 1.2986521152045258,
+          "priceUsd": 1.3012860362788488,
           "symbol": "VIRTUAL",
           "token": "0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b",
-          "usd": 0.0003173786939097269
+          "usd": 0.00031802240011914403
         },
         {
           "amount": "794384571364959",
@@ -2133,10 +2133,10 @@
           "amountHuman": 0.002048515422032574,
           "amountHumanStr": "0.002048515422032574",
           "decimals": 18,
-          "priceUsd": 0.04585658277033012,
+          "priceUsd": 0.04592128515198447,
           "symbol": "DRV",
           "token": "0x9d0e8f5b25384c7310cb8c6ae32c8fbeb645d083",
-          "usd": 9.393791700673447e-05
+          "usd": 9.407046083339565e-05
         },
         {
           "amount": "372699276723449",
@@ -2153,20 +2153,20 @@
           "amountHuman": 2.0637776014e-08,
           "amountHumanStr": "0.000000020637776014",
           "decimals": 18,
-          "priceUsd": 4307.363590884533,
+          "priceUsd": 4310.901813113437,
           "symbol": "wstETH",
           "token": "0xc1cba3fcea344f92d9239c08c0568f6f2f0ee452",
-          "usd": 8.889440499953371e-05
+          "usd": 8.89674260373816e-05
         },
         {
           "amount": "93968865605121",
           "amountHuman": 9.3968865605121e-05,
           "amountHumanStr": "0.000093968865605121",
           "decimals": 18,
-          "priceUsd": 0.2950908751723766,
+          "priceUsd": 0.296127248382627,
           "symbol": "GHST",
           "token": "0xcd2f22236dd9dfe2356d7c543161d4d260fd9bcb",
-          "usd": 2.7729354790370594e-05
+          "usd": 2.7826741605281363e-05
         },
         {
           "amount": "7093228419649647",
@@ -2183,20 +2183,20 @@
           "amountHuman": 0.000179,
           "amountHumanStr": "0.000179",
           "decimals": 6,
-          "priceUsd": 0.7682290542034089,
+          "priceUsd": 0.7679875010800752,
           "symbol": "XSGD",
           "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
-          "usd": 0.00013751300070241019
+          "usd": 0.00013746976269333344
         },
         {
           "amount": "4786437608304384",
           "amountHuman": 0.004786437608304384,
           "amountHumanStr": "0.004786437608304384",
           "decimals": 18,
-          "priceUsd": 0.06691129282730782,
+          "priceUsd": 0.06769973617623035,
           "symbol": "ZORA",
           "token": "0x1111111111166b7fe7bd91427724b487980afc69",
-          "usd": 0.00032026672840889346
+          "usd": 0.00032404056330619373
         },
         {
           "amount": "4389412258612336",
@@ -2223,10 +2223,10 @@
           "amountHuman": 1.2e-05,
           "amountHumanStr": "0.000012",
           "decimals": 6,
-          "priceUsd": 0.999853419042419,
+          "priceUsd": 1.0001144912314455,
           "symbol": "USD+",
           "token": "0xb79dd08ea68a908a97220c76d19a6aa9cbde4376",
-          "usd": 1.1998241028509029e-05
+          "usd": 1.2001373894777346e-05
         },
         {
           "amount": "184930261700260",
@@ -2263,10 +2263,10 @@
           "amountHuman": 1.4379222891227e-05,
           "amountHumanStr": "0.000014379222891227",
           "decimals": 18,
-          "priceUsd": 0.17711023098456913,
+          "priceUsd": 0.17716583109682388,
           "symbol": "RECALL",
           "token": "0x1f16e03c1a5908818f47f6ee7bb16690b40d0671",
-          "usd": 2.5467074876438177e-06
+          "usd": 2.547506974050706e-06
         },
         {
           "amount": "674850065876",
@@ -2293,10 +2293,10 @@
           "amountHuman": 1.8917721211766e-05,
           "amountHumanStr": "0.000018917721211766",
           "decimals": 18,
-          "priceUsd": 0.3179534175456809,
+          "priceUsd": 0.3178004834090985,
           "symbol": "LMTS",
           "token": "0x9eadbe35f3ee3bf3e28180070c429298a1b02f93",
-          "usd": 6.01495411145742e-06
+          "usd": 6.012060946097792e-06
         },
         {
           "amount": "368687118262",
@@ -2310,7 +2310,7 @@
         }
       ],
       "pendingTokenCount": 48,
-      "totalUsd": 0.019183281378027297
+      "totalUsd": 0.019184296506241972
     },
     {
       "address": "0xe6e7d3c6379ad80de02f26ccc72605d0f70d5201",
@@ -2360,20 +2360,20 @@
           "amountHuman": 527.944651273745,
           "amountHumanStr": "527.944651273744917931",
           "decimals": 18,
-          "priceUsd": 0.03994644403802261,
+          "priceUsd": 0.03999666776438456,
           "symbol": "MAMO",
           "token": "0x7300b37dfdfab110d83290a29dfb31b1740219fe",
-          "usd": 21.089511467280015
+          "usd": 21.116026814979843
         },
         {
           "amount": "139629393",
           "amountHuman": 139.629393,
           "amountHumanStr": "139.629393",
           "decimals": 6,
-          "priceUsd": 0.9997107897440886,
+          "priceUsd": 0.9997024296852948,
           "symbol": "USDC",
           "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-          "usd": 139.5890107475177
+          "usd": 139.58784343758288
         },
         {
           "amount": "9761117",
@@ -2420,10 +2420,10 @@
           "amountHuman": 22.99862269744096,
           "amountHumanStr": "22.998622697440959431",
           "decimals": 18,
-          "priceUsd": 1.2986521152045258,
+          "priceUsd": 1.3012860362788488,
           "symbol": "VIRTUAL",
           "token": "0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b",
-          "usd": 29.86721001282252
+          "usd": 29.927786569825713
         },
         {
           "amount": "42553388731394361579",
@@ -2470,10 +2470,10 @@
           "amountHuman": 130.85469596128928,
           "amountHumanStr": "130.854695961289275489",
           "decimals": 18,
-          "priceUsd": 0.04585658277033012,
+          "priceUsd": 0.04592128515198447,
           "symbol": "DRV",
           "token": "0x9d0e8f5b25384c7310cb8c6ae32c8fbeb645d083",
-          "usd": 6.000549196235244
+          "usd": 6.009015806714596
         },
         {
           "amount": "24792679107662898002",
@@ -2490,20 +2490,20 @@
           "amountHuman": 0.002013815407797688,
           "amountHumanStr": "0.002013815407797688",
           "decimals": 18,
-          "priceUsd": 4307.363590884533,
+          "priceUsd": 4310.901813113437,
           "symbol": "wstETH",
           "token": "0xc1cba3fcea344f92d9239c08c0568f6f2f0ee452",
-          "usd": 8.674235166310048
+          "usd": 8.681360492750828
         },
         {
           "amount": "9123459471491741752",
           "amountHuman": 9.123459471491742,
           "amountHumanStr": "9.123459471491741752",
           "decimals": 18,
-          "priceUsd": 0.2950908751723766,
+          "priceUsd": 0.296127248382627,
           "symbol": "GHST",
           "token": "0xcd2f22236dd9dfe2356d7c543161d4d260fd9bcb",
-          "usd": 2.6922496400422067
+          "usd": 2.701704949023266
         },
         {
           "amount": "470632236888361061326",
@@ -2520,20 +2520,20 @@
           "amountHuman": 17.540892,
           "amountHumanStr": "17.540892",
           "decimals": 6,
-          "priceUsd": 0.7682290542034089,
+          "priceUsd": 0.7679875010800752,
           "symbol": "XSGD",
           "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
-          "usd": 13.475422871044142
+          "usd": 13.471185813795481
         },
         {
           "amount": "465389361009010573407",
           "amountHuman": 465.3893610090106,
           "amountHumanStr": "465.389361009010573407",
           "decimals": 18,
-          "priceUsd": 0.06691129282730782,
+          "priceUsd": 0.06769973617623035,
           "symbol": "ZORA",
           "token": "0x1111111111166b7fe7bd91427724b487980afc69",
-          "usd": 31.13980381318758
+          "usd": 31.50673695953444
         },
         {
           "amount": "429353132375743503293",
@@ -2560,10 +2560,10 @@
           "amountHuman": 1.226787,
           "amountHumanStr": "1.226787",
           "decimals": 6,
-          "priceUsd": 0.999853419042419,
+          "priceUsd": 1.0001144912314455,
           "symbol": "USD+",
           "token": "0xb79dd08ea68a908a97220c76d19a6aa9cbde4376",
-          "usd": 1.226607176386792
+          "usd": 1.2269274563543513
         },
         {
           "amount": "18082441219700296639",
@@ -2587,7 +2587,7 @@
         }
       ],
       "pendingTokenCount": 27,
-      "totalUsd": 444.98484462218204
+      "totalUsd": 445.4588328319173
     },
     {
       "address": "0xeb06308b1c2194988baa4f5626d5e3d3f228ae5a",
@@ -2607,30 +2607,30 @@
           "amountHuman": 1.2073630032e-08,
           "amountHumanStr": "0.000000012073630032",
           "decimals": 18,
-          "priceUsd": 3541.326239449698,
+          "priceUsd": 3545.233747420528,
           "symbol": "WETH",
           "token": "0x4200000000000000000000000000000000000006",
-          "usd": 4.2756662837729496e-05
+          "usd": 4.280384064331639e-05
         },
         {
           "amount": "941570194333",
           "amountHuman": 9.41570194333e-07,
           "amountHumanStr": "0.000000941570194333",
           "decimals": 18,
-          "priceUsd": 1.1018402001940069,
+          "priceUsd": 1.1012318047673177,
           "symbol": "wBLT",
           "token": "0x4e74d4db6c0726ccded4656d0bce448876bb4c7a",
-          "usd": 1.0374598914205827e-06
+          "usd": 1.0368870444204436e-06
         },
         {
           "amount": "14",
           "amountHuman": 1.4e-07,
           "amountHumanStr": "0.00000014",
           "decimals": 8,
-          "priceUsd": 0.6640429901914338,
+          "priceUsd": 0.6651680838925249,
           "symbol": "SPX",
           "token": "0x50da645f148798f68ef2d7db7c1cb22a6819bb2c",
-          "usd": 9.296601862680073e-08
+          "usd": 9.31235317449535e-08
         },
         {
           "amount": "176689415061",
@@ -2647,10 +2647,10 @@
           "amountHuman": 6.14229972061e-07,
           "amountHumanStr": "0.000000614229972061",
           "decimals": 18,
-          "priceUsd": 0.320094599502632,
+          "priceUsd": 0.32035908377829053,
           "symbol": "ENA",
           "token": "0x58538e6a46e07434d7e7375bc268d3cb839c0133",
-          "usd": 1.9661169690937864e-07
+          "usd": 1.9677415107862695e-07
         },
         {
           "amount": "3607100897255",
@@ -2677,30 +2677,30 @@
           "amountHuman": 4.8679971517671e-05,
           "amountHumanStr": "0.000048679971517671",
           "decimals": 18,
-          "priceUsd": 0.03994644403802261,
+          "priceUsd": 0.03999666776438456,
           "symbol": "MAMO",
           "token": "0x7300b37dfdfab110d83290a29dfb31b1740219fe",
-          "usd": 1.9445917580031793e-06
+          "usd": 1.94703664757199e-06
         },
         {
           "amount": "42",
           "amountHuman": 4.2e-05,
           "amountHumanStr": "0.000042",
           "decimals": 6,
-          "priceUsd": 0.9997107897440886,
+          "priceUsd": 0.9997024296852948,
           "symbol": "USDC",
           "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-          "usd": 4.1987853169251714e-05
+          "usd": 4.198750204678238e-05
         },
         {
           "amount": "11612698654255",
           "amountHuman": 1.1612698654255e-05,
           "amountHumanStr": "0.000011612698654255",
           "decimals": 18,
-          "priceUsd": 1.015287855457027,
+          "priceUsd": 1.0100329489416175,
           "symbol": "AERO",
           "token": "0x940181a94a35a4569e4529a3cdfb74e38fd98631",
-          "usd": 1.1790231912747263e-05
+          "usd": 1.1729208266927532e-05
         },
         {
           "amount": "900232165967",
@@ -2757,10 +2757,10 @@
           "amountHuman": 4.20056505966e-07,
           "amountHumanStr": "0.000000420056505966",
           "decimals": 18,
-          "priceUsd": 12.997477120067645,
+          "priceUsd": 12.97934972555086,
           "symbol": "ZEN",
           "token": "0xf43eb8de897fbc7f2502483b2bef7bb9ea179229",
-          "usd": 5.459674825428643e-06
+          "usd": 5.452060295425655e-06
         },
         {
           "amount": "4176142652635",
@@ -2827,10 +2827,10 @@
           "amountHuman": 1.884859402631e-06,
           "amountHumanStr": "0.000001884859402631",
           "decimals": 18,
-          "priceUsd": 1.2986521152045258,
+          "priceUsd": 1.3012860362788488,
           "symbol": "VIRTUAL",
           "token": "0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b",
-          "usd": 2.447776650089887e-06
+          "usd": 2.4527412209926128e-06
         },
         {
           "amount": "13254839831562",
@@ -2877,10 +2877,10 @@
           "amountHuman": 1.487904605754e-05,
           "amountHumanStr": "0.00001487904605754",
           "decimals": 18,
-          "priceUsd": 0.04585658277033012,
+          "priceUsd": 0.04592128515198447,
           "symbol": "DRV",
           "token": "0x9d0e8f5b25384c7310cb8c6ae32c8fbeb645d083",
-          "usd": 6.82302207081137e-07
+          "usd": 6.832649167978048e-07
         },
         {
           "amount": "4459995213619",
@@ -2897,20 +2897,20 @@
           "amountHuman": 1.66301963e-10,
           "amountHumanStr": "0.000000000166301963",
           "decimals": 18,
-          "priceUsd": 4307.363590884533,
+          "priceUsd": 4310.901813113437,
           "symbol": "wstETH",
           "token": "0xc1cba3fcea344f92d9239c08c0568f6f2f0ee452",
-          "usd": 7.163230205188267e-07
+          "usd": 7.169114338210238e-07
         },
         {
           "amount": "1952106176892",
           "amountHuman": 1.952106176892e-06,
           "amountHumanStr": "0.000001952106176892",
           "decimals": 18,
-          "priceUsd": 0.2950908751723766,
+          "priceUsd": 0.296127248382627,
           "symbol": "GHST",
           "token": "0xcd2f22236dd9dfe2356d7c543161d4d260fd9bcb",
-          "usd": 5.760487201684625e-07
+          "usd": 5.780718307137577e-07
         },
         {
           "amount": "42307646538285",
@@ -2927,10 +2927,10 @@
           "amountHuman": 5.55143119316e-05,
           "amountHumanStr": "0.0000555143119316",
           "decimals": 18,
-          "priceUsd": 0.06691129282730782,
+          "priceUsd": 0.06769973617623035,
           "symbol": "ZORA",
           "token": "0x1111111111166b7fe7bd91427724b487980afc69",
-          "usd": 3.714534381761796e-06
+          "usd": 3.7583042717742766e-06
         },
         {
           "amount": "24815844282819",
@@ -2987,10 +2987,10 @@
           "amountHuman": 1.4379222891227e-05,
           "amountHumanStr": "0.000014379222891227",
           "decimals": 18,
-          "priceUsd": 0.17711023098456913,
+          "priceUsd": 0.17716583109682388,
           "symbol": "RECALL",
           "token": "0x1f16e03c1a5908818f47f6ee7bb16690b40d0671",
-          "usd": 2.5467074876438177e-06
+          "usd": 2.547506974050706e-06
         },
         {
           "amount": "674850065876",
@@ -3017,10 +3017,10 @@
           "amountHuman": 1.8917721211766e-05,
           "amountHumanStr": "0.000018917721211766",
           "decimals": 18,
-          "priceUsd": 0.3179534175456809,
+          "priceUsd": 0.3178004834090985,
           "symbol": "LMTS",
           "token": "0x9eadbe35f3ee3bf3e28180070c429298a1b02f93",
-          "usd": 6.01495411145742e-06
+          "usd": 6.012060946097792e-06
         },
         {
           "amount": "368687118262",
@@ -3034,7 +3034,7 @@
         }
       ],
       "pendingTokenCount": 44,
-      "totalUsd": 0.00017219223738784635
+      "totalUsd": 0.00017222283292052384
     },
     {
       "address": "0xf6e0efd25be6f4302190ea44db596719aa400588",
@@ -3054,30 +3054,30 @@
           "amountHuman": 0.8993642480764598,
           "amountHumanStr": "0.899364248076459735",
           "decimals": 18,
-          "priceUsd": 3541.326239449698,
+          "priceUsd": 3545.233747420528,
           "symbol": "WETH",
           "token": "0x4200000000000000000000000000000000000006",
-          "usd": 3184.9422105361145
+          "usd": 3188.456483504153
         },
         {
           "amount": "14433502397129005781",
           "amountHuman": 14.433502397129006,
           "amountHumanStr": "14.433502397129005781",
           "decimals": 18,
-          "priceUsd": 1.1018402001940069,
+          "priceUsd": 1.1012318047673177,
           "symbol": "wBLT",
           "token": "0x4e74d4db6c0726ccded4656d0bce448876bb4c7a",
-          "usd": 15.903413170753302
+          "usd": 15.894631893903782
         },
         {
           "amount": "2867031449",
           "amountHuman": 28.67031449,
           "amountHumanStr": "28.67031449",
           "decimals": 8,
-          "priceUsd": 0.6640429901914338,
+          "priceUsd": 0.6651680838925249,
           "symbol": "SPX",
           "token": "0x50da645f148798f68ef2d7db7c1cb22a6819bb2c",
-          "usd": 19.03832136366839
+          "usd": 19.07057815390939
         },
         {
           "amount": "5836014252634731445",
@@ -3094,10 +3094,10 @@
           "amountHuman": 119.63371691509434,
           "amountHumanStr": "119.633716915094338924",
           "decimals": 18,
-          "priceUsd": 0.320094599502632,
+          "priceUsd": 0.32035908377829053,
           "symbol": "ENA",
           "token": "0x58538e6a46e07434d7e7375bc268d3cb839c0133",
-          "usd": 38.294106702948376
+          "usd": 38.325747939911004
         },
         {
           "amount": "214278659670927483387",
@@ -3124,30 +3124,30 @@
           "amountHuman": 1114.994469130491,
           "amountHumanStr": "1114.994469130491121234",
           "decimals": 18,
-          "priceUsd": 0.03994644403802261,
+          "priceUsd": 0.03999666776438456,
           "symbol": "MAMO",
           "token": "0x7300b37dfdfab110d83290a29dfb31b1740219fe",
-          "usd": 44.54006416382589
+          "usd": 44.59606334093859
         },
         {
           "amount": "1856456705",
           "amountHuman": 1856.456705,
           "amountHumanStr": "1856.456705",
           "decimals": 6,
-          "priceUsd": 0.9997107897440886,
+          "priceUsd": 0.9997024296852948,
           "symbol": "USDC",
           "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-          "usd": 1855.9197986812585
+          "usd": 1855.9042785940567
         },
         {
           "amount": "328509067254040534141",
           "amountHuman": 328.50906725404053,
           "amountHumanStr": "328.509067254040534141",
           "decimals": 18,
-          "priceUsd": 1.015287855457027,
+          "priceUsd": 1.0100329489416175,
           "symbol": "AERO",
           "token": "0x940181a94a35a4569e4529a3cdfb74e38fd98631",
-          "usd": 333.53126639054307
+          "usd": 331.80498195265875
         },
         {
           "amount": "48952045902554411933",
@@ -3204,10 +3204,10 @@
           "amountHuman": 67.75346120172466,
           "amountHumanStr": "67.753461201724656767",
           "decimals": 18,
-          "priceUsd": 12.997477120067645,
+          "priceUsd": 12.97934972555086,
           "symbol": "ZEN",
           "token": "0xf43eb8de897fbc7f2502483b2bef7bb9ea179229",
-          "usd": 880.6240617748072
+          "usd": 879.3958680537257
         },
         {
           "amount": "167165190946320602488",
@@ -3284,10 +3284,10 @@
           "amountHuman": 113.30966389107986,
           "amountHumanStr": "113.309663891079859069",
           "decimals": 18,
-          "priceUsd": 1.2986521152045258,
+          "priceUsd": 1.3012860362788488,
           "symbol": "VIRTUAL",
           "token": "0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b",
-          "usd": 147.14983468526475
+          "usd": 147.4482833969119
         },
         {
           "amount": "1743799736301437577645",
@@ -3334,10 +3334,10 @@
           "amountHuman": 690.6282448215212,
           "amountHumanStr": "690.628244821521187601",
           "decimals": 18,
-          "priceUsd": 0.04585658277033012,
+          "priceUsd": 0.04592128515198447,
           "symbol": "DRV",
           "token": "0x9d0e8f5b25384c7310cb8c6ae32c8fbeb645d083",
-          "usd": 31.669851272185902
+          "usd": 31.714536564463618
         },
         {
           "amount": "473516556495573877331",
@@ -3354,20 +3354,20 @@
           "amountHuman": 0.011181982135443058,
           "amountHumanStr": "0.011181982135443057",
           "decimals": 18,
-          "priceUsd": 4307.363590884533,
+          "priceUsd": 4310.901813113437,
           "symbol": "wstETH",
           "token": "0xc1cba3fcea344f92d9239c08c0568f6f2f0ee452",
-          "usd": 48.1648627241287
+          "usd": 48.20442706188354
         },
         {
           "amount": "284881724301292346713",
           "amountHuman": 284.88172430129237,
           "amountHumanStr": "284.881724301292346713",
           "decimals": 18,
-          "priceUsd": 0.2950908751723766,
+          "priceUsd": 0.296127248382627,
           "symbol": "GHST",
           "token": "0xcd2f22236dd9dfe2356d7c543161d4d260fd9bcb",
-          "usd": 84.06599734468406
+          "usd": 84.36124113183988
         },
         {
           "amount": "596665436635603887383",
@@ -3384,20 +3384,20 @@
           "amountHuman": 75.511654,
           "amountHumanStr": "75.511654",
           "decimals": 6,
-          "priceUsd": 0.7682290542034089,
+          "priceUsd": 0.7679875010800752,
           "symbol": "XSGD",
           "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
-          "usd": 58.01024653375506
+          "usd": 57.99200645788326
         },
         {
           "amount": "5079965386900960267758",
           "amountHuman": 5079.96538690096,
           "amountHumanStr": "5079.965386900960267758",
           "decimals": 18,
-          "priceUsd": 0.06691129282730782,
+          "priceUsd": 0.06769973617623035,
           "symbol": "ZORA",
           "token": "0x1111111111166b7fe7bd91427724b487980afc69",
-          "usd": 339.9070515555182
+          "usd": 343.9123164775769
         },
         {
           "amount": "857708141590987131273",
@@ -3414,10 +3414,10 @@
           "amountHuman": 2800.6446430052624,
           "amountHumanStr": "2800.644643005262342912",
           "decimals": 18,
-          "priceUsd": 0.17711023098456913,
+          "priceUsd": 0.17716583109682388,
           "symbol": "RECALL",
           "token": "0x1f16e03c1a5908818f47f6ee7bb16690b40d0671",
-          "usd": 496.02281962835815
+          "usd": 496.1785357848949
         },
         {
           "amount": "131440706923152139764",
@@ -3444,10 +3444,10 @@
           "amountHuman": 3684.6090341868207,
           "amountHumanStr": "3684.609034186820878123",
           "decimals": 18,
-          "priceUsd": 0.3179534175456809,
+          "priceUsd": 0.3178004834090985,
           "symbol": "LMTS",
           "token": "0x9eadbe35f3ee3bf3e28180070c429298a1b02f93",
-          "usd": 1171.5340347393903
+          "usd": 1170.9705322381033
         },
         {
           "amount": "24701869",
@@ -3471,63 +3471,63 @@
         }
       ],
       "pendingTokenCount": 43,
-      "totalUsd": 12950.815801197557
+      "totalUsd": 12955.72837247717
     }
   ],
-  "lastUpdated": "2025-11-13T08:15:24.450449",
+  "lastUpdated": "2025-11-13T08:27:19.569170",
   "summary": {
     "totalByTokenUsd": {
       "0x080d43c2164afdbc3712422ce78ab902ccab5ca1": 9.826655727943953,
-      "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b": 117.91656841493821,
-      "0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b": 279.89805983930626,
-      "0x1111111111166b7fe7bd91427724b487980afc69": 478.34437751638893,
+      "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b": 117.87949208303226,
+      "0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b": 280.46574797521384,
+      "0x1111111111166b7fe7bd91427724b487980afc69": 483.98090652384167,
       "0x1bc0c42215582d5a085795f4badbac3ff36d1bcb": 665.3668323985559,
       "0x1c4cca7c5db003824208adda61bd749e55f463a3": 80.21341050452382,
-      "0x1f16e03c1a5908818f47f6ee7bb16690b40d0671": 496.02741898208086,
+      "0x1f16e03c1a5908818f47f6ee7bb16690b40d0671": 496.18313658249,
       "0x226a2fa2556c48245e57cd1cba4c6c9e67077dd2": 126.28879798482127,
       "0x22e6966b799c4d5b13be962e1d117b56327fda66": 104.9594601262887,
       "0x23471e7250bcd7ee21df3f39ed6151931d1e076b": 133.48968583366,
       "0x3e31966d4f81c72d2a55310a6365a56a4393e98d": 37.107954264578,
-      "0x4200000000000000000000000000000000000006": 3185.0342518845423,
+      "0x4200000000000000000000000000000000000006": 3188.548626411228,
       "0x4da9a0f397db1397902070f93a4d6ddbc0e0e6e8": 100.01015905775485,
-      "0x4e74d4db6c0726ccded4656d0bce448876bb4c7a": 15.905451302394725,
-      "0x50da645f148798f68ef2d7db7c1cb22a6819bb2c": 19.03850763436757,
+      "0x4e74d4db6c0726ccded4656d0bce448876bb4c7a": 15.896668900164256,
+      "0x50da645f148798f68ef2d7db7c1cb22a6819bb2c": 19.070764740208602,
       "0x548f93779fbc992010c07467cbaf329dd5f059b7": 55.11432820386964,
       "0x56f8ad6112c2db9f9848243531b277ce1c3be30c": 174.34581611820542,
-      "0x58538e6a46e07434d7e7375bc268d3cb839c0133": 38.294474778888116,
+      "0x58538e6a46e07434d7e7375bc268d3cb839c0133": 38.326116319980514,
       "0x5ab3d4c385b400f3abb49e80de2faf6a88a7b691": 66.19728163072543,
       "0x688aee022aa544f150678b8e5720b6b96a9e9a2f": 100.13314457554506,
       "0x696f9436b67233384889472cd7cd58a6fb5df4f1": 145.46899203435697,
       "0x7252c865c05378ffc15120f428dd65804dd0ce63": 424.9821122406097,
-      "0x7300b37dfdfab110d83290a29dfb31b1740219fe": 138.27533685027115,
+      "0x7300b37dfdfab110d83290a29dfb31b1740219fe": 138.44918718533387,
       "0x806041b6473da60abbe1b256d9a2749a151be6c6": 3.0177657465469645,
-      "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 2476.402539795126,
-      "0x940181a94a35a4569e4529a3cdfb74e38fd98631": 333.55449919408653,
+      "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 2476.381830935082,
+      "0x940181a94a35a4569e4529a3cdfb74e38fd98631": 331.82809450832366,
       "0x9818b6c09f5ecc843060927e8587c427c7c93583": 61.39830205422005,
       "0x98d0baa52b2d063e780de12f615f963fe8537553": 41.83611766408775,
       "0x9b8df6e244526ab5f6e6400d331db28c8fdddb55": 196.39759833133215,
-      "0x9d0e8f5b25384c7310cb8c6ae32c8fbeb645d083": 58.34035139266793,
+      "0x9d0e8f5b25384c7310cb8c6ae32c8fbeb645d083": 58.422668029748436,
       "0x9d56c29e820dd13b0580b185d0e0dc301d27581d": 139.25078170776857,
-      "0x9eadbe35f3ee3bf3e28180070c429298a1b02f93": 1171.5448977465155,
+      "0x9eadbe35f3ee3bf3e28180070c429298a1b02f93": 1170.9813900201718,
       "0xa3d1a8deb97b111454b294e2324efad13a9d8396": 9.587093231967573,
       "0xa4a2e2ca3fbfe21aed83471d28b6f65a233c6e00": 752.6628127180326,
       "0xa749de6c28262b7ffbc5de27dc845dd7ecd2b358": 814.144354056911,
       "0xb0505e5a99abd03d94a1169e638b78edfed26ea4": 98.50829505920144,
-      "0xb79dd08ea68a908a97220c76d19a6aa9cbde4376": 5.452958582929944,
+      "0xb79dd08ea68a908a97220c76d19a6aa9cbde4376": 5.454382407469425,
       "0xc08cd26474722ce93f4d0c34d16201461c10aa8c": 101.99079044442013,
-      "0xc1cba3fcea344f92d9239c08c0568f6f2f0ee452": 86.71849785731271,
+      "0xc1cba3fcea344f92d9239c08c0568f6f2f0ee452": 86.78973152735286,
       "0xc9d23ed2adb0f551369946bd377f8644ce1ca5c4": 13.466618940058172,
-      "0xcd2f22236dd9dfe2356d7c543161d4d260fd9bcb": 96.03351126695364,
+      "0xcd2f22236dd9dfe2356d7c543161d4d260fd9bcb": 96.37078553307663,
       "0xd4554bea546efa83c1e6b389ecac40ea999b3e78": 40.57099384330481,
       "0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca": 24.70650330898007,
       "0xe0023e73aab4fe9a22f059a9d27e857e027ee3dc": 11.629270059631509,
       "0xef4461891dfb3ac8572ccf7c794664a8dd927945": 324.58707826007776,
       "0xeff2a458e464b07088bdb441c21a42ab4b61e07e": 3.956903665702597,
-      "0xf43eb8de897fbc7f2502483b2bef7bb9ea179229": 880.6725760486519,
+      "0xf43eb8de897fbc7f2502483b2bef7bb9ea179229": 879.44431466541,
       "0xf544251d25f3d243a36b07e7e7962a678f952691": 11.948721937788212,
       "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2": 167.99009271363101
     },
-    "totalUsd": 14918.609003532518
+    "totalUsd": 14925.628568793225
   },
-  "updateTimestamp": 1763021724
+  "updateTimestamp": 1763022439
 }
