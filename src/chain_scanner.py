@@ -201,6 +201,66 @@ class ChainScanner:
             logger.error(f"registry_all_tokens failed: {e}")
             return []
 
+    # ---------- active rewards (registry + distributor balance) ----------
+    def active_token_balances(
+        self,
+        registry_address: str,
+        distributor_address: str,
+        *,
+        min_units: int = 1,
+        chunk_size: int = 120,
+    ) -> Dict[str, int]:
+        """
+        Return a map of { tokenLower: balance } for tokens found in the on-chain
+        RewardTokenRegistry that also have balance > min_units in the distributor.
+        """
+        try:
+            reg_tokens = self.registry_all_tokens(registry_address)
+            if not reg_tokens:
+                logger.info("active_token_balances: registry returned 0 tokens")
+                return {}
+            # checksum once for multicall; keep original lowercaes list for keys
+            dist_cs = self.w3.to_checksum_address(distributor_address)
+            # fetch balances in batches
+            balances: Dict[str, int] = {}
+            total = len(reg_tokens)
+            for i in range(0, total, chunk_size):
+                chunk = reg_tokens[i:i + chunk_size]
+                # balances_map expects lower/any; returns lower-keyed map
+                bm = self.balances_map(dist_cs, chunk, chunk_size=len(chunk))
+                for k, v in bm.items():
+                    if v is None:
+                        continue
+                    if int(v) > int(min_units):
+                        balances[k] = int(v)
+            if not balances:
+                logger.info("active_token_balances: no tokens had balance > min_units")
+            return dict(sorted(balances.items()))
+        except Exception as e:
+            logger.error(f"active_token_balances failed: {e}")
+            return {}
+
+    def active_tokens_from_registry(
+        self,
+        registry_address: str,
+        distributor_address: str,
+        *,
+        min_units: int = 1,
+        chunk_size: int = 120,
+    ) -> List[str]:
+        """
+        Convenience wrapper: return a sorted list of LOWERCASE token addresses
+        that are present in the on-chain registry AND have balance > min_units
+        in the distributor.
+        """
+        m = self.active_token_balances(
+            registry_address,
+            distributor_address,
+            min_units=min_units,
+            chunk_size=chunk_size,
+        )
+        return list(m.keys())
+
     # ---------- multicall helpers ----------
     def _call_chunk(self, calls: List[dict]) -> List[tuple]:
         # returns list of (success: bool, returnData: bytes)
