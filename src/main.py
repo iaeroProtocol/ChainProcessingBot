@@ -1,4 +1,4 @@
-import os
+import os, sys
 import json
 import logging
 import base64
@@ -23,6 +23,14 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
+logger.info("=== ChainProcessingBot start === CWD=%s argv=%s", os.getcwd(), sys.argv)
+
+required = ["BASE_RPC_URL","BASE_EXPLORER_API_KEY","GITHUB_TOKEN","GITHUB_REPO",
+            "EPOCH_STAKING_DISTRIBUTOR","LIQ_STAKING_DISTRIBUTOR","REWARD_TOKEN_REGISTRY"]
+missing = [k for k in required if not os.environ.get(k)]
+if missing:
+    logger.error("Missing required env: %s", ", ".join(missing))
+    return False
 
 def _default_state():
     return {"last_tx_hash": None, "last_update": 0}
