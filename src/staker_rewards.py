@@ -4,7 +4,6 @@ from datetime import datetime, timezone
 from typing import Dict, List
 from web3 import Web3
 from decimal import Decimal, getcontext
-
 getcontext().prec = 50
 
 ERC20_ABI = [
@@ -19,7 +18,7 @@ def pretty_decimal(d: Decimal, max_dp: int = 18) -> str:
         integer, frac = s.split('.', 1)
         frac = frac[:max_dp]
         s = integer + ('.' + frac if frac else '')
-    s = s.rstrip('0').rstrip('.')
+        s = s.rstrip('0').rstrip('.')
     return s
 
 class SymbolResolver:
@@ -42,6 +41,7 @@ class SymbolResolver:
         self.cache[addr_lc] = sym
         return sym
 
+
 # (… keep the same POA shim, DIST_ABI, helpers: load_json, save_json, to_lower_set, checksum_list, human_amount …)
 
 def build_staker_rewards(
@@ -63,9 +63,8 @@ def build_staker_rewards(
     except Exception:
         pass
 
-    def _load(p):
-        with open(p,"r") as f:
-            return json.load(f)
+    def _load(p): 
+        with open(p,"r") as f: return json.load(f)
 
     epochs = _load(epochs_path)
     stakers = _load(stakers_path)
@@ -81,7 +80,12 @@ def build_staker_rewards(
 
     symbol_resolver = SymbolResolver(w3, active_symbol_map=active_symbol_map)
 
-    dist_addr = epochs.get("distributorAddress") or active.get("distributor")
+    # Prefer a single canonical distributor field; keep backward compat
+    dist_addr = (
+        epochs.get("distributorAddress")
+        or active.get("distributorAddress")
+        or active.get("distributor")
+    )
     if not dist_addr:
         raise RuntimeError("No distributorAddress/distributor found in epochs.json/active_reward_tokens.json")
 
@@ -91,12 +95,44 @@ def build_staker_rewards(
          "outputs":[{"type":"uint256[]"}]}
     ])
 
-    # Normalize
-    active_now = set((t.get("address") if isinstance(t, dict) else t).lower() for t in (active.get("tokens") or []) if t)
-    epoch_ids = sorted(int(e) for e in (epochs.get("epochs") or {}).keys())
+    # ---------------- Token universe: registry + distributor balances ----------------
+    # active_reward_tokens.json should contain tokens discovered from registry->balance scan.
+    # Accept either [{address,decimals,symbol}, ...] or ["0x...", ...].
+    def _tok_addr(x):
+        return (x.get("address") if isinstance(x, dict) else x or "").lower()
+
+    all_funded = sorted(int(e) for e in (epochs.get("epochs") or {}).keys())    
+    # Build per-epoch token lists from epochs.json
+    def lower_list(x):
+        seen = set()
+        for a in x or []:
+            lo = (a.get("address") if isinstance(a, dict) else a or "").lower()
+            if lo:
+                seen.add(lo)
+        return sorted(seen)
+
+    per_epoch_tokens_lc = {
+        eid: lower_list((epochs["epochs"].get(str(eid)) or {}).get("tokens"))
+        for eid in all_funded
+    }
+
+    # union of all tokens for pricing/decimals
+    tok_universe = sorted({t for toks in per_epoch_tokens_lc.values() for t in toks})
+
+
+    # ---------------- Epoch scope (default: current + previous) ----------------
+
+    current_epoch = None
+    if "currentEpoch" in epochs and isinstance(epochs["currentEpoch"], (int, str)):
+        current_epoch = int(epochs["currentEpoch"])
+    elif all_funded:
+        current_epoch = all_funded[-1]
+    epoch_set = all_funded[:]  # already “all funded”
+
 
     # Optional prices
     price_map: Dict[str,float] = {}
+    fetched = {}
     if use_prices:
         try:
             from price_fetcher import PriceFetcher
@@ -110,32 +146,23 @@ def build_staker_rewards(
                 weth=weth_addr,
                 max_price_usd=max_price_usd,
             )
-            fetched = pf.fetch_batch(list(active_now))
-            price_map = {k.lower(): float(v.get("priceUsd", 0.0)) for (k,v) in (fetched or {}).items()}
+            fetched = pf.fetch_batch(tok_universe)
         except Exception:
-            price_map = {}
+            pass
+
+    price_map = {k.lower(): float(v.get("priceUsd", 0.0)) for k, v in (fetched or {}).items()}
+
 
     holders = [h["address"] for h in (stakers.get("holders") or [])]
 
-    # Precompute per-epoch filtered tokens (lowercase → checksum at call)
-    def lower_list(x):
-        seen: set[str] = set()
-        for a in x or []:
-            lo = (a.get("address") if isinstance(a, dict) else a or "").lower()
-            if lo:
-                seen.add(lo)
-        return sorted(seen)
+    # Decimals map (fallback 18)
+    dec_map = {t: 18 for t in tok_universe}
+    for t in (active.get("tokens") or []):
+        lo = (t.get("address") if isinstance(t, dict) else t or "").lower()
+        if lo in dec_map:
+            dec_map[lo] = int(t.get("decimals", 18)) if isinstance(t, dict) else 18
 
-    per_epoch_tokens_lc = {}
-    for eid in epoch_ids:
-        toks = lower_list((epochs["epochs"].get(str(eid)) or {}).get("tokens"))
-        per_epoch_tokens_lc[eid] = [t for t in toks if (not active_now or t in active_now)]
-
-    # Decimals map from active (fallback 18)
-    dec_map = {
-        (t.get("address") if isinstance(t,dict) else t).lower(): int(t.get("decimals", 18)) if isinstance(t,dict) else 18
-        for t in (active.get("tokens") or [])
-    }
+ 
 
     rows = []
     totals_by_token_usd: Dict[str,float] = {}
@@ -143,17 +170,16 @@ def build_staker_rewards(
     def checksum_list(addrs_lc: List[str]) -> List[str]:
         out=[]
         for a in addrs_lc:
-            try:
-                out.append(w3.to_checksum_address(a))
-            except:
-                pass
+            try: out.append(w3.to_checksum_address(a))
+            except: pass
         return out
 
     for user in holders:
         user_cs = w3.to_checksum_address(user)
-        per_token_raw: Dict[str,int] = {}
+        items = []
+        total_usd = 0.0
 
-        for eid in epoch_ids:
+        for eid in epoch_set:
             toks_lc = per_epoch_tokens_lc.get(eid, [])
             if not toks_lc:
                 continue
@@ -161,38 +187,36 @@ def build_staker_rewards(
             try:
                 amounts = dist.functions.previewClaimsForEpoch(user_cs, toks_cs, eid).call()
             except Exception:
-                amounts = [0]*len(toks_cs)
+                amounts = [0] * len(toks_cs)
 
             for lo, raw in zip(toks_lc, amounts):
-                per_token_raw[lo] = per_token_raw.get(lo, 0) + int(raw)
+                raw_i = int(raw)
+                if raw_i == 0:
+                    continue
+                dec = int(dec_map.get(lo, 18))
+                human_dec = Decimal(raw_i) / (Decimal(10) ** dec)
+                human_str = pretty_decimal(human_dec)
+                human_float = float(human_dec)
+                px = float(price_map.get(lo, 0.0))
+                usd = human_float * px
+                sym = symbol_resolver.get(lo)
+                items.append({
+                    "token": lo,
+                    "symbol": sym,
+                    "decimals": dec,
+                    "amount": str(raw_i),
+                    "amountHuman": human_float,
+                    "amountHumanStr": human_str,
+                    "priceUsd": px,
+                    "usd": usd,
+                    "epoch": eid,
+                })
+                totals_by_token_usd[lo] = totals_by_token_usd.get(lo, 0.0) + usd
+                total_usd += usd
 
-        items = []
-        total_usd = 0.0
-        for lo, raw in per_token_raw.items():
-            if raw == 0:
-                continue
-            dec = int(dec_map.get(lo, 18))
-            # precise humanization
-            human_dec = Decimal(raw) / (Decimal(10) ** dec)
-            human_str = pretty_decimal(human_dec)  # pretty string
-            human_float = float(human_dec)  # keep numeric for any downstream math
-            px = float(price_map.get(lo, 0.0))
-            usd = human_float * px
-            # symbol
-            sym = symbol_resolver.get(lo)
+        # (optional) sort items — newest epoch first, then by USD desc
+        items.sort(key=lambda r: (r["epoch"], r["usd"], r["symbol"]), reverse=True)
 
-            items.append({
-                "token": lo,
-                "symbol": sym,  # NEW
-                "decimals": dec,
-                "amount": str(raw),
-                "amountHuman": human_float,  # keep numeric (backwards compatible)
-                "amountHumanStr": human_str,  # NEW pretty string (no scientific notation)
-                "priceUsd": px,
-                "usd": usd
-            })
-            totals_by_token_usd[lo] = totals_by_token_usd.get(lo, 0.0) + usd
-            total_usd += usd
 
         rows.append({
             "address": user,
@@ -208,13 +232,14 @@ def build_staker_rewards(
         "chainId": chain_id,
         "distributor": w3.to_checksum_address(dist_addr),
         "holderCount": len(rows),
-        "activeTokensNow": sorted(list(active_now)),
-        "fundedEpochs": epoch_ids,
+        "activeTokensNow": tok_universe,   # was active_now; use union or drop this field
+        "fundedEpochs": all_funded,
+        "currentEpoch": int(epochs.get("currentEpoch")) if epochs.get("currentEpoch") is not None else (all_funded[-1] if all_funded else None),
+        "defaultEpochs": epoch_set,
         "holders": rows,
         "summary": {
             "totalUsd": sum(r["totalUsd"] for r in rows),
             "totalByTokenUsd": totals_by_token_usd
         }
     }
-
     return out
