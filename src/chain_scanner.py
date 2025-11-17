@@ -11,13 +11,8 @@ logger = logging.getLogger(__name__)
 REGISTRY_ABI = [
     {"inputs": [], "name": "allTokens", "outputs": [{"internalType":"address[]","name":"out","type":"address[]"}], "stateMutability":"view", "type":"function"}
 ]
-
 ERC20_ABI = [
-    {"inputs":[{"internalType":"address","name":"account","type":"address"}],
-     "name":"balanceOf",
-     "outputs":[{"internalType":"uint256","name":"","type":"uint256"}],
-     "stateMutability":"view",
-     "type":"function"}
+    {"inputs":[{"internalType":"address","name":"account","type":"address"}], "name":"balanceOf", "outputs":[{"internalType":"uint256","name":"","type":"uint256"}], "stateMutability":"view", "type":"function"}
 ]
 
 MULTICALL3_ABI = [
@@ -43,9 +38,8 @@ DEFAULT_MULTICALL3 = os.environ.get("MULTICALL3", "0xCA11bde05977b3631167028862b
 
 # Function selectors
 SEL_BALANCE_OF = bytes.fromhex("70a08231")  # balanceOf(address)
-SEL_DECIMALS = bytes.fromhex("313ce567")    # decimals()
-SEL_TOTAL_SUPPLY = bytes.fromhex("18160ddd") # totalSupply()
-
+SEL_DECIMALS   = bytes.fromhex("313ce567")  # decimals()
+SEL_TOTAL_SUPPLY = bytes.fromhex("18160ddd")  # totalSupply()
 TRANSFER_TOPIC = "0x" + keccak(text="Transfer(address,address,uint256)").hex()
 REWARDFUNDED_TOPIC = "0x" + keccak(text="RewardFunded(address,uint256,uint256)").hex()
 
@@ -58,6 +52,7 @@ class ChainScanner:
     - read RewardTokenRegistry
     - multicall balances & decimals
     """
+
     def __init__(self, rpc_url: str, explorer_api_key: str, chain_id: int = 8453, multicall3: str | None = None):
         self.w3 = Web3(Web3.HTTPProvider(rpc_url, request_kwargs={"timeout": 20}))
         self.explorer_api_key = explorer_api_key
@@ -83,7 +78,7 @@ class ChainScanner:
                 "action": "tokentx",
                 "address": distributor_address,
                 "page": 1,
-                "offset": 1,  # only need the newest tx
+                "offset": 1,         # only need the newest tx
                 "sort": "desc",
                 "apikey": self.explorer_api_key,
             }
@@ -144,6 +139,7 @@ class ChainScanner:
 
         return sorted(epochs), {e: sorted(list(ts)) for e, ts in epoch_tokens.items()}
 
+    
     def _get_logs_chunked(self, address: str, topics: list, from_block: int, to_block: int, step: int = 50_000):
         """
         Yield logs in chunks to avoid provider limits.
@@ -151,7 +147,6 @@ class ChainScanner:
         address = self.w3.to_checksum_address(address)
         fb = max(0, int(from_block))
         tb = int(to_block)
-
         while fb <= tb:
             end = min(tb, fb + step)
             try:
@@ -206,6 +201,66 @@ class ChainScanner:
             logger.error(f"registry_all_tokens failed: {e}")
             return []
 
+    # ---------- active rewards (registry + distributor balance) ----------
+    def active_token_balances(
+        self,
+        registry_address: str,
+        distributor_address: str,
+        *,
+        min_units: int = 1,
+        chunk_size: int = 120,
+    ) -> Dict[str, int]:
+        """
+        Return a map of { tokenLower: balance } for tokens found in the on-chain
+        RewardTokenRegistry that also have balance > min_units in the distributor.
+        """
+        try:
+            reg_tokens = self.registry_all_tokens(registry_address)
+            if not reg_tokens:
+                logger.info("active_token_balances: registry returned 0 tokens")
+                return {}
+            # checksum once for multicall; keep original lowercaes list for keys
+            dist_cs = self.w3.to_checksum_address(distributor_address)
+            # fetch balances in batches
+            balances: Dict[str, int] = {}
+            total = len(reg_tokens)
+            for i in range(0, total, chunk_size):
+                chunk = reg_tokens[i:i + chunk_size]
+                # balances_map expects lower/any; returns lower-keyed map
+                bm = self.balances_map(dist_cs, chunk, chunk_size=len(chunk))
+                for k, v in bm.items():
+                    if v is None:
+                        continue
+                    if int(v) > int(min_units):
+                        balances[k] = int(v)
+            if not balances:
+                logger.info("active_token_balances: no tokens had balance > min_units")
+            return dict(sorted(balances.items()))
+        except Exception as e:
+            logger.error(f"active_token_balances failed: {e}")
+            return {}
+
+    def active_tokens_from_registry(
+        self,
+        registry_address: str,
+        distributor_address: str,
+        *,
+        min_units: int = 1,
+        chunk_size: int = 120,
+    ) -> List[str]:
+        """
+        Convenience wrapper: return a sorted list of LOWERCASE token addresses
+        that are present in the on-chain registry AND have balance > min_units
+        in the distributor.
+        """
+        m = self.active_token_balances(
+            registry_address,
+            distributor_address,
+            min_units=min_units,
+            chunk_size=chunk_size,
+        )
+        return list(m.keys())
+
     # ---------- multicall helpers ----------
     def _call_chunk(self, calls: List[dict]) -> List[tuple]:
         # returns list of (success: bool, returnData: bytes)
@@ -219,7 +274,6 @@ class ChainScanner:
         holder_cs = self.w3.to_checksum_address(holder)
         results: Dict[str, int] = {}
         total = len(token_addrs)
-
         for i in range(0, total, chunk_size):
             chunk = token_addrs[i:i+chunk_size]
             calls = []
@@ -232,7 +286,6 @@ class ChainScanner:
                 addr32 = bytes(12) + bytes.fromhex(holder_cs[2:])
                 calldata = SEL_BALANCE_OF + addr32.rjust(32, b"\x00")
                 calls.append({"target": target, "allowFailure": True, "callData": calldata})
-
             ret = self._call_chunk(calls)
             for addr, res in zip(chunk, ret):
                 success, data = bool(res[0]), bytes(res[1])
@@ -240,13 +293,11 @@ class ChainScanner:
                     continue
                 bal = int.from_bytes(data[-32:], "big")
                 results[addr.lower()] = bal
-
         return results
 
     def decimals_map(self, token_addrs: List[str], chunk_size: int = 50, default_decimals: int = 18) -> Dict[str, int]:
         out: Dict[str, int] = {}
         total = len(token_addrs)
-
         for i in range(0, total, chunk_size):
             chunk = token_addrs[i:i+chunk_size]
             calls = []
@@ -257,7 +308,6 @@ class ChainScanner:
                     continue
                 calldata = SEL_DECIMALS  # no args
                 calls.append({"target": target, "allowFailure": True, "callData": calldata})
-
             ret = self._call_chunk(calls)
             for addr, res in zip(chunk, ret):
                 success, data = bool(res[0]), bytes(res[1])
@@ -267,5 +317,4 @@ class ChainScanner:
                     if dec == 0:  # guard against broken tokens
                         dec = default_decimals
                 out[addr.lower()] = dec
-
         return out
