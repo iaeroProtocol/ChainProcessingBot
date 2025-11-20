@@ -127,7 +127,7 @@
     "0xfc48314ad4ad5bd36a84e8307b86a68a01d95d9c",
     "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2"
   ],
-  "asOf": 1763603434,
+  "asOf": 1763603738,
   "chainId": 8453,
   "currentEpoch": 1762992000,
   "defaultEpochs": [
@@ -1153,17 +1153,6 @@
           "usd": 6.066389228472438e-16
         },
         {
-          "amount": "367",
-          "amountHuman": 3.67e-16,
-          "amountHumanStr": "0.000000000000000367",
-          "decimals": 18,
-          "epoch": 1762992000,
-          "priceUsd": 0.7659282974656115,
-          "symbol": "XSGD",
-          "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
-          "usd": 2.8109568516987943e-16
-        },
-        {
           "amount": "904",
           "amountHuman": 9.04e-16,
           "amountHumanStr": "0.000000000000000904",
@@ -1194,6 +1183,17 @@
           "priceUsd": 0.0,
           "symbol": "cbBTC",
           "token": "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
+          "usd": 0.0
+        },
+        {
+          "amount": "367",
+          "amountHuman": 3.67e-16,
+          "amountHumanStr": "0.000000000000000367",
+          "decimals": 18,
+          "epoch": 1762992000,
+          "priceUsd": 0.0,
+          "symbol": "XSGD",
+          "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
           "usd": 0.0
         },
         {
@@ -1780,17 +1780,6 @@
           "usd": 3.354935272221729e-15
         },
         {
-          "amount": "52",
-          "amountHuman": 5.2e-17,
-          "amountHumanStr": "0.000000000000000052",
-          "decimals": 18,
-          "epoch": 1762387200,
-          "priceUsd": 0.7659282974656115,
-          "symbol": "XSGD",
-          "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
-          "usd": 3.98282714682118e-17
-        },
-        {
           "amount": "45",
           "amountHuman": 4.5e-17,
           "amountHumanStr": "0.000000000000000045",
@@ -1822,6 +1811,17 @@
           "symbol": "USD+",
           "token": "0xb79dd08ea68a908a97220c76d19a6aa9cbde4376",
           "usd": 5.9985873737263e-18
+        },
+        {
+          "amount": "52",
+          "amountHuman": 5.2e-17,
+          "amountHumanStr": "0.000000000000000052",
+          "decimals": 18,
+          "epoch": 1762387200,
+          "priceUsd": 0.0,
+          "symbol": "XSGD",
+          "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
+          "usd": 0.0
         },
         {
           "amount": "2819542863041",
@@ -2330,17 +2330,6 @@
           "usd": 2.2235943164489846e-14
         },
         {
-          "amount": "900",
-          "amountHuman": 9e-16,
-          "amountHumanStr": "0.0000000000000009",
-          "decimals": 18,
-          "epoch": 1761782400,
-          "priceUsd": 0.7659282974656115,
-          "symbol": "XSGD",
-          "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
-          "usd": 6.893354677190504e-16
-        },
-        {
           "amount": "639",
           "amountHuman": 6.39e-16,
           "amountHumanStr": "0.000000000000000639",
@@ -2372,6 +2361,17 @@
           "symbol": "USD+",
           "token": "0xb79dd08ea68a908a97220c76d19a6aa9cbde4376",
           "usd": 6.198540286183843e-17
+        },
+        {
+          "amount": "900",
+          "amountHuman": 9e-16,
+          "amountHumanStr": "0.0000000000000009",
+          "decimals": 18,
+          "epoch": 1761782400,
+          "priceUsd": 0.0,
+          "symbol": "XSGD",
+          "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
+          "usd": 0.0
         },
         {
           "amount": "3780707779392",
@@ -3057,7 +3057,7 @@
         }
       ],
       "pendingTokenCount": 214,
-      "totalUsd": 0.15353253505245165
+      "totalUsd": 0.15353253505245062
     },
     {
       "address": "0x9402cec8e19cfbdc3fab9898f49ff91351d47a98",
@@ -3514,17 +3514,6 @@
           "usd": 4.8590979510955215e-16
         },
         {
-          "amount": "294",
-          "amountHuman": 2.94e-16,
-          "amountHumanStr": "0.000000000000000294",
-          "decimals": 18,
-          "epoch": 1762992000,
-          "priceUsd": 0.7659282974656115,
-          "symbol": "XSGD",
-          "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
-          "usd": 2.251829194548898e-16
-        },
-        {
           "amount": "724",
           "amountHuman": 7.24e-16,
           "amountHumanStr": "0.000000000000000724",
@@ -3555,6 +3544,17 @@
           "priceUsd": 0.0,
           "symbol": "cbBTC",
           "token": "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
+          "usd": 0.0
+        },
+        {
+          "amount": "294",
+          "amountHuman": 2.94e-16,
+          "amountHumanStr": "0.000000000000000294",
+          "decimals": 18,
+          "epoch": 1762992000,
+          "priceUsd": 0.0,
+          "symbol": "XSGD",
+          "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
           "usd": 0.0
         },
         {
@@ -4141,17 +4141,6 @@
           "usd": 2.6861475198032736e-15
         },
         {
-          "amount": "41",
-          "amountHuman": 4.1e-17,
-          "amountHumanStr": "0.000000000000000041",
-          "decimals": 18,
-          "epoch": 1762387200,
-          "priceUsd": 0.7659282974656115,
-          "symbol": "XSGD",
-          "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
-          "usd": 3.140306019609007e-17
-        },
-        {
           "amount": "36",
           "amountHuman": 3.6e-17,
           "amountHumanStr": "0.000000000000000036",
@@ -4183,6 +4172,17 @@
           "symbol": "USD+",
           "token": "0xb79dd08ea68a908a97220c76d19a6aa9cbde4376",
           "usd": 4.998822811438584e-18
+        },
+        {
+          "amount": "41",
+          "amountHuman": 4.1e-17,
+          "amountHumanStr": "0.000000000000000041",
+          "decimals": 18,
+          "epoch": 1762387200,
+          "priceUsd": 0.0,
+          "symbol": "XSGD",
+          "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
+          "usd": 0.0
         },
         {
           "amount": "2258011144269",
@@ -4691,17 +4691,6 @@
           "usd": 1.7807348630538042e-14
         },
         {
-          "amount": "720",
-          "amountHuman": 7.2e-16,
-          "amountHumanStr": "0.00000000000000072",
-          "decimals": 18,
-          "epoch": 1761782400,
-          "priceUsd": 0.7659282974656115,
-          "symbol": "XSGD",
-          "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
-          "usd": 5.514683741752403e-16
-        },
-        {
           "amount": "512",
           "amountHuman": 5.12e-16,
           "amountHumanStr": "0.000000000000000512",
@@ -4733,6 +4722,17 @@
           "symbol": "USD+",
           "token": "0xb79dd08ea68a908a97220c76d19a6aa9cbde4376",
           "usd": 4.998822811438583e-17
+        },
+        {
+          "amount": "720",
+          "amountHuman": 7.2e-16,
+          "amountHumanStr": "0.00000000000000072",
+          "decimals": 18,
+          "epoch": 1761782400,
+          "priceUsd": 0.0,
+          "symbol": "XSGD",
+          "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
+          "usd": 0.0
         },
         {
           "amount": "3027753332284",
@@ -6804,7 +6804,7 @@
         }
       ],
       "pendingTokenCount": 340,
-      "totalUsd": 0.12347700849966228
+      "totalUsd": 0.12347700849966148
     },
     {
       "address": "0xa1dbd1973af714c1a45a83d989b3ce889c9070f1",
@@ -7261,17 +7261,6 @@
           "usd": 5.986568317571484e-17
         },
         {
-          "amount": "36",
-          "amountHuman": 3.6e-17,
-          "amountHumanStr": "0.000000000000000036",
-          "decimals": 18,
-          "epoch": 1762992000,
-          "priceUsd": 0.7659282974656115,
-          "symbol": "XSGD",
-          "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
-          "usd": 2.7573418708762014e-17
-        },
-        {
           "amount": "90",
           "amountHuman": 9e-17,
           "amountHumanStr": "0.00000000000000009",
@@ -7291,6 +7280,17 @@
           "priceUsd": 0.0,
           "symbol": "tBTC",
           "token": "0x236aa50979d5f3de3bd1eeb40e81137f22ab794b",
+          "usd": 0.0
+        },
+        {
+          "amount": "36",
+          "amountHuman": 3.6e-17,
+          "amountHumanStr": "0.000000000000000036",
+          "decimals": 18,
+          "epoch": 1762992000,
+          "priceUsd": 0.0,
+          "symbol": "XSGD",
+          "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
           "usd": 0.0
         },
         {
@@ -7877,17 +7877,6 @@
           "usd": 3.348937175787483e-16
         },
         {
-          "amount": "5",
-          "amountHuman": 5e-18,
-          "amountHumanStr": "0.000000000000000005",
-          "decimals": 18,
-          "epoch": 1762387200,
-          "priceUsd": 0.7659282974656115,
-          "symbol": "XSGD",
-          "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
-          "usd": 3.829641487328058e-18
-        },
-        {
           "amount": "4",
           "amountHuman": 4e-18,
           "amountHumanStr": "0.000000000000000004",
@@ -7908,6 +7897,17 @@
           "symbol": "USDT",
           "token": "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2",
           "usd": 9.97761386261914e-19
+        },
+        {
+          "amount": "5",
+          "amountHuman": 5e-18,
+          "amountHumanStr": "0.000000000000000005",
+          "decimals": 18,
+          "epoch": 1762387200,
+          "priceUsd": 0.0,
+          "symbol": "XSGD",
+          "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
+          "usd": 0.0
         },
         {
           "amount": "282251393033",
@@ -8416,17 +8416,6 @@
           "usd": 2.2252937771053542e-15
         },
         {
-          "amount": "90",
-          "amountHuman": 9e-17,
-          "amountHumanStr": "0.00000000000000009",
-          "decimals": 18,
-          "epoch": 1761782400,
-          "priceUsd": 0.7659282974656115,
-          "symbol": "XSGD",
-          "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
-          "usd": 6.893354677190503e-17
-        },
-        {
           "amount": "64",
           "amountHuman": 6.4e-17,
           "amountHumanStr": "0.000000000000000064",
@@ -8458,6 +8447,17 @@
           "symbol": "USD+",
           "token": "0xb79dd08ea68a908a97220c76d19a6aa9cbde4376",
           "usd": 5.9985873737263e-18
+        },
+        {
+          "amount": "90",
+          "amountHuman": 9e-17,
+          "amountHumanStr": "0.00000000000000009",
+          "decimals": 18,
+          "epoch": 1761782400,
+          "priceUsd": 0.0,
+          "symbol": "XSGD",
+          "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
+          "usd": 0.0
         },
         {
           "amount": "378469166535",
@@ -9495,7 +9495,7 @@
         }
       ],
       "pendingTokenCount": 244,
-      "totalUsd": 0.0176922569118518
+      "totalUsd": 0.0176922569118517
     },
     {
       "address": "0xa9e0ab6697f239cd274fd772f31bd819efcf3e50",
@@ -11030,17 +11030,6 @@
           "usd": 4.4275948512127645e-15
         },
         {
-          "amount": "179",
-          "amountHuman": 1.79e-16,
-          "amountHumanStr": "0.000000000000000179",
-          "decimals": 18,
-          "epoch": 1761782400,
-          "priceUsd": 0.7659282974656115,
-          "symbol": "XSGD",
-          "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
-          "usd": 1.3710116524634446e-16
-        },
-        {
           "amount": "127",
           "amountHuman": 1.27e-16,
           "amountHumanStr": "0.000000000000000127",
@@ -11072,6 +11061,17 @@
           "symbol": "USD+",
           "token": "0xb79dd08ea68a908a97220c76d19a6aa9cbde4376",
           "usd": 1.19971747474526e-17
+        },
+        {
+          "amount": "179",
+          "amountHuman": 1.79e-16,
+          "amountHumanStr": "0.000000000000000179",
+          "decimals": 18,
+          "epoch": 1761782400,
+          "priceUsd": 0.0,
+          "symbol": "XSGD",
+          "token": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
+          "usd": 0.0
         },
         {
           "amount": "752954447107",
@@ -11691,7 +11691,7 @@
         }
       ],
       "pendingTokenCount": 199,
-      "totalUsd": 0.013797586971424136
+      "totalUsd": 0.013797586971423999
     },
     {
       "address": "0xe6e7d3c6379ad80de02f26ccc72605d0f70d5201",
@@ -14454,14 +14454,14 @@
       "totalUsd": 1.406802811831972
     }
   ],
-  "lastUpdated": "2025-11-20T01:50:34.678815",
+  "lastUpdated": "2025-11-20T01:55:38.394382",
   "summary": {
     "totalByTokenUsd": {
       "0x00fbac94fec8d4089d3fe979f39454f48c71a65d": 3.5844199095096076,
       "0x04c0599ae5a44757c0af6f9ec3b93da8976c150a": 3.5288210590112124e-08,
       "0x080d43c2164afdbc3712422ce78ab902ccab5ca1": 6.361471830395972e-05,
       "0x084382d1cc4f4dfd1769b1cc1ac2a9b1f8365e90": 4.4729762777348064e-05,
-      "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b": 2.055751550397701e-15,
+      "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b": 0.0,
       "0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b": 115.3084620475222,
       "0x0c03ce270b4826ec62e7dd007f0b716068639f7b": 73.47047564080565,
       "0x0ceac003b0d2479bebec9f4b2ebad0a803759bbf": 7.993936877930259e-07,
@@ -14586,5 +14586,5 @@
     },
     "totalUsd": 1724.986978528373
   },
-  "updateTimestamp": 1763603434
+  "updateTimestamp": 1763603738
 }
