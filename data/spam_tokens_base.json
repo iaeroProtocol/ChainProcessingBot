@@ -1,0 +1,122 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-11-27T00:00:00Z",
+  "chainId": 8453,
+  "description": "Known spam/scam tokens on Base chain to exclude from reward sweeping",
+  "tokens": [
+    {
+      "address": "0x2d6613f383a89742179fdbdf3649b5dddec523c6",
+      "symbol": "UЅDС | t.me/s/US_CIRCLE | *claim until 20.10.25",
+      "reason": "Phishing scam impersonating USDC"
+    },
+    {
+      "address": "0x3319e7bd7e8792f313aef8f572cbb0470bfd38a2",
+      "symbol": "UЅDС | t.me/s/US_CIRCLE | *claim until 30.09.25",
+      "reason": "Phishing scam impersonating USDC"
+    },
+    {
+      "address": "0x430d3834c385b5064050bf73c725ecc614111140",
+      "symbol": "UЅDС | t.me/s/US_CIRCLE | *claim until 05.10.25",
+      "reason": "Phishing scam impersonating USDC"
+    },
+    {
+      "address": "0x7e2a4abd22d513c34f347038d4b8c37cb3571f92",
+      "symbol": "UЅDС | t.me/s/US_CIRCLE | *claim until 21.10.25",
+      "reason": "Phishing scam impersonating USDC"
+    },
+    {
+      "address": "0xb0c26970e9dad9b5162fcaab1a5d13e604a6d9ac",
+      "symbol": "xADA",
+      "reason": "Fake ADA token airdrop scam"
+    },
+    {
+      "address": "0xb435cb9cee20efce58c452f646552c3ad744ed64",
+      "symbol": "UЅDС | t.me/s/US_CIRCLE | *claim until 09.09.25",
+      "reason": "Phishing scam impersonating USDC"
+    },
+    {
+      "address": "0xb96a7fa2dc5627eb76f91962e1e45e75e572c850",
+      "symbol": "UЅDС | t.me/s/US_CIRCLE | *claim until 25.10.25",
+      "reason": "Phishing scam impersonating USDC"
+    },
+    {
+      "address": "0xbcd73d9c3de8884c9aaaf9b2e4f0a48a64f12a1b",
+      "symbol": "UЅDС | t.me/s/US_CIRCLE | *claim until 15.10.25",
+      "reason": "Phishing scam impersonating USDC"
+    },
+    {
+      "address": "0xd01c8f05a9b7d5c2672a590b563ced2cb50d24a6",
+      "symbol": "UЅDС | t.me/s/US_CIRCLE | *claim until 17.09.25",
+      "reason": "Phishing scam impersonating USDC"
+    },
+    {
+      "address": "0xd24ea96b9bf1af69d34e7fc8c6d740bae5f32b9b",
+      "symbol": "UЅDС | t.me/s/US_CIRCLE | *claim until 13.10.25",
+      "reason": "Phishing scam impersonating USDC"
+    },
+    {
+      "address": "0xda932bcc910ec2dbdcbc49e01f8a5b36be9deefb",
+      "symbol": "UЅDС | t.me/s/US_CIRCLE | *claim until 21.09.25",
+      "reason": "Phishing scam impersonating USDC"
+    },
+    {
+      "address": "0xfaf87e196a29969094be35dfb0ab9d0b8518db84",
+      "symbol": "ACHIVX",
+      "reason": "Spam airdrop token"
+    },
+    {
+      "address": "0xfb584ace7f491e2930491a8d01a28db308aeb65f",
+      "symbol": "UЅDС | t.me/s/US_CIRCLE | *claim until 09.10.25",
+      "reason": "Phishing scam impersonating USDC"
+    },
+    {
+      "address": "0xfd755cff1f0f65c1e163b33c66a0e082ce6f87ff",
+      "symbol": "UЅDС | t.me/s/US_CIRCLE | *claim until 28.09.25",
+      "reason": "Phishing scam impersonating USDC"
+    },
+    {
+      "address": "0x2c5cf1997efcae3ca8e6c26ca623e453b9203d5f",
+      "symbol": "MasterBOT",
+      "reason": "Spam bot token"
+    },
+    {
+      "address": "0x507b8c8053c20c40d8f448d9b9a4054a981544a7",
+      "symbol": "UЅDС | t.me/s/US_CIRCLE | *claim until 30.10.25",
+      "reason": "Phishing scam impersonating USDC"
+    },
+    {
+      "address": "0xa340faae387bddf282f43fc5663c75f7b5f5fc24",
+      "symbol": "UЅDС | t.me/s/us_circle | claim until 03.11.25",
+      "reason": "Phishing scam impersonating USDC"
+    },
+    {
+      "address": "0xc2170f20f85381b2014eebc1d29f7c77c52ab6fb",
+      "symbol": "UЅDС | t.me/s/US_CIRCLE | *claim until 01.11.25",
+      "reason": "Phishing scam impersonating USDC"
+    },
+    {
+      "address": "0xeb92d414136373deaae640f75ccd793622ffdf45",
+      "symbol": "MONEROCHAN",
+      "reason": "Spam airdrop token"
+    },
+    {
+      "address": "0xf0c9afa1d49a85417734da1740beabbaa2463c57",
+      "symbol": "UЅDС | t.me/s/US_POOL | *claim until 11.11.25",
+      "reason": "Phishing scam impersonating USDC"
+    },
+    {
+      "address": "0xe3758013cd2258e8d4dcc8bd6599aebb50681594",
+      "symbol": "UЅDС | t.me/s/US_POOL | *claim until 16.11.25",
+      "reason": "Phishing scam impersonating USDC"
+    }
+  ],
+  "symbolPatterns": [
+    "t.me/",
+    "claim until",
+    "UЅDС",
+    "xADA",
+    "MasterBOT",
+    "ACHIVX"
+  ],
+  "notes": "Addresses are lowercase. symbolPatterns can be used for heuristic detection of new spam tokens."
+}
