@@ -127,7 +127,7 @@ def build_staker_rewards(
         current_epoch = int(epochs["currentEpoch"])
     elif all_funded:
         current_epoch = all_funded[-1]
-    epoch_set = all_funded[:]  # already “all funded”
+    epoch_set = all_funded[:]  # already "all funded"
 
 
     # Optional prices
@@ -225,7 +225,49 @@ def build_staker_rewards(
             "totalUsd": total_usd
         })
 
+    # ========== Build enhanced summary ==========
+    
+    MIN_USD_FOR_SUMMARY = 50.0
+    
+    # Build summary for each wallet with > $50 owed
+    # Sorted by totalUsd descending
+    qualified_wallets = [r for r in rows if r["totalUsd"] > MIN_USD_FOR_SUMMARY]
+    qualified_wallets.sort(key=lambda r: r["totalUsd"], reverse=True)
+    
+    wallet_summaries = []
+    for wallet in qualified_wallets:
+        # Aggregate USD by token for this wallet's pending items
+        wallet_token_usd: Dict[str, float] = {}
+        for item in wallet["pending"]:
+            token = item["token"]
+            wallet_token_usd[token] = wallet_token_usd.get(token, 0.0) + item["usd"]
+        
+        # Get top 5 tokens for this wallet, sorted descending by USD
+        sorted_tokens = sorted(
+            wallet_token_usd.items(),
+            key=lambda kv: kv[1],
+            reverse=True
+        )[:5]
+        
+        top_5 = [
+            {
+                "token": addr,
+                "symbol": symbol_resolver.get(addr),
+                "usd": usd_val
+            }
+            for addr, usd_val in sorted_tokens
+        ]
+        
+        wallet_summaries.append({
+            "address": wallet["address"],
+            "totalUsdOwed": wallet["totalUsd"],
+            "top5Tokens": top_5
+        })
+
     out = {
+        # ===== NEW: Per-wallet summaries (>$50 owed) =====
+        "walletSummaries": wallet_summaries,
+        # ===== Existing fields =====
         "asOf": int(time.time()),
         "lastUpdated": datetime.now(timezone.utc).isoformat(),
         "updateTimestamp": int(datetime.now(timezone.utc).timestamp()),
