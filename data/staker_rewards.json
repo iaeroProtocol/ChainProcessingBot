@@ -143,7 +143,7 @@
     "0xfc48314ad4ad5bd36a84e8307b86a68a01d95d9c",
     "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2"
   ],
-  "asOf": 1764257120,
+  "asOf": 1764257426,
   "chainId": 8453,
   "currentEpoch": 1764201600,
   "defaultEpochs": [
@@ -19361,7 +19361,7 @@
       "totalUsd": 1481.7448703676685
     }
   ],
-  "lastUpdated": "2025-11-27T15:25:20.309085",
+  "lastUpdated": "2025-11-27T15:30:26.904645",
   "summary": {
     "totalByTokenUsd": {
       "0x00fbac94fec8d4089d3fe979f39454f48c71a65d": 3.5398129534895633,
@@ -19509,5 +19509,100 @@
     },
     "totalUsd": 2862.5932039474574
   },
-  "updateTimestamp": 1764257120
+  "updateTimestamp": 1764257426,
+  "walletSummaries": [
+    {
+      "address": "0xf6e0efd25be6f4302190ea44db596719aa400588",
+      "top5Tokens": [
+        {
+          "symbol": "USDC",
+          "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "usd": 921.1192591492586
+        },
+        {
+          "symbol": "AVNT",
+          "token": "0x696f9436b67233384889472cd7cd58a6fb5df4f1",
+          "usd": 161.52685818759358
+        },
+        {
+          "symbol": "LCAP",
+          "token": "0x4da9a0f397db1397902070f93a4d6ddbc0e0e6e8",
+          "usd": 71.96682540422978
+        },
+        {
+          "symbol": "wstETH",
+          "token": "0xc1cba3fcea344f92d9239c08c0568f6f2f0ee452",
+          "usd": 70.8921469189983
+        },
+        {
+          "symbol": "uSUI",
+          "token": "0xb0505e5a99abd03d94a1169e638b78edfed26ea4",
+          "usd": 45.38597405629872
+        }
+      ],
+      "totalUsdOwed": 1481.7448703676685
+    },
+    {
+      "address": "0x010b23b2f2a5f6bc4ce0c68a5f65c248c1129831",
+      "top5Tokens": [
+        {
+          "symbol": "WCT",
+          "token": "0xef4461891dfb3ac8572ccf7c794664a8dd927945",
+          "usd": 183.36180743433016
+        },
+        {
+          "symbol": "ORDER",
+          "token": "0x4e200fe2f3efb977d5fd9c430a41531fb04d97b8",
+          "usd": 97.25369521183148
+        },
+        {
+          "symbol": "RIPE",
+          "token": "0x2a0a59d6b975828e781ecac125dba40d7ee5ddc0",
+          "usd": 92.11739102134983
+        },
+        {
+          "symbol": "VIRTUAL",
+          "token": "0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b",
+          "usd": 80.23273003956065
+        },
+        {
+          "symbol": "CLANKER",
+          "token": "0x1bc0c42215582d5a085795f4badbac3ff36d1bcb",
+          "usd": 79.49479208969346
+        }
+      ],
+      "totalUsdOwed": 1086.9894918120472
+    },
+    {
+      "address": "0xe6e7d3c6379ad80de02f26ccc72605d0f70d5201",
+      "top5Tokens": [
+        {
+          "symbol": "WCT",
+          "token": "0xef4461891dfb3ac8572ccf7c794664a8dd927945",
+          "usd": 53.23390033370381
+        },
+        {
+          "symbol": "ORDER",
+          "token": "0x4e200fe2f3efb977d5fd9c430a41531fb04d97b8",
+          "usd": 28.234852123418467
+        },
+        {
+          "symbol": "RIPE",
+          "token": "0x2a0a59d6b975828e781ecac125dba40d7ee5ddc0",
+          "usd": 26.74367187609455
+        },
+        {
+          "symbol": "VIRTUAL",
+          "token": "0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b",
+          "usd": 23.29329762936921
+        },
+        {
+          "symbol": "CLANKER",
+          "token": "0x1bc0c42215582d5a085795f4badbac3ff36d1bcb",
+          "usd": 23.079058274809196
+        }
+      ],
+      "totalUsdOwed": 284.6498662569558
+    }
+  ]
 }
