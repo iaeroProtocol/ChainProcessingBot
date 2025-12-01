@@ -143,7 +143,7 @@
     "0xfc48314ad4ad5bd36a84e8307b86a68a01d95d9c",
     "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2"
   ],
-  "asOf": 1764575438,
+  "asOf": 1764575723,
   "chainId": 8453,
   "currentEpoch": 1764201600,
   "defaultEpochs": [
@@ -175,7 +175,7 @@
     1763596800,
     1764201600
   ],
-  "holderCount": 12,
+  "holderCount": 13,
   "holders": [
     {
       "address": "0x010b23b2f2a5f6bc4ce0c68a5f65c248c1129831",
@@ -15820,6 +15820,12 @@
       "totalUsd": 0.017506138408696813
     },
     {
+      "address": "0xb309b8a386b12afec9af9b2663ac79a453f7faa4",
+      "pending": [],
+      "pendingTokenCount": 0,
+      "totalUsd": 0.0
+    },
+    {
       "address": "0xb5b4d5c284616744522bc46b5dc88b2fc086124c",
       "pending": [],
       "pendingTokenCount": 0,
@@ -19367,7 +19373,7 @@
       "totalUsd": 1406.4184303835693
     }
   ],
-  "lastUpdated": "2025-12-01T07:50:38.416199",
+  "lastUpdated": "2025-12-01T07:55:23.587780",
   "summary": {
     "totalByTokenUsd": {
       "0x00fbac94fec8d4089d3fe979f39454f48c71a65d": 3.522500466587913,
@@ -19515,7 +19521,7 @@
     },
     "totalUsd": 2616.4838832339383
   },
-  "updateTimestamp": 1764575438,
+  "updateTimestamp": 1764575723,
   "walletSummaries": [
     {
       "address": "0xf6e0efd25be6f4302190ea44db596719aa400588",
