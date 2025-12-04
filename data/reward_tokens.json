@@ -1,21 +1,33 @@
 {
-  "currentEpoch": 1764201600,
-  "previousEpoch": 1763596800,
+  "currentEpoch": 1764806400,
+  "previousEpoch": 1764201600,
   "distributorAddress": "0x77f90d2dDB15Ffe28fa322aDA351d11da3B8bFe5",
-  "lastUpdated": "2025-11-28T07:51:57.857Z",
+  "lastUpdated": "2025-12-04T00:02:01.567Z",
   "epochs": {
-    "1763596800": {
-      "timestamp": 1763596800,
-      "tokens": []
-    },
     "1764201600": {
       "timestamp": 1764201600,
-      "tokens": []
+      "tokens": [
+        "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "0xc08Cd26474722cE93F4D0c34D16201461c10AA8C"
+      ]
+    },
+    "1764806400": {
+      "timestamp": 1764806400,
+      "tokens": [
+        "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        "0xc08Cd26474722cE93F4D0c34D16201461c10AA8C"
+      ]
     }
   },
   "summary": {
-    "currentEpochTokens": [],
-    "previousEpochTokens": [],
-    "totalTokens": 0
+    "currentEpochTokens": [
+      "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "0xc08Cd26474722cE93F4D0c34D16201461c10AA8C"
+    ],
+    "previousEpochTokens": [
+      "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "0xc08Cd26474722cE93F4D0c34D16201461c10AA8C"
+    ],
+    "totalTokens": 2
   }
 }
