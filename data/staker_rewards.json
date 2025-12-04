@@ -143,7 +143,7 @@
     "0xfc48314ad4ad5bd36a84e8307b86a68a01d95d9c",
     "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2"
   ],
-  "asOf": 1764817846,
+  "asOf": 1764818134,
   "chainId": 8453,
   "currentEpoch": 1764806400,
   "defaultEpochs": [
@@ -183,15 +183,15 @@
       "address": "0x010b23b2f2a5f6bc4ce0c68a5f65c248c1129831",
       "pending": [
         {
-          "amount": "3084602",
-          "amountHuman": 3.084602,
-          "amountHumanStr": "3.084602",
+          "amount": "1566247029",
+          "amountHuman": 1566.247029,
+          "amountHumanStr": "1566.247029",
           "decimals": 6,
           "epoch": 1764806400,
           "priceUsd": 0.9998056002181522,
           "symbol": "USDC",
           "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-          "usd": 3.0840023540441126
+          "usd": 1565.9425509192429
         },
         {
           "amount": "22302297811777045098",
@@ -558,21 +558,21 @@
         }
       ],
       "pendingTokenCount": 34,
-      "totalUsd": 1054.0800322385162
+      "totalUsd": 2616.9385808037155
     },
     {
       "address": "0x0682f4ee106d167ca46ed015918e83f6f4e5b571",
       "pending": [
         {
-          "amount": "845801",
-          "amountHuman": 0.845801,
-          "amountHumanStr": "0.845801",
+          "amount": "429466920",
+          "amountHuman": 429.46692,
+          "amountHumanStr": "429.46692",
           "decimals": 6,
           "epoch": 1764806400,
           "priceUsd": 0.9998056002181522,
           "symbol": "USDC",
           "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-          "usd": 0.8456365764701134
+          "usd": 429.3834317244412
         },
         {
           "amount": "6115318321865192798",
@@ -653,11 +653,22 @@
         }
       ],
       "pendingTokenCount": 8,
-      "totalUsd": 10.486242478388647
+      "totalUsd": 439.02403762635976
     },
     {
       "address": "0x2fbb24544a6ecb47a404ba7cb85f7d1de9441c0c",
       "pending": [
+        {
+          "amount": "23004",
+          "amountHuman": 0.023004,
+          "amountHumanStr": "0.023004",
+          "decimals": 6,
+          "epoch": 1764806400,
+          "priceUsd": 0.9998056002181522,
+          "symbol": "USDC",
+          "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "usd": 0.022999528027418375
+        },
         {
           "amount": "327568587353266",
           "amountHuman": 0.000327568587353266,
@@ -668,17 +679,6 @@
           "symbol": "CARV",
           "token": "0xc08cd26474722ce93f4d0c34d16201461c10aa8c",
           "usd": 4.505467554855382e-05
-        },
-        {
-          "amount": "45",
-          "amountHuman": 4.5e-05,
-          "amountHumanStr": "0.000045",
-          "decimals": 6,
-          "epoch": 1764806400,
-          "priceUsd": 0.9998056002181522,
-          "symbol": "USDC",
-          "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-          "usd": 4.4991252009816854e-05
         },
         {
           "amount": "4475",
@@ -4026,17 +4026,40 @@
         }
       ],
       "pendingTokenCount": 306,
-      "totalUsd": 0.21031598087715037
+      "totalUsd": 0.2332705176525589
     },
     {
       "address": "0x4a4cd5c752d175722b85d16682619d660e5a34ab",
-      "pending": [],
-      "pendingTokenCount": 0,
-      "totalUsd": 0.0
+      "pending": [
+        {
+          "amount": "194767",
+          "amountHuman": 0.194767,
+          "amountHumanStr": "0.194767",
+          "decimals": 6,
+          "epoch": 1764806400,
+          "priceUsd": 0.9998056002181522,
+          "symbol": "USDC",
+          "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "usd": 0.19472913733768885
+        }
+      ],
+      "pendingTokenCount": 1,
+      "totalUsd": 0.19472913733768885
     },
     {
       "address": "0x4e35a5cd14a04b4c76d20fd2c68a3ea2070a824e",
       "pending": [
+        {
+          "amount": "24",
+          "amountHuman": 2.4e-05,
+          "amountHumanStr": "0.000024",
+          "decimals": 6,
+          "epoch": 1764806400,
+          "priceUsd": 0.9998056002181522,
+          "symbol": "USDC",
+          "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "usd": 2.3995334405235653e-05
+        },
         {
           "amount": "345172378667",
           "amountHuman": 3.45172378667e-07,
@@ -4049,13 +4072,24 @@
           "usd": 4.747594894498418e-08
         }
       ],
-      "pendingTokenCount": 1,
-      "totalUsd": 4.747594894498418e-08
+      "pendingTokenCount": 2,
+      "totalUsd": 2.4042810354180637e-05
     },
     {
       "address": "0x4e4e2fe969a597cca9fd0dcebb12d138959f69f0",
       "pending": [
         {
+          "amount": "24",
+          "amountHuman": 2.4e-05,
+          "amountHumanStr": "0.000024",
+          "decimals": 6,
+          "epoch": 1764806400,
+          "priceUsd": 0.9998056002181522,
+          "symbol": "USDC",
+          "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "usd": 2.3995334405235653e-05
+        },
+        {
           "amount": "345172378665",
           "amountHuman": 3.45172378665e-07,
           "amountHumanStr": "0.000000345172378665",
@@ -4067,13 +4101,24 @@
           "usd": 4.747594894470909e-08
         }
       ],
-      "pendingTokenCount": 1,
-      "totalUsd": 4.747594894470909e-08
+      "pendingTokenCount": 2,
+      "totalUsd": 2.4042810354180363e-05
     },
     {
       "address": "0x4f69de699882ce3c152d9bf5e5df93fd8dc20386",
       "pending": [
         {
+          "amount": "24",
+          "amountHuman": 2.4e-05,
+          "amountHumanStr": "0.000024",
+          "decimals": 6,
+          "epoch": 1764806400,
+          "priceUsd": 0.9998056002181522,
+          "symbol": "USDC",
+          "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "usd": 2.3995334405235653e-05
+        },
+        {
           "amount": "345172378665",
           "amountHuman": 3.45172378665e-07,
           "amountHumanStr": "0.000000345172378665",
@@ -4085,30 +4130,23 @@
           "usd": 4.747594894470909e-08
         }
       ],
-      "pendingTokenCount": 1,
-      "totalUsd": 4.747594894470909e-08
+      "pendingTokenCount": 2,
+      "totalUsd": 2.4042810354180363e-05
     },
     {
       "address": "0x57e7452db712d1a62756ae4ab199289865a0014d",
       "pending": [
         {
-          "amount": "345172378665",
-          "amountHuman": 3.45172378665e-07,
-          "amountHumanStr": "0.000000345172378665",
-          "decimals": 18,
+          "amount": "24",
+          "amountHuman": 2.4e-05,
+          "amountHumanStr": "0.000024",
+          "decimals": 6,
           "epoch": 1764806400,
-          "priceUsd": 0.13754272322811179,
-          "symbol": "CARV",
-          "token": "0xc08cd26474722ce93f4d0c34d16201461c10aa8c",
-          "usd": 4.747594894470909e-08
-        }
-      ],
-      "pendingTokenCount": 1,
-      "totalUsd": 4.747594894470909e-08
-    },
-    {
-      "address": "0x750d7af768ff42bd0ba5021ca55fc0f8d13c14b1",
-      "pending": [
+          "priceUsd": 0.9998056002181522,
+          "symbol": "USDC",
+          "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "usd": 2.3995334405235653e-05
+        },
         {
           "amount": "345172378665",
           "amountHuman": 3.45172378665e-07,
@@ -4121,12 +4159,52 @@
           "usd": 4.747594894470909e-08
         }
       ],
-      "pendingTokenCount": 1,
-      "totalUsd": 4.747594894470909e-08
+      "pendingTokenCount": 2,
+      "totalUsd": 2.4042810354180363e-05
+    },
+    {
+      "address": "0x750d7af768ff42bd0ba5021ca55fc0f8d13c14b1",
+      "pending": [
+        {
+          "amount": "24",
+          "amountHuman": 2.4e-05,
+          "amountHumanStr": "0.000024",
+          "decimals": 6,
+          "epoch": 1764806400,
+          "priceUsd": 0.9998056002181522,
+          "symbol": "USDC",
+          "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "usd": 2.3995334405235653e-05
+        },
+        {
+          "amount": "345172378665",
+          "amountHuman": 3.45172378665e-07,
+          "amountHumanStr": "0.000000345172378665",
+          "decimals": 18,
+          "epoch": 1764806400,
+          "priceUsd": 0.13754272322811179,
+          "symbol": "CARV",
+          "token": "0xc08cd26474722ce93f4d0c34d16201461c10aa8c",
+          "usd": 4.747594894470909e-08
+        }
+      ],
+      "pendingTokenCount": 2,
+      "totalUsd": 2.4042810354180363e-05
     },
     {
       "address": "0x76ada9b1e0bb3dede2bac9712d66ea454f0bc003",
       "pending": [
+        {
+          "amount": "16681",
+          "amountHuman": 0.016681,
+          "amountHumanStr": "0.016681",
+          "decimals": 6,
+          "epoch": 1764806400,
+          "priceUsd": 0.9998056002181522,
+          "symbol": "USDC",
+          "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "usd": 0.016677757217239
+        },
         {
           "amount": "237529264743825",
           "amountHuman": 0.000237529264743825,
@@ -4137,17 +4215,6 @@
           "symbol": "CARV",
           "token": "0xc08cd26474722ce93f4d0c34d16201461c10aa8c",
           "usd": 3.2670421919236816e-05
-        },
-        {
-          "amount": "32",
-          "amountHuman": 3.2e-05,
-          "amountHumanStr": "0.000032",
-          "decimals": 6,
-          "epoch": 1764806400,
-          "priceUsd": 0.9998056002181522,
-          "symbol": "USDC",
-          "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-          "usd": 3.199377920698087e-05
         },
         {
           "amount": "3245",
@@ -4514,11 +4581,22 @@
         }
       ],
       "pendingTokenCount": 35,
-      "totalUsd": 0.010246210294731915
+      "totalUsd": 0.026891973732763932
     },
     {
       "address": "0x9402cec8e19cfbdc3fab9898f49ff91351d47a98",
       "pending": [
+        {
+          "amount": "18422",
+          "amountHuman": 0.018422,
+          "amountHumanStr": "0.018422",
+          "decimals": 6,
+          "epoch": 1764806400,
+          "priceUsd": 0.9998056002181522,
+          "symbol": "USDC",
+          "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "usd": 0.0184184187672188
+        },
         {
           "amount": "262331007785545",
           "amountHuman": 0.000262331007785545,
@@ -4529,17 +4607,6 @@
           "symbol": "CARV",
           "token": "0xc08cd26474722ce93f4d0c34d16201461c10aa8c",
           "usd": 3.608172119799885e-05
-        },
-        {
-          "amount": "36",
-          "amountHuman": 3.6e-05,
-          "amountHumanStr": "0.000036",
-          "decimals": 6,
-          "epoch": 1764806400,
-          "priceUsd": 0.9998056002181522,
-          "symbol": "USDC",
-          "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-          "usd": 3.5993001607853484e-05
         },
         {
           "amount": "3584",
@@ -9262,11 +9329,22 @@
         }
       ],
       "pendingTokenCount": 431,
-      "totalUsd": 0.16897977878221224
+      "totalUsd": 0.18736220454782318
     },
     {
       "address": "0xa06c02ad87fd4b48e47245e41a242287a7de055c",
       "pending": [
+        {
+          "amount": "24",
+          "amountHuman": 2.4e-05,
+          "amountHumanStr": "0.000024",
+          "decimals": 6,
+          "epoch": 1764806400,
+          "priceUsd": 0.9998056002181522,
+          "symbol": "USDC",
+          "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "usd": 2.3995334405235653e-05
+        },
         {
           "amount": "345172378665",
           "amountHuman": 3.45172378665e-07,
@@ -9279,12 +9357,23 @@
           "usd": 4.747594894470909e-08
         }
       ],
-      "pendingTokenCount": 1,
-      "totalUsd": 4.747594894470909e-08
+      "pendingTokenCount": 2,
+      "totalUsd": 2.4042810354180363e-05
     },
     {
       "address": "0xa1dbd1973af714c1a45a83d989b3ce889c9070f1",
       "pending": [
+        {
+          "amount": "2302",
+          "amountHuman": 0.002302,
+          "amountHumanStr": "0.002302",
+          "decimals": 6,
+          "epoch": 1764806400,
+          "priceUsd": 0.9998056002181522,
+          "symbol": "USDC",
+          "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "usd": 0.002301552491702186
+        },
         {
           "amount": "32791375973193",
           "amountHuman": 3.2791375973193e-05,
@@ -9295,17 +9384,6 @@
           "symbol": "CARV",
           "token": "0xc08cd26474722ce93f4d0c34d16201461c10aa8c",
           "usd": 4.5102151497498396e-06
-        },
-        {
-          "amount": "4",
-          "amountHuman": 4e-06,
-          "amountHumanStr": "0.000004",
-          "decimals": 6,
-          "epoch": 1764806400,
-          "priceUsd": 0.9998056002181522,
-          "symbol": "USDC",
-          "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-          "usd": 3.999222400872609e-06
         },
         {
           "amount": "448",
@@ -12972,11 +13050,22 @@
         }
       ],
       "pendingTokenCount": 335,
-      "totalUsd": 0.023464386723310582
+      "totalUsd": 0.025761939992611893
     },
     {
       "address": "0xa2bbdbf0bc1f623154b0ccf43f300e0bf8386d26",
       "pending": [
+        {
+          "amount": "24",
+          "amountHuman": 2.4e-05,
+          "amountHumanStr": "0.000024",
+          "decimals": 6,
+          "epoch": 1764806400,
+          "priceUsd": 0.9998056002181522,
+          "symbol": "USDC",
+          "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "usd": 2.3995334405235653e-05
+        },
         {
           "amount": "345172378664",
           "amountHuman": 3.45172378664e-07,
@@ -12989,12 +13078,23 @@
           "usd": 4.747594894457155e-08
         }
       ],
-      "pendingTokenCount": 1,
-      "totalUsd": 4.747594894457155e-08
+      "pendingTokenCount": 2,
+      "totalUsd": 2.4042810354180224e-05
     },
     {
       "address": "0xa9e0ab6697f239cd274fd772f31bd819efcf3e50",
       "pending": [
+        {
+          "amount": "24",
+          "amountHuman": 2.4e-05,
+          "amountHumanStr": "0.000024",
+          "decimals": 6,
+          "epoch": 1764806400,
+          "priceUsd": 0.9998056002181522,
+          "symbol": "USDC",
+          "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "usd": 2.3995334405235653e-05
+        },
         {
           "amount": "345172378665",
           "amountHuman": 3.45172378665e-07,
@@ -16087,58 +16187,80 @@
           "usd": 0.0
         }
       ],
-      "pendingTokenCount": 281,
-      "totalUsd": 0.018910187916948522
+      "pendingTokenCount": 282,
+      "totalUsd": 0.018934183251353758
     },
     {
       "address": "0xaa78b95fa980303868c99ba399bbf21b30b516cc",
       "pending": [
         {
-          "amount": "345172378665",
-          "amountHuman": 3.45172378665e-07,
-          "amountHumanStr": "0.000000345172378665",
-          "decimals": 18,
-          "epoch": 1764806400,
-          "priceUsd": 0.13754272322811179,
-          "symbol": "CARV",
-          "token": "0xc08cd26474722ce93f4d0c34d16201461c10aa8c",
-          "usd": 4.747594894470909e-08
-        }
-      ],
-      "pendingTokenCount": 1,
-      "totalUsd": 4.747594894470909e-08
-    },
-    {
-      "address": "0xb309b8a386b12afec9af9b2663ac79a453f7faa4",
-      "pending": [
-        {
-          "amount": "345172378665",
-          "amountHuman": 3.45172378665e-07,
-          "amountHumanStr": "0.000000345172378665",
-          "decimals": 18,
-          "epoch": 1764806400,
-          "priceUsd": 0.13754272322811179,
-          "symbol": "CARV",
-          "token": "0xc08cd26474722ce93f4d0c34d16201461c10aa8c",
-          "usd": 4.747594894470909e-08
-        }
-      ],
-      "pendingTokenCount": 1,
-      "totalUsd": 4.747594894470909e-08
-    },
-    {
-      "address": "0xb5b4d5c284616744522bc46b5dc88b2fc086124c",
-      "pending": [
-        {
-          "amount": "20765",
-          "amountHuman": 0.020765,
-          "amountHumanStr": "0.020765",
+          "amount": "24",
+          "amountHuman": 2.4e-05,
+          "amountHumanStr": "0.000024",
           "decimals": 6,
           "epoch": 1764806400,
           "priceUsd": 0.9998056002181522,
           "symbol": "USDC",
           "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-          "usd": 0.02076096328852993
+          "usd": 2.3995334405235653e-05
+        },
+        {
+          "amount": "345172378665",
+          "amountHuman": 3.45172378665e-07,
+          "amountHumanStr": "0.000000345172378665",
+          "decimals": 18,
+          "epoch": 1764806400,
+          "priceUsd": 0.13754272322811179,
+          "symbol": "CARV",
+          "token": "0xc08cd26474722ce93f4d0c34d16201461c10aa8c",
+          "usd": 4.747594894470909e-08
+        }
+      ],
+      "pendingTokenCount": 2,
+      "totalUsd": 2.4042810354180363e-05
+    },
+    {
+      "address": "0xb309b8a386b12afec9af9b2663ac79a453f7faa4",
+      "pending": [
+        {
+          "amount": "24",
+          "amountHuman": 2.4e-05,
+          "amountHumanStr": "0.000024",
+          "decimals": 6,
+          "epoch": 1764806400,
+          "priceUsd": 0.9998056002181522,
+          "symbol": "USDC",
+          "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "usd": 2.3995334405235653e-05
+        },
+        {
+          "amount": "345172378665",
+          "amountHuman": 3.45172378665e-07,
+          "amountHumanStr": "0.000000345172378665",
+          "decimals": 18,
+          "epoch": 1764806400,
+          "priceUsd": 0.13754272322811179,
+          "symbol": "CARV",
+          "token": "0xc08cd26474722ce93f4d0c34d16201461c10aa8c",
+          "usd": 4.747594894470909e-08
+        }
+      ],
+      "pendingTokenCount": 2,
+      "totalUsd": 2.4042810354180363e-05
+    },
+    {
+      "address": "0xb5b4d5c284616744522bc46b5dc88b2fc086124c",
+      "pending": [
+        {
+          "amount": "10543780",
+          "amountHuman": 10.54378,
+          "amountHumanStr": "10.54378",
+          "decimals": 6,
+          "epoch": 1764806400,
+          "priceUsd": 0.9998056002181522,
+          "symbol": "USDC",
+          "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "usd": 10.541730291468149
         },
         {
           "amount": "150136303724436607",
@@ -16153,165 +16275,253 @@
         }
       ],
       "pendingTokenCount": 2,
-      "totalUsd": 0.04141111935819185
+      "totalUsd": 10.56238044753781
     },
     {
       "address": "0xb7e194208098ab57ed5f53d695b95226cd30036b",
       "pending": [
         {
-          "amount": "345172378665",
-          "amountHuman": 3.45172378665e-07,
-          "amountHumanStr": "0.000000345172378665",
-          "decimals": 18,
-          "epoch": 1764806400,
-          "priceUsd": 0.13754272322811179,
-          "symbol": "CARV",
-          "token": "0xc08cd26474722ce93f4d0c34d16201461c10aa8c",
-          "usd": 4.747594894470909e-08
-        }
-      ],
-      "pendingTokenCount": 1,
-      "totalUsd": 4.747594894470909e-08
-    },
-    {
-      "address": "0xc49b9e97ed793469a703f8f54e229a82026620bc",
-      "pending": [
-        {
-          "amount": "345172378665",
-          "amountHuman": 3.45172378665e-07,
-          "amountHumanStr": "0.000000345172378665",
-          "decimals": 18,
-          "epoch": 1764806400,
-          "priceUsd": 0.13754272322811179,
-          "symbol": "CARV",
-          "token": "0xc08cd26474722ce93f4d0c34d16201461c10aa8c",
-          "usd": 4.747594894470909e-08
-        }
-      ],
-      "pendingTokenCount": 1,
-      "totalUsd": 4.747594894470909e-08
-    },
-    {
-      "address": "0xccb16ce655dd3db3ccc855c2c15e104d1188a239",
-      "pending": [
-        {
-          "amount": "345172378665",
-          "amountHuman": 3.45172378665e-07,
-          "amountHumanStr": "0.000000345172378665",
-          "decimals": 18,
-          "epoch": 1764806400,
-          "priceUsd": 0.13754272322811179,
-          "symbol": "CARV",
-          "token": "0xc08cd26474722ce93f4d0c34d16201461c10aa8c",
-          "usd": 4.747594894470909e-08
-        }
-      ],
-      "pendingTokenCount": 1,
-      "totalUsd": 4.747594894470909e-08
-    },
-    {
-      "address": "0xd2fdd9353c1b03f657ebcaae8635ebdea53b072d",
-      "pending": [
-        {
-          "amount": "345172378665",
-          "amountHuman": 3.45172378665e-07,
-          "amountHumanStr": "0.000000345172378665",
-          "decimals": 18,
-          "epoch": 1764806400,
-          "priceUsd": 0.13754272322811179,
-          "symbol": "CARV",
-          "token": "0xc08cd26474722ce93f4d0c34d16201461c10aa8c",
-          "usd": 4.747594894470909e-08
-        }
-      ],
-      "pendingTokenCount": 1,
-      "totalUsd": 4.747594894470909e-08
-    },
-    {
-      "address": "0xd3aad681478ff5cdfbee97fb7d57dcb3642e4234",
-      "pending": [
-        {
-          "amount": "345172378665",
-          "amountHuman": 3.45172378665e-07,
-          "amountHumanStr": "0.000000345172378665",
-          "decimals": 18,
-          "epoch": 1764806400,
-          "priceUsd": 0.13754272322811179,
-          "symbol": "CARV",
-          "token": "0xc08cd26474722ce93f4d0c34d16201461c10aa8c",
-          "usd": 4.747594894470909e-08
-        }
-      ],
-      "pendingTokenCount": 1,
-      "totalUsd": 4.747594894470909e-08
-    },
-    {
-      "address": "0xd66411f42be55ae87aa96acb9c3966e14429f997",
-      "pending": [
-        {
-          "amount": "345172378665",
-          "amountHuman": 3.45172378665e-07,
-          "amountHumanStr": "0.000000345172378665",
-          "decimals": 18,
-          "epoch": 1764806400,
-          "priceUsd": 0.13754272322811179,
-          "symbol": "CARV",
-          "token": "0xc08cd26474722ce93f4d0c34d16201461c10aa8c",
-          "usd": 4.747594894470909e-08
-        }
-      ],
-      "pendingTokenCount": 1,
-      "totalUsd": 4.747594894470909e-08
-    },
-    {
-      "address": "0xe15f030ad94190c33045e126e715de735460acbf",
-      "pending": [
-        {
-          "amount": "345172378665",
-          "amountHuman": 3.45172378665e-07,
-          "amountHumanStr": "0.000000345172378665",
-          "decimals": 18,
-          "epoch": 1764806400,
-          "priceUsd": 0.13754272322811179,
-          "symbol": "CARV",
-          "token": "0xc08cd26474722ce93f4d0c34d16201461c10aa8c",
-          "usd": 4.747594894470909e-08
-        }
-      ],
-      "pendingTokenCount": 1,
-      "totalUsd": 4.747594894470909e-08
-    },
-    {
-      "address": "0xe582b2f0e2dd5b4cd9adae496c3f5b3eb702c259",
-      "pending": [
-        {
-          "amount": "345172378665",
-          "amountHuman": 3.45172378665e-07,
-          "amountHumanStr": "0.000000345172378665",
-          "decimals": 18,
-          "epoch": 1764806400,
-          "priceUsd": 0.13754272322811179,
-          "symbol": "CARV",
-          "token": "0xc08cd26474722ce93f4d0c34d16201461c10aa8c",
-          "usd": 4.747594894470909e-08
-        }
-      ],
-      "pendingTokenCount": 1,
-      "totalUsd": 4.747594894470909e-08
-    },
-    {
-      "address": "0xe6e7d3c6379ad80de02f26ccc72605d0f70d5201",
-      "pending": [
-        {
-          "amount": "882904",
-          "amountHuman": 0.882904,
-          "amountHumanStr": "0.882904",
+          "amount": "24",
+          "amountHuman": 2.4e-05,
+          "amountHumanStr": "0.000024",
           "decimals": 6,
           "epoch": 1764806400,
           "priceUsd": 0.9998056002181522,
           "symbol": "USDC",
           "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-          "usd": 0.8827323636550075
+          "usd": 2.3995334405235653e-05
+        },
+        {
+          "amount": "345172378665",
+          "amountHuman": 3.45172378665e-07,
+          "amountHumanStr": "0.000000345172378665",
+          "decimals": 18,
+          "epoch": 1764806400,
+          "priceUsd": 0.13754272322811179,
+          "symbol": "CARV",
+          "token": "0xc08cd26474722ce93f4d0c34d16201461c10aa8c",
+          "usd": 4.747594894470909e-08
+        }
+      ],
+      "pendingTokenCount": 2,
+      "totalUsd": 2.4042810354180363e-05
+    },
+    {
+      "address": "0xc49b9e97ed793469a703f8f54e229a82026620bc",
+      "pending": [
+        {
+          "amount": "24",
+          "amountHuman": 2.4e-05,
+          "amountHumanStr": "0.000024",
+          "decimals": 6,
+          "epoch": 1764806400,
+          "priceUsd": 0.9998056002181522,
+          "symbol": "USDC",
+          "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "usd": 2.3995334405235653e-05
+        },
+        {
+          "amount": "345172378665",
+          "amountHuman": 3.45172378665e-07,
+          "amountHumanStr": "0.000000345172378665",
+          "decimals": 18,
+          "epoch": 1764806400,
+          "priceUsd": 0.13754272322811179,
+          "symbol": "CARV",
+          "token": "0xc08cd26474722ce93f4d0c34d16201461c10aa8c",
+          "usd": 4.747594894470909e-08
+        }
+      ],
+      "pendingTokenCount": 2,
+      "totalUsd": 2.4042810354180363e-05
+    },
+    {
+      "address": "0xccb16ce655dd3db3ccc855c2c15e104d1188a239",
+      "pending": [
+        {
+          "amount": "24",
+          "amountHuman": 2.4e-05,
+          "amountHumanStr": "0.000024",
+          "decimals": 6,
+          "epoch": 1764806400,
+          "priceUsd": 0.9998056002181522,
+          "symbol": "USDC",
+          "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "usd": 2.3995334405235653e-05
+        },
+        {
+          "amount": "345172378665",
+          "amountHuman": 3.45172378665e-07,
+          "amountHumanStr": "0.000000345172378665",
+          "decimals": 18,
+          "epoch": 1764806400,
+          "priceUsd": 0.13754272322811179,
+          "symbol": "CARV",
+          "token": "0xc08cd26474722ce93f4d0c34d16201461c10aa8c",
+          "usd": 4.747594894470909e-08
+        }
+      ],
+      "pendingTokenCount": 2,
+      "totalUsd": 2.4042810354180363e-05
+    },
+    {
+      "address": "0xd2fdd9353c1b03f657ebcaae8635ebdea53b072d",
+      "pending": [
+        {
+          "amount": "24",
+          "amountHuman": 2.4e-05,
+          "amountHumanStr": "0.000024",
+          "decimals": 6,
+          "epoch": 1764806400,
+          "priceUsd": 0.9998056002181522,
+          "symbol": "USDC",
+          "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "usd": 2.3995334405235653e-05
+        },
+        {
+          "amount": "345172378665",
+          "amountHuman": 3.45172378665e-07,
+          "amountHumanStr": "0.000000345172378665",
+          "decimals": 18,
+          "epoch": 1764806400,
+          "priceUsd": 0.13754272322811179,
+          "symbol": "CARV",
+          "token": "0xc08cd26474722ce93f4d0c34d16201461c10aa8c",
+          "usd": 4.747594894470909e-08
+        }
+      ],
+      "pendingTokenCount": 2,
+      "totalUsd": 2.4042810354180363e-05
+    },
+    {
+      "address": "0xd3aad681478ff5cdfbee97fb7d57dcb3642e4234",
+      "pending": [
+        {
+          "amount": "24",
+          "amountHuman": 2.4e-05,
+          "amountHumanStr": "0.000024",
+          "decimals": 6,
+          "epoch": 1764806400,
+          "priceUsd": 0.9998056002181522,
+          "symbol": "USDC",
+          "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "usd": 2.3995334405235653e-05
+        },
+        {
+          "amount": "345172378665",
+          "amountHuman": 3.45172378665e-07,
+          "amountHumanStr": "0.000000345172378665",
+          "decimals": 18,
+          "epoch": 1764806400,
+          "priceUsd": 0.13754272322811179,
+          "symbol": "CARV",
+          "token": "0xc08cd26474722ce93f4d0c34d16201461c10aa8c",
+          "usd": 4.747594894470909e-08
+        }
+      ],
+      "pendingTokenCount": 2,
+      "totalUsd": 2.4042810354180363e-05
+    },
+    {
+      "address": "0xd66411f42be55ae87aa96acb9c3966e14429f997",
+      "pending": [
+        {
+          "amount": "24",
+          "amountHuman": 2.4e-05,
+          "amountHumanStr": "0.000024",
+          "decimals": 6,
+          "epoch": 1764806400,
+          "priceUsd": 0.9998056002181522,
+          "symbol": "USDC",
+          "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "usd": 2.3995334405235653e-05
+        },
+        {
+          "amount": "345172378665",
+          "amountHuman": 3.45172378665e-07,
+          "amountHumanStr": "0.000000345172378665",
+          "decimals": 18,
+          "epoch": 1764806400,
+          "priceUsd": 0.13754272322811179,
+          "symbol": "CARV",
+          "token": "0xc08cd26474722ce93f4d0c34d16201461c10aa8c",
+          "usd": 4.747594894470909e-08
+        }
+      ],
+      "pendingTokenCount": 2,
+      "totalUsd": 2.4042810354180363e-05
+    },
+    {
+      "address": "0xe15f030ad94190c33045e126e715de735460acbf",
+      "pending": [
+        {
+          "amount": "24",
+          "amountHuman": 2.4e-05,
+          "amountHumanStr": "0.000024",
+          "decimals": 6,
+          "epoch": 1764806400,
+          "priceUsd": 0.9998056002181522,
+          "symbol": "USDC",
+          "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "usd": 2.3995334405235653e-05
+        },
+        {
+          "amount": "345172378665",
+          "amountHuman": 3.45172378665e-07,
+          "amountHumanStr": "0.000000345172378665",
+          "decimals": 18,
+          "epoch": 1764806400,
+          "priceUsd": 0.13754272322811179,
+          "symbol": "CARV",
+          "token": "0xc08cd26474722ce93f4d0c34d16201461c10aa8c",
+          "usd": 4.747594894470909e-08
+        }
+      ],
+      "pendingTokenCount": 2,
+      "totalUsd": 2.4042810354180363e-05
+    },
+    {
+      "address": "0xe582b2f0e2dd5b4cd9adae496c3f5b3eb702c259",
+      "pending": [
+        {
+          "amount": "24",
+          "amountHuman": 2.4e-05,
+          "amountHumanStr": "0.000024",
+          "decimals": 6,
+          "epoch": 1764806400,
+          "priceUsd": 0.9998056002181522,
+          "symbol": "USDC",
+          "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "usd": 2.3995334405235653e-05
+        },
+        {
+          "amount": "345172378665",
+          "amountHuman": 3.45172378665e-07,
+          "amountHumanStr": "0.000000345172378665",
+          "decimals": 18,
+          "epoch": 1764806400,
+          "priceUsd": 0.13754272322811179,
+          "symbol": "CARV",
+          "token": "0xc08cd26474722ce93f4d0c34d16201461c10aa8c",
+          "usd": 4.747594894470909e-08
+        }
+      ],
+      "pendingTokenCount": 2,
+      "totalUsd": 2.4042810354180363e-05
+    },
+    {
+      "address": "0xe6e7d3c6379ad80de02f26ccc72605d0f70d5201",
+      "pending": [
+        {
+          "amount": "448306543",
+          "amountHuman": 448.306543,
+          "amountHumanStr": "448.306543",
+          "decimals": 6,
+          "epoch": 1764806400,
+          "priceUsd": 0.9998056002181522,
+          "symbol": "USDC",
+          "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "usd": 448.21939230583985
         },
         {
           "amount": "6383581813555492196",
@@ -16645,11 +16855,22 @@
         }
       ],
       "pendingTokenCount": 31,
-      "totalUsd": 275.05172184388704
+      "totalUsd": 722.3883817860718
     },
     {
       "address": "0xeb06308b1c2194988baa4f5626d5e3d3f228ae5a",
       "pending": [
+        {
+          "amount": "24",
+          "amountHuman": 2.4e-05,
+          "amountHumanStr": "0.000024",
+          "decimals": 6,
+          "epoch": 1764806400,
+          "priceUsd": 0.9998056002181522,
+          "symbol": "USDC",
+          "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "usd": 2.3995334405235653e-05
+        },
         {
           "amount": "345172378665",
           "amountHuman": 3.45172378665e-07,
@@ -19665,22 +19886,22 @@
           "usd": 0.0
         }
       ],
-      "pendingTokenCount": 274,
-      "totalUsd": 0.00019007829081947442
+      "pendingTokenCount": 275,
+      "totalUsd": 0.00021407362522471007
     },
     {
       "address": "0xf6e0efd25be6f4302190ea44db596719aa400588",
       "pending": [
         {
-          "amount": "9298398",
-          "amountHuman": 9.298398,
-          "amountHumanStr": "9.298398",
+          "amount": "4721383482",
+          "amountHuman": 4721.383482,
+          "amountHumanStr": "4721.383482",
           "decimals": 6,
           "epoch": 1764806400,
           "priceUsd": 0.9998056002181522,
           "symbol": "USDC",
           "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-          "usd": 9.296590393457267
+          "usd": 4720.46564608108
         },
         {
           "amount": "67229305820960000533",
@@ -19893,10 +20114,10 @@
         }
       ],
       "pendingTokenCount": 20,
-      "totalUsd": 1484.0500708433551
+      "totalUsd": 6195.219126530978
     }
   ],
-  "lastUpdated": "2025-12-04T03:10:46.542783",
+  "lastUpdated": "2025-12-04T03:15:34.646044",
   "summary": {
     "totalByTokenUsd": {
       "0x00fbac94fec8d4089d3fe979f39454f48c71a65d": 3.5453979248122907,
@@ -19968,7 +20189,7 @@
       "0x7ba6f01772924a82d9626c126347a28299e98c98": 1.524528752670944e-07,
       "0x800822d361335b4d5f352dac293ca4128b5b605f": 12.180737718383996,
       "0x806041b6473da60abbe1b256d9a2749a151be6c6": 2.5999840654692133e-13,
-      "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 935.4689816745974,
+      "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 8096.147475673695,
       "0x8fe815417913a93ea99049fc0718ee1647a2a07c": 9.527118499408789e-07,
       "0x9126236476efba9ad8ab77855c60eb5bf37586eb": 0.005565248374881366,
       "0x93dc5cb35627a759848c7a7f0079ea7b49e435a5": 0.0001193745380568846,
@@ -20042,9 +20263,9 @@
       "0xfc48314ad4ad5bd36a84e8307b86a68a01d95d9c": 6.033121803871454e-07,
       "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2": 4.3769372236318936e-11
     },
-    "totalUsd": 2824.14158595348
+    "totalUsd": 9984.820079952578
   },
-  "updateTimestamp": 1764817846,
+  "updateTimestamp": 1764818134,
   "walletSummaries": [
     {
       "address": "0xf6e0efd25be6f4302190ea44db596719aa400588",
@@ -20052,7 +20273,7 @@
         {
           "symbol": "USDC",
           "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-          "usd": 930.5298500274046
+          "usd": 5641.698905715028
         },
         {
           "symbol": "AVNT",
@@ -20075,11 +20296,16 @@
           "usd": 50.230100421373834
         }
       ],
-      "totalUsdOwed": 1484.0500708433551
+      "totalUsdOwed": 6195.219126530978
     },
     {
       "address": "0x010b23b2f2a5f6bc4ce0c68a5f65c248c1129831",
       "top5Tokens": [
+        {
+          "symbol": "USDC",
+          "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "usd": 1565.9425509192429
+        },
         {
           "symbol": "WCT",
           "token": "0xef4461891dfb3ac8572ccf7c794664a8dd927945",
@@ -20099,18 +20325,18 @@
           "symbol": "CLANKER",
           "token": "0x1bc0c42215582d5a085795f4badbac3ff36d1bcb",
           "usd": 83.13299229296042
-        },
-        {
-          "symbol": "VIRTUAL",
-          "token": "0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b",
-          "usd": 79.29751089191441
         }
       ],
-      "totalUsdOwed": 1054.0800322385162
+      "totalUsdOwed": 2616.9385808037155
     },
     {
       "address": "0xe6e7d3c6379ad80de02f26ccc72605d0f70d5201",
       "top5Tokens": [
+        {
+          "symbol": "USDC",
+          "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "usd": 448.21939230583985
+        },
         {
           "symbol": "WCT",
           "token": "0xef4461891dfb3ac8572ccf7c794664a8dd927945",
@@ -20130,14 +20356,40 @@
           "symbol": "CLANKER",
           "token": "0x1bc0c42215582d5a085795f4badbac3ff36d1bcb",
           "usd": 24.135306518239812
-        },
-        {
-          "symbol": "VIRTUAL",
-          "token": "0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b",
-          "usd": 23.021783274266653
         }
       ],
-      "totalUsdOwed": 275.05172184388704
+      "totalUsdOwed": 722.3883817860718
+    },
+    {
+      "address": "0x0682f4ee106d167ca46ed015918e83f6f4e5b571",
+      "top5Tokens": [
+        {
+          "symbol": "USDC",
+          "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+          "usd": 429.3834317244412
+        },
+        {
+          "symbol": "uSUI",
+          "token": "0xb0505e5a99abd03d94a1169e638b78edfed26ea4",
+          "usd": 2.327576596987262
+        },
+        {
+          "symbol": "DRV",
+          "token": "0x9d0e8f5b25384c7310cb8c6ae32c8fbeb645d083",
+          "usd": 1.9966193968236647
+        },
+        {
+          "symbol": "BMX",
+          "token": "0x548f93779fbc992010c07467cbaf329dd5f059b7",
+          "usd": 1.7224482679167492
+        },
+        {
+          "symbol": "WAI",
+          "token": "0x23471e7250bcd7ee21df3f39ed6151931d1e076b",
+          "usd": 1.4953685586383398
+        }
+      ],
+      "totalUsdOwed": 439.02403762635976
     }
   ]
 }
