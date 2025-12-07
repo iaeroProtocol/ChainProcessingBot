@@ -1,10 +1,10 @@
 {
-  "asOf": 1765056638,
+  "asOf": 1765089927,
   "checkpoint": {
-    "last_block": 39133622
+    "last_block": 39150197
   },
   "decimals": 18,
-  "holderCount": 32,
+  "holderCount": 33,
   "holders": [
     {
       "address": "0x010b23b2f2a5f6bc4ce0c68a5f65c248c1129831",
@@ -75,6 +75,10 @@
       "balance": "9999999999991808"
     },
     {
+      "address": "0xa3f2d88fb722d4f2a082edbf98354b81dc34829e",
+      "balance": "9531313501445077200"
+    },
+    {
       "address": "0xa9e0ab6697f239cd274fd772f31bd819efcf3e50",
       "balance": "10000000000000000"
     },
@@ -135,8 +139,8 @@
       "balance": "1947702364857261893877760"
     }
   ],
-  "lastUpdated": "2025-12-06T21:30:39.128257",
+  "lastUpdated": "2025-12-07T06:45:27.530284",
   "token": "0x72c135b8eebc57a3823f0920233e1a90ff4d683d",
-  "totalSupply": "2966962430957542296482841",
-  "updateTimestamp": 1765056639
+  "totalSupply": "2966971962271043741560041",
+  "updateTimestamp": 1765089927
 }
