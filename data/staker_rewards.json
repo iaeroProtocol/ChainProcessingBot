@@ -154,7 +154,7 @@
     "0xfc48314ad4ad5bd36a84e8307b86a68a01d95d9c",
     "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2"
   ],
-  "asOf": 1765992654,
+  "asOf": 1765992930,
   "chainId": 8453,
   "currentEpoch": 1765411200,
   "defaultEpochs": [
@@ -561,17 +561,6 @@
       "address": "0x0682f4ee106d167ca46ed015918e83f6f4e5b571",
       "pending": [
         {
-          "amount": "24970",
-          "amountHuman": 2.497e-14,
-          "amountHumanStr": "0.00000000000002497",
-          "decimals": 18,
-          "epoch": 1765411200,
-          "priceUsd": 0.0,
-          "symbol": "cbBTC",
-          "token": "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
-          "usd": 0.0
-        },
-        {
           "amount": "50154432945931494659",
           "amountHuman": 50.1544329459315,
           "amountHumanStr": "50.154432945931494659",
@@ -638,7 +627,7 @@
           "usd": 2.588981757149562e-12
         }
       ],
-      "pendingTokenCount": 7,
+      "pendingTokenCount": 6,
       "totalUsd": 7.612879059169073
     },
     {
@@ -42779,7 +42768,7 @@
       "totalUsd": 1412.4806308219777
     }
   ],
-  "lastUpdated": "2025-12-17T17:30:54.219050",
+  "lastUpdated": "2025-12-17T17:35:30.585350",
   "summary": {
     "totalByTokenUsd": {
       "0x00fbac94fec8d4089d3fe979f39454f48c71a65d": 3.612996872242451,
@@ -42938,7 +42927,7 @@
     },
     "totalUsd": 2459.570473862166
   },
-  "updateTimestamp": 1765992654,
+  "updateTimestamp": 1765992930,
   "walletSummaries": [
     {
       "address": "0xf6e0efd25be6f4302190ea44db596719aa400588",
