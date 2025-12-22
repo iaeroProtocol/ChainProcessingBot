@@ -50,7 +50,7 @@
     "0xf43eb8de897fbc7f2502483b2bef7bb9ea179229",
     "0xfb31f85a8367210b2e4ed2360d2da9dc2d2ccc95"
   ],
-  "asOf": 1766429124,
+  "asOf": 1766429417,
   "chainId": 8453,
   "currentEpoch": 1766016000,
   "defaultEpochs": [
@@ -1160,17 +1160,6 @@
       "address": "0x2f3302103a329ebb8a75e807be93177f8ebfbd77",
       "pending": [
         {
-          "amount": "67278439069382",
-          "amountHuman": 6.7278439069382e-05,
-          "amountHumanStr": "0.000067278439069382",
-          "decimals": 18,
-          "epoch": 1766016000,
-          "priceUsd": 3030.225295200483,
-          "symbol": "WETH",
-          "token": "0x4200000000000000000000000000000000000006",
-          "usd": 0.20386882788964575
-        },
-        {
           "amount": "110068",
           "amountHuman": 0.110068,
           "amountHumanStr": "0.110068",
@@ -1699,8 +1688,8 @@
           "usd": 0.0
         }
       ],
-      "pendingTokenCount": 49,
-      "totalUsd": 0.7201935381778194
+      "pendingTokenCount": 48,
+      "totalUsd": 0.5163247102881736
     },
     {
       "address": "0x2fbb24544a6ecb47a404ba7cb85f7d1de9441c0c",
@@ -19569,7 +19558,7 @@
       "totalUsd": 355.62386488240145
     }
   ],
-  "lastUpdated": "2025-12-22T18:45:24.624695",
+  "lastUpdated": "2025-12-22T18:50:17.302618",
   "summary": {
     "totalByTokenUsd": {
       "0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b": 170.03826874862128,
@@ -19581,7 +19570,7 @@
       "0x236aa50979d5f3de3bd1eeb40e81137f22ab794b": 0.0,
       "0x2615a94df961278dcbc41fb0a54fec5f10a693ae": 62.58070432679033,
       "0x35e5db674d8e93a03d814fa0ada70731efe8a4b9": 5.04662135561159e-07,
-      "0x4200000000000000000000000000000000000006": 4.064257862737172,
+      "0x4200000000000000000000000000000000000006": 3.8603890348475263,
       "0x4c87da04887a1f9f21f777e3a8dd55c3c9f84701": 0.09530394787249724,
       "0x4da9a0f397db1397902070f93a4d6ddbc0e0e6e8": 0.04649525430446267,
       "0x4e74d4db6c0726ccded4656d0bce448876bb4c7a": 0.056950173159148604,
@@ -19622,9 +19611,9 @@
       "0xf43eb8de897fbc7f2502483b2bef7bb9ea179229": 0.09805210555115436,
       "0xfb31f85a8367210b2e4ed2360d2da9dc2d2ccc95": 0.03678193338218939
     },
-    "totalUsd": 369.97474002527315
+    "totalUsd": 369.7708711973835
   },
-  "updateTimestamp": 1766429124,
+  "updateTimestamp": 1766429417,
   "walletSummaries": [
     {
       "address": "0xf6e0efd25be6f4302190ea44db596719aa400588",
