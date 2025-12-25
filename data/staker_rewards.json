@@ -70,7 +70,7 @@
     "0xfbb75a59193a3525a8825bebe7d4b56899e2f7e1",
     "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2"
   ],
-  "asOf": 1766623526,
+  "asOf": 1766623817,
   "chainId": 8453,
   "currentEpoch": 1766620800,
   "defaultEpochs": [
@@ -92,43 +92,9 @@
     },
     {
       "address": "0x0540d0265f5bfe408e4c95b356e39f9577e55f8e",
-      "pending": [
-        {
-          "amount": "85",
-          "amountHuman": 8.5e-17,
-          "amountHumanStr": "0.000000000000000085",
-          "decimals": 18,
-          "epoch": 1766620800,
-          "priceUsd": 1.177479158511848,
-          "symbol": "EURC",
-          "token": "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42",
-          "usd": 1.0008572847350708e-16
-        },
-        {
-          "amount": "214",
-          "amountHuman": 2.14e-16,
-          "amountHumanStr": "0.000000000000000214",
-          "decimals": 18,
-          "epoch": 1766620800,
-          "priceUsd": 0.3553940359324888,
-          "symbol": "cbADA",
-          "token": "0xcbada732173e39521cdbe8bf59a6dc85a9fc7b8c",
-          "usd": 7.60543236895526e-17
-        },
-        {
-          "amount": "710915952",
-          "amountHuman": 7.10915952e-10,
-          "amountHumanStr": "0.000000000710915952",
-          "decimals": 18,
-          "epoch": 1766620800,
-          "priceUsd": 0.0,
-          "symbol": "tBTC",
-          "token": "0x236aa50979d5f3de3bd1eeb40e81137f22ab794b",
-          "usd": 0.0
-        }
-      ],
-      "pendingTokenCount": 3,
-      "totalUsd": 1.761400521630597e-16
+      "pending": [],
+      "pendingTokenCount": 0,
+      "totalUsd": 0.0
     },
     {
       "address": "0x0682f4ee106d167ca46ed015918e83f6f4e5b571",
@@ -47479,7 +47445,7 @@
       "totalUsd": 3243.8296649881745
     }
   ],
-  "lastUpdated": "2025-12-25T00:45:26.642879",
+  "lastUpdated": "2025-12-25T00:50:17.433214",
   "summary": {
     "totalByTokenUsd": {
       "0x043eb4b75d0805c43d7c834902e335621983cf03": 5.586034608926584,
@@ -47506,7 +47472,7 @@
       "0x55cd6469f597452b5a7536e2cd98fde4c1247ee4": 13.426754010311916,
       "0x590830dfdf9a3f68afcdde2694773debdf267774": 40.1831628109464,
       "0x5ab3d4c385b400f3abb49e80de2faf6a88a7b691": 20.790723552796194,
-      "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42": 1.579550258566824e-11,
+      "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42": 1.579540249993977e-11,
       "0x63706e401c06ac8513145b7687a14804d17f814b": 28.854046733574343,
       "0x688aee022aa544f150678b8e5720b6b96a9e9a2f": 5.928459840780819,
       "0x696f9436b67233384889472cd7cd58a6fb5df4f1": 82.7516851536188,
@@ -47541,7 +47507,7 @@
       "0xc48823ec67720a04a9dfd8c7d109b2c3d6622094": 79.21948086787816,
       "0xc55e93c62874d8100dbd2dfe307edc1036ad5434": 5.822300416374025,
       "0xcb17c9db87b595717c857a08468793f5bab6445f": 4.14783801262621e-12,
-      "0xcbada732173e39521cdbe8bf59a6dc85a9fc7b8c": 1.1966905453818596e-11,
+      "0xcbada732173e39521cdbe8bf59a6dc85a9fc7b8c": 1.1966829399494906e-11,
       "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": 0.0,
       "0xcd2f22236dd9dfe2356d7c543161d4d260fd9bcb": 7.077464383924986,
       "0xd4554bea546efa83c1e6b389ecac40ea999b3e78": 1.6564795258541662,
@@ -47554,7 +47520,7 @@
     },
     "totalUsd": 3678.829874829586
   },
-  "updateTimestamp": 1766623526,
+  "updateTimestamp": 1766623817,
   "walletSummaries": [
     {
       "address": "0xf6e0efd25be6f4302190ea44db596719aa400588",
