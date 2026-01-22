@@ -1,5 +1,5 @@
 {
-  "currentEpoch": 1768435200,
+  "currentEpoch": 1769040000,
   "distributorAddress": "0x781a80fa817b5a146c440f03ef8643f4aca6588a",
   "epochs": {
     "1766016000": {
@@ -232,16 +232,32 @@
         "0xc729777d0470f30612b1564fd96e8dd26f5814e3",
         "0xea17df5cf6d172224892b5477a16acb111182478"
       ]
+    },
+    "1769040000": {
+      "tokens": [
+        "0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b",
+        "0x1111111111166b7fe7bd91427724b487980afc69",
+        "0x16ee7ecac70d1028e7712751e2ee6ba808a7dd92",
+        "0x1aa8fd5bcce2231c6100d55bf8b377cff33acfc3",
+        "0x23471e7250bcd7ee21df3f39ed6151931d1e076b",
+        "0x3e31966d4f81c72d2a55310a6365a56a4393e98d",
+        "0x4200000000000000000000000000000000000006",
+        "0x6b2504a03ca4d43d0d73776f6ad46dab2f2a4cfd",
+        "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+        "0xa88594d404727625a9437c3f886c7643872296ae",
+        "0xd85c31854c2b0fb40aaa9e2fc4da23c21f829d46",
+        "0xfb31f85a8367210b2e4ed2360d2da9dc2d2ccc95"
+      ]
     }
   },
-  "lastUpdated": "2026-01-21T23:55:16.197275",
-  "previousEpoch": 1767830400,
+  "lastUpdated": "2026-01-22T00:05:39.882541",
+  "previousEpoch": 1768435200,
   "state": {
-    "last_block": 41125184,
-    "last_update": 1768437043
+    "last_block": 41125496,
+    "last_update": 1769040339
   },
   "summary": {
-    "totalEpochs": 5
+    "totalEpochs": 6
   },
-  "updateTimestamp": 1769039716
+  "updateTimestamp": 1769040339
 }
