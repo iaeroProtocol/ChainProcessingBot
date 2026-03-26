@@ -1,45 +1,52 @@
 {
-  "asOf": 1774446319,
+  "asOf": 1774532738,
   "chainId": 8453,
   "distributor": "0x781a80fa817b5a146c440f03ef8643f4aca6588a",
-  "lastUpdated": "2026-03-25T13:45:19.384242",
+  "lastUpdated": "2026-03-26T13:45:38.783635",
   "liqDistributor": "0xb81efc6be6622bf4086566210a6ad134cd0cdda4",
   "liqSnapshot": {
     "balances": [
       {
         "address": "0x00000000a22c618fd6b4d7e9a335c4b96b189a38",
         "balance": "109694630477610914992",
-        "balanceUsd": 0.430951810026,
+        "balanceUsd": 0.395459015389,
         "decimals": 18,
-        "priceUsd": 0.00392865
+        "priceUsd": 0.00360509
       },
       {
         "address": "0x00f3c42833c3170159af4e92dbb451fb3f708917",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 8,
-        "priceUsd": 2.43
+        "priceUsd": 2.31
       },
       {
         "address": "0x00fbac94fec8d4089d3fe979f39454f48c71a65d",
         "balance": "30197963259176",
-        "balanceUsd": 2.251379e-06,
+        "balanceUsd": 2.267384e-06,
         "decimals": 18,
-        "priceUsd": 0.074554
+        "priceUsd": 0.075084
+      },
+      {
+        "address": "0x01b4db9b14e0a5935b666a9b6fe723639508222b",
+        "balance": "0",
+        "balanceUsd": 0.0,
+        "decimals": 18,
+        "priceUsd": 0.0
       },
       {
         "address": "0x03569cc076654f82679c4ba2124d64774781b01d",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 1.005
+        "priceUsd": 1.004
       },
       {
         "address": "0x043eb4b75d0805c43d7c834902e335621983cf03",
-        "balance": "848198416046511502",
-        "balanceUsd": 0.618399411981,
+        "balance": "3623371807577014072",
+        "balanceUsd": 2.623473370302,
         "decimals": 18,
-        "priceUsd": 0.729074
+        "priceUsd": 0.724042
       },
       {
         "address": "0x0467659ab956c74cfc8ef273d117ec0a3ca19972",
@@ -51,16 +58,16 @@
       {
         "address": "0x04c0599ae5a44757c0af6f9ec3b93da8976c150a",
         "balance": "493320",
-        "balanceUsd": 1.18e-09,
+        "balanceUsd": 1.116e-09,
         "decimals": 18,
-        "priceUsd": 2391.91
+        "priceUsd": 2262.06
       },
       {
         "address": "0x04d5ddf5f3a8939889f11e97f8c4bb48317f1938",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.993818
+        "priceUsd": 0.994252
       },
       {
         "address": "0x06088387eadce2ca0e8ce940c74f1c8939fbbcf5",
@@ -72,23 +79,23 @@
       {
         "address": "0x07d15798a67253d76cea61f0ea6f57aedc59dffb",
         "balance": "375000000000000000000",
-        "balanceUsd": 0.00261375,
+        "balanceUsd": 0.00244125,
         "decimals": 18,
-        "priceUsd": 6.97e-06
+        "priceUsd": 6.51e-06
       },
       {
         "address": "0x080d43c2164afdbc3712422ce78ab902ccab5ca1",
         "balance": "74160349165109",
-        "balanceUsd": 1.4548e-07,
+        "balanceUsd": 1.51151e-07,
         "decimals": 18,
-        "priceUsd": 0.0019617
+        "priceUsd": 0.00203816
       },
       {
         "address": "0x084382d1cc4f4dfd1769b1cc1ac2a9b1f8365e90",
         "balance": "706158298320468",
-        "balanceUsd": 1.06898e-07,
+        "balanceUsd": 9.7273e-08,
         "decimals": 18,
-        "priceUsd": 0.00015138
+        "priceUsd": 0.00013775
       },
       {
         "address": "0x091b1dbbdd959d7553ba817150ed59fb24c3eac9",
@@ -100,30 +107,30 @@
       {
         "address": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
         "balance": "10812730",
-        "balanceUsd": 8.45699295309,
+        "balanceUsd": 8.42843653316,
         "decimals": 6,
-        "priceUsd": 0.782133
+        "priceUsd": 0.779492
       },
       {
         "address": "0x0b2558bdbc7ffec0f327fb3579c23dabd1699706",
         "balance": "28305171077035866",
-        "balanceUsd": 0.000734416159,
+        "balanceUsd": 0.00071074879,
         "decimals": 18,
-        "priceUsd": 0.02594636
+        "priceUsd": 0.02511021
       },
       {
         "address": "0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b",
-        "balance": "7443812262233441589",
-        "balanceUsd": 5.531251246261,
+        "balance": "20643599773788241304",
+        "balanceUsd": 14.343709856422,
         "decimals": 18,
-        "priceUsd": 0.743067
+        "priceUsd": 0.694826
       },
       {
         "address": "0x0c03ce270b4826ec62e7dd007f0b716068639f7b",
         "balance": "1162858125784390",
-        "balanceUsd": 0.000326554982,
+        "balanceUsd": 0.000348831855,
         "decimals": 18,
-        "priceUsd": 0.280821
+        "priceUsd": 0.299978
       },
       {
         "address": "0x0c75780ee8a70355597d0e4ccda6a123d9834b32",
@@ -137,14 +144,14 @@
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.460042
+        "priceUsd": 0.442942
       },
       {
         "address": "0x0d97f261b1e88845184f678e2d1e7a98d9fd38de",
         "balance": "129486170460063",
-        "balanceUsd": 1.312e-09,
+        "balanceUsd": 1.23e-09,
         "decimals": 18,
-        "priceUsd": 1.013e-05
+        "priceUsd": 9.5e-06
       },
       {
         "address": "0x0e2ffe16778964f32770fa38b8a86751cc9e5f22",
@@ -163,23 +170,23 @@
       {
         "address": "0x1111111111166b7fe7bd91427724b487980afc69",
         "balance": "70344773879542962154",
-        "balanceUsd": 1.144462340022,
+        "balanceUsd": 1.092556338271,
         "decimals": 18,
-        "priceUsd": 0.01626933
+        "priceUsd": 0.01553145
       },
       {
         "address": "0x11dc28d01984079b7efe7763b533e6ed9e3722b9",
-        "balance": "27033760897353426693",
-        "balanceUsd": 1.371206420236,
+        "balance": "162459173799774157941",
+        "balanceUsd": 6.87148043809,
         "decimals": 18,
-        "priceUsd": 0.050722
+        "priceUsd": 0.04229666
       },
       {
         "address": "0x1217bfe6c773eec6cc4a38b5dc45b92292b6e189",
         "balance": "6125617",
-        "balanceUsd": 6.125617,
+        "balanceUsd": 6.121322942483,
         "decimals": 6,
-        "priceUsd": 1.0
+        "priceUsd": 0.999299
       },
       {
         "address": "0x13c9c2305965641024069f22350d23dcb837237b",
@@ -205,9 +212,9 @@
       {
         "address": "0x16ee7ecac70d1028e7712751e2ee6ba808a7dd92",
         "balance": "1705954120874053783",
-        "balanceUsd": 0.059593412923,
+        "balanceUsd": 0.058112030602,
         "decimals": 18,
-        "priceUsd": 0.0349326
+        "priceUsd": 0.03406424
       },
       {
         "address": "0x182214259d6a36db5dad514f4e737afb2dec816d",
@@ -219,44 +226,44 @@
       {
         "address": "0x194f360d130f2393a5e9f3117a6a1b78abea1624",
         "balance": "53469971888006450979",
-        "balanceUsd": 0.164291300923,
+        "balanceUsd": 0.158771061026,
         "decimals": 18,
-        "priceUsd": 0.00307259
+        "priceUsd": 0.00296935
       },
       {
         "address": "0x1aa8fd5bcce2231c6100d55bf8b377cff33acfc3",
         "balance": "21067130945182706",
-        "balanceUsd": 0.005498816117,
+        "balanceUsd": 0.006075254953,
         "decimals": 18,
-        "priceUsd": 0.261014
+        "priceUsd": 0.288376
       },
       {
         "address": "0x1bc0c42215582d5a085795f4badbac3ff36d1bcb",
         "balance": "355699008462447",
-        "balanceUsd": 0.009386896833,
+        "balanceUsd": 0.009038311805,
         "decimals": 18,
-        "priceUsd": 26.39
+        "priceUsd": 25.41
       },
       {
         "address": "0x1c4cca7c5db003824208adda61bd749e55f463a3",
         "balance": "15146172567936717",
-        "balanceUsd": 0.000158940603,
+        "balanceUsd": 0.00014258728,
         "decimals": 18,
-        "priceUsd": 0.01049378
+        "priceUsd": 0.00941408
       },
       {
         "address": "0x1c7a460413dd4e964f96d8dfc56e7223ce88cd85",
         "balance": "1051692672037053",
-        "balanceUsd": 0.000111151295,
+        "balanceUsd": 0.000104501442,
         "decimals": 18,
-        "priceUsd": 0.105688
+        "priceUsd": 0.099365
       },
       {
         "address": "0x1db0c569ebb4a8b57ac01833b9792f526305e062",
         "balance": "561148387407323",
-        "balanceUsd": 3.20685e-07,
+        "balanceUsd": 2.91174e-07,
         "decimals": 18,
-        "priceUsd": 0.00057148
+        "priceUsd": 0.00051889
       },
       {
         "address": "0x1e2ea5db3aeb89f9cdf8a89a54d151872f833851",
@@ -267,17 +274,17 @@
       },
       {
         "address": "0x1f16e03c1a5908818f47f6ee7bb16690b40d0671",
-        "balance": "11072217783015814641",
-        "balanceUsd": 0.487783786376,
+        "balance": "164422463629925069289",
+        "balanceUsd": 6.63153941831,
         "decimals": 18,
-        "priceUsd": 0.04405475
+        "priceUsd": 0.04033232
       },
       {
         "address": "0x2081ab0d9ec9e4303234ab26d86b20b3367946ee",
         "balance": "2928130276359",
-        "balanceUsd": 5.95224e-07,
+        "balanceUsd": 5.48562e-07,
         "decimals": 18,
-        "priceUsd": 0.203278
+        "priceUsd": 0.187342
       },
       {
         "address": "0x20fbd133897ef802e0235db77bb19a071e257d41",
@@ -289,16 +296,16 @@
       {
         "address": "0x226a2fa2556c48245e57cd1cba4c6c9e67077dd2",
         "balance": "124965896444408528",
-        "balanceUsd": 0.002278778115,
+        "balanceUsd": 0.002147025321,
         "decimals": 18,
-        "priceUsd": 0.0182352
+        "priceUsd": 0.01718089
       },
       {
         "address": "0x22e6966b799c4d5b13be962e1d117b56327fda66",
         "balance": "11364811618731",
-        "balanceUsd": 3.420104e-06,
+        "balanceUsd": 3.290613e-06,
         "decimals": 18,
-        "priceUsd": 0.300938
+        "priceUsd": 0.289544
       },
       {
         "address": "0x23234097f73c3380c123cd6e27e16e66ae71cb75",
@@ -310,13 +317,13 @@
       {
         "address": "0x23471e7250bcd7ee21df3f39ed6151931d1e076b",
         "balance": "4921096266623261",
-        "balanceUsd": 0.000375371381,
+        "balanceUsd": 0.000444045279,
         "decimals": 18,
-        "priceUsd": 0.076278
+        "priceUsd": 0.090233
       },
       {
         "address": "0x236aa50979d5f3de3bd1eeb40e81137f22ab794b",
-        "balance": "612811291796",
+        "balance": "17028077880695",
         "balanceUsd": 0.0,
         "decimals": 18,
         "priceUsd": 0.0
@@ -324,16 +331,16 @@
       {
         "address": "0x24914cb6bd01e6a0cf2a9c0478e33c25926e6a0c",
         "balance": "250813616637072",
-        "balanceUsd": 1.5129077e-05,
+        "balanceUsd": 1.4337008e-05,
         "decimals": 18,
-        "priceUsd": 0.06032
+        "priceUsd": 0.057162
       },
       {
         "address": "0x24fcfc492c1393274b6bcd568ac9e225bec93584",
         "balance": "130578128462386",
-        "balanceUsd": 4.024376e-06,
+        "balanceUsd": 3.843373e-06,
         "decimals": 18,
-        "priceUsd": 0.03081968
+        "priceUsd": 0.02943351
       },
       {
         "address": "0x25dcf191058288edcbe1597a4c2d8dea0943acae",
@@ -345,16 +352,16 @@
       {
         "address": "0x2615a94df961278dcbc41fb0a54fec5f10a693ae",
         "balance": "754530729119476",
-        "balanceUsd": 0.001071433635,
+        "balanceUsd": 0.001041252406,
         "decimals": 18,
-        "priceUsd": 1.42
+        "priceUsd": 1.38
       },
       {
         "address": "0x26f3901ac8a79c50fb0d8289c74f0d09adc42e29",
         "balance": "5727176",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.00653117
+        "priceUsd": 0.00625748
       },
       {
         "address": "0x292e23bbaa444c382a1ce91089b71e38cdc8245b",
@@ -366,30 +373,30 @@
       {
         "address": "0x2a06a17cbc6d0032cac2c6696da90f29d39a1a29",
         "balance": "8626194",
-        "balanceUsd": 0.001592837936,
+        "balanceUsd": 0.001523051164,
         "decimals": 8,
-        "priceUsd": 0.01846513
+        "priceUsd": 0.01765612
       },
       {
         "address": "0x2a0a59d6b975828e781ecac125dba40d7ee5ddc0",
         "balance": "2997991368957805",
-        "balanceUsd": 0.001431945608,
+        "balanceUsd": 0.00136710505,
         "decimals": 18,
-        "priceUsd": 0.477635
+        "priceUsd": 0.456007
       },
       {
         "address": "0x2ae3f1ec7f1f5012cfeab0185bfc7aa3cf0dec22",
         "balance": "1002798548493",
-        "balanceUsd": 0.002478045577,
+        "balanceUsd": 0.002339328454,
         "decimals": 18,
-        "priceUsd": 2471.13
+        "priceUsd": 2332.8
       },
       {
         "address": "0x2b11834ed1feaed4b4b3a86a6f571315e25a884d",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.01371673
+        "priceUsd": 0.01308364
       },
       {
         "address": "0x2c5cf1997efcae3ca8e6c26ca623e453b9203d5f",
@@ -410,14 +417,14 @@
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 1.56053e-07
+        "priceUsd": 1.44327e-07
       },
       {
         "address": "0x2dad3a13ef0c6366220f989157009e501e7938f8",
         "balance": "879364952727913",
-        "balanceUsd": 6.212924e-06,
+        "balanceUsd": 6.008419e-06,
         "decimals": 18,
-        "priceUsd": 0.00706524
+        "priceUsd": 0.00683268
       },
       {
         "address": "0x2f0269d0319201a0ef96dea70bd89180d3a9a0e8",
@@ -429,23 +436,23 @@
       {
         "address": "0x306acd0c07c430abbbb2e74ef7bde94f32a898c0",
         "balance": "709133771067858",
-        "balanceUsd": 1.4227783e-05,
+        "balanceUsd": 1.3919225e-05,
         "decimals": 18,
-        "priceUsd": 0.02006361
+        "priceUsd": 0.01962849
       },
       {
         "address": "0x30c7235866872213f68cb1f08c37cb9eccb93452",
         "balance": "35614197886870",
-        "balanceUsd": 1.210266e-06,
+        "balanceUsd": 1.110741e-06,
         "decimals": 18,
-        "priceUsd": 0.03398269
+        "priceUsd": 0.03118816
       },
       {
         "address": "0x311935cd80b76769bf2ecc9d8ab7635b2139cf82",
         "balance": "15099805",
-        "balanceUsd": 1.4085098104,
+        "balanceUsd": 1.31926996285,
         "decimals": 9,
-        "priceUsd": 93.28
+        "priceUsd": 87.37
       },
       {
         "address": "0x3319e7bd7e8792f313aef8f572cbb0470bfd38a2",
@@ -459,42 +466,49 @@
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.00904081
+        "priceUsd": 0.00858701
       },
       {
         "address": "0x352b850b733ab8bab50aed1dab5d22e3186ce984",
         "balance": "7215082869495252",
-        "balanceUsd": 1.1225803e-05,
+        "balanceUsd": 1.1703153e-05,
         "decimals": 18,
-        "priceUsd": 0.00155588
+        "priceUsd": 0.00162204
       },
       {
         "address": "0x35e5db674d8e93a03d814fa0ada70731efe8a4b9",
         "balance": "1755309904",
-        "balanceUsd": 5.52e-10,
+        "balanceUsd": 5.71e-10,
         "decimals": 18,
-        "priceUsd": 0.314339
+        "priceUsd": 0.325359
       },
       {
         "address": "0x368181499736d0c0cc614dbb145e2ec1ac86b8c6",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 1.024
+        "priceUsd": 1.022
+      },
+      {
+        "address": "0x36a280467bd6e068ae8edeb5c252dddeae04f7a3",
+        "balance": "0",
+        "balanceUsd": 0.0,
+        "decimals": 8,
+        "priceUsd": 0.0
       },
       {
         "address": "0x370923d39f139c64813f173a1bf0b4f9ba36a24f",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.00068433
+        "priceUsd": 0.00068434
       },
       {
         "address": "0x39d5313c3750140e5042887413ba8aa6145a9bd2",
         "balance": "138452",
         "balanceUsd": 1e-12,
         "decimals": 18,
-        "priceUsd": 7.11
+        "priceUsd": 6.45
       },
       {
         "address": "0x3ac6d169bb8d9fe36458c4a422412727ef59e09c",
@@ -506,16 +520,16 @@
       {
         "address": "0x3e31966d4f81c72d2a55310a6365a56a4393e98d",
         "balance": "39327172",
-        "balanceUsd": 3.111487194296,
+        "balanceUsd": 3.063154099908,
         "decimals": 6,
-        "priceUsd": 0.079118
+        "priceUsd": 0.077889
       },
       {
         "address": "0x3ee5e23eee121094f1cfc0ccc79d6c809ebd22e5",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 4.495e-05
+        "priceUsd": 4.473e-05
       },
       {
         "address": "0x3f0ef001d521f8e66a3ac9ef835cf0c9b049919f",
@@ -526,10 +540,10 @@
       },
       {
         "address": "0x4200000000000000000000000000000000000006",
-        "balance": "16562055957887600",
-        "balanceUsd": 36.31959499229,
+        "balance": "63550661588711148",
+        "balanceUsd": 131.781193896815,
         "decimals": 18,
-        "priceUsd": 2192.94
+        "priceUsd": 2073.64
       },
       {
         "address": "0x430d3834c385b5064050bf73c725ecc614111140",
@@ -541,9 +555,9 @@
       {
         "address": "0x449b3317a6d1efb1bc3ba0700c9eaa4ffff4ae65",
         "balance": "5673452",
-        "balanceUsd": 3.950515402832,
+        "balanceUsd": 3.915130082708,
         "decimals": 6,
-        "priceUsd": 0.696316
+        "priceUsd": 0.690079
       },
       {
         "address": "0x45bbff28b665bc2663250890bc92d2d0a08cd80c",
@@ -555,72 +569,79 @@
       {
         "address": "0x4621b7a9c75199271f773ebd9a499dbd165c3191",
         "balance": "15598636673",
-        "balanceUsd": 1.5464e-08,
+        "balanceUsd": 1.5479e-08,
         "decimals": 18,
-        "priceUsd": 0.991351
+        "priceUsd": 0.992305
       },
       {
         "address": "0x4a0c64af541439898448659aedcec8e8e819fc53",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.0299171
+        "priceUsd": 0.02822893
       },
       {
         "address": "0x4bfaa776991e85e5f8b1255461cbbd216cfc714f",
         "balance": "619678149610",
-        "balanceUsd": 1.3484e-08,
+        "balanceUsd": 1.256e-08,
         "decimals": 18,
-        "priceUsd": 0.02175988
+        "priceUsd": 0.02026873
       },
       {
         "address": "0x4c87da04887a1f9f21f777e3a8dd55c3c9f84701",
         "balance": "698377243777704313",
-        "balanceUsd": 0.000212641903,
+        "balanceUsd": 0.000210658512,
         "decimals": 18,
-        "priceUsd": 0.00030448
+        "priceUsd": 0.00030164
       },
       {
         "address": "0x4da9a0f397db1397902070f93a4d6ddbc0e0e6e8",
         "balance": "254169733954599",
-        "balanceUsd": 0.001616519508,
+        "balanceUsd": 0.001558060469,
         "decimals": 18,
-        "priceUsd": 6.36
+        "priceUsd": 6.13
       },
       {
         "address": "0x4e200fe2f3efb977d5fd9c430a41531fb04d97b8",
         "balance": "17885439508156615",
-        "balanceUsd": 0.001016983976,
+        "balanceUsd": 0.000965599108,
         "decimals": 18,
-        "priceUsd": 0.056861
+        "priceUsd": 0.053988
       },
       {
         "address": "0x4e74d4db6c0726ccded4656d0bce448876bb4c7a",
         "balance": "5905573032000786",
-        "balanceUsd": 0.005713015918,
+        "balanceUsd": 0.005620310232,
         "decimals": 18,
-        "priceUsd": 0.967394
+        "priceUsd": 0.951696
       },
       {
         "address": "0x4eb92702ba4cfbf80561bad64d89c706ac824960",
         "balance": "7407724829928457",
-        "balanceUsd": 0.000907327768,
+        "balanceUsd": 0.000868526105,
         "decimals": 18,
-        "priceUsd": 0.122484
+        "priceUsd": 0.117246
       },
       {
         "address": "0x4ed4e862860bed51a9570b96d89af5e1b0efefed",
         "balance": "702656302314851",
-        "balanceUsd": 5.29719e-07,
+        "balanceUsd": 5.01795e-07,
         "decimals": 18,
-        "priceUsd": 0.00075388
+        "priceUsd": 0.00071414
+      },
+      {
+        "address": "0x4f4ded4b99f3c76fa9af75275b545e807e252540",
+        "balance": "0",
+        "balanceUsd": 0.0,
+        "decimals": 8,
+        "priceUsd": 0.0
       },
       {
         "address": "0x4f9fd6be4a90f2620860d680c0d4d5fb53d1a825",
-        "balance": "236237911990980722",
-        "balanceUsd": 0.006086263473,
+        "balance": "57120156593278761401",
+        "balanceUsd": 1.384173333872,
         "decimals": 18,
-        "priceUsd": 0.02576328
+        "priceUsd": 0.02423266
       },
       {
         "address": "0x507b8c8053c20c40d8f448d9b9a4054a981544a7",
@@ -632,16 +653,16 @@
       {
         "address": "0x50da645f148798f68ef2d7db7c1cb22a6819bb2c",
         "balance": "42427946",
-        "balanceUsd": 0.131112111568,
+        "balanceUsd": 0.121843302484,
         "decimals": 8,
-        "priceUsd": 0.309023
+        "priceUsd": 0.287177
       },
       {
         "address": "0x50f88fe97f72cd3e75b9eb4f747f59bceba80d59",
         "balance": "67382469037499768",
-        "balanceUsd": 0.000112338031,
+        "balanceUsd": 0.000107154971,
         "decimals": 18,
-        "priceUsd": 0.00166717
+        "priceUsd": 0.00159025
       },
       {
         "address": "0x511cfa6620e8d62ee790931416499d7921ee2eab",
@@ -652,17 +673,17 @@
       },
       {
         "address": "0x526728dbc96689597f85ae4cd716d4f7fccbae9d",
-        "balance": "2066852385000120362",
-        "balanceUsd": 2.058756524208,
+        "balance": "12772641480253552016",
+        "balanceUsd": 12.724692984137,
         "decimals": 18,
-        "priceUsd": 0.996083
+        "priceUsd": 0.996246
       },
       {
         "address": "0x532f27101965dd16442e59d40670faf5ebb142e4",
         "balance": "2259764285962120984",
-        "balanceUsd": 0.015672437022,
+        "balanceUsd": 0.014867508983,
         "decimals": 18,
-        "priceUsd": 0.00693543
+        "priceUsd": 0.00657923
       },
       {
         "address": "0x5359b789214659f0c2ccbf01373aeaffa470b182",
@@ -674,37 +695,37 @@
       {
         "address": "0x548f93779fbc992010c07467cbaf329dd5f059b7",
         "balance": "2154446892060",
-        "balanceUsd": 9.5227e-07,
+        "balanceUsd": 9.07225e-07,
         "decimals": 18,
-        "priceUsd": 0.442002
+        "priceUsd": 0.421094
       },
       {
         "address": "0x55cd6469f597452b5a7536e2cd98fde4c1247ee4",
         "balance": "20143975251734155",
-        "balanceUsd": 0.000138483384,
+        "balanceUsd": 0.000127544601,
         "decimals": 18,
-        "priceUsd": 0.00687468
+        "priceUsd": 0.00633165
       },
       {
         "address": "0x56f8ad6112c2db9f9848243531b277ce1c3be30c",
         "balance": "3831972835732782",
-        "balanceUsd": 1.36533e-07,
+        "balanceUsd": 1.3569e-07,
         "decimals": 18,
-        "priceUsd": 3.563e-05
+        "priceUsd": 3.541e-05
       },
       {
         "address": "0x58538e6a46e07434d7e7375bc268d3cb839c0133",
         "balance": "18175363331829",
-        "balanceUsd": 1.813083e-06,
+        "balanceUsd": 1.78333e-06,
         "decimals": 18,
-        "priceUsd": 0.099755
+        "priceUsd": 0.098118
       },
       {
         "address": "0x590830dfdf9a3f68afcdde2694773debdf267774",
-        "balance": "40166295449592898003",
-        "balanceUsd": 0.46440431464,
+        "balance": "284821471879309547969",
+        "balanceUsd": 5.828278993349,
         "decimals": 18,
-        "priceUsd": 0.01156204
+        "priceUsd": 0.02046292
       },
       {
         "address": "0x597c44171437c95863b49b6bea9c6e4b31c11151",
@@ -716,16 +737,16 @@
       {
         "address": "0x5ab3d4c385b400f3abb49e80de2faf6a88a7b691",
         "balance": "63897292758404550",
-        "balanceUsd": 0.003651474692,
+        "balanceUsd": 0.003453904263,
         "decimals": 18,
-        "priceUsd": 0.057146
+        "priceUsd": 0.054054
       },
       {
         "address": "0x5b2193fdc451c1f847be09ca9d13a4bf60f8c86b",
         "balance": "258281128788042445007",
-        "balanceUsd": 14.686381545146,
+        "balanceUsd": 15.505132723404,
         "decimals": 18,
-        "priceUsd": 0.056862
+        "priceUsd": 0.060032
       },
       {
         "address": "0x5cca011eab2de4114fb0d21c0336d82a838af2aa",
@@ -737,51 +758,51 @@
       {
         "address": "0x5cda0e1ca4ce2af96315f7f8963c85399c172204",
         "balance": "577392424368909",
-        "balanceUsd": 0.10703700763,
+        "balanceUsd": 0.103353243962,
         "decimals": 18,
-        "priceUsd": 185.38
+        "priceUsd": 179.0
       },
       {
         "address": "0x5ed25e305e08f58afd7995eac72563e6be65a617",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 1.29
+        "priceUsd": 1.22
       },
       {
         "address": "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42",
-        "balance": "10564640",
-        "balanceUsd": 12.2549824,
+        "balance": "11663885",
+        "balanceUsd": 13.41346775,
         "decimals": 6,
-        "priceUsd": 1.16
+        "priceUsd": 1.15
       },
       {
         "address": "0x616b416f777e3dc904a44aa259a475bf26d06ef9",
         "balance": "378988544171610",
-        "balanceUsd": 6.3007e-08,
+        "balanceUsd": 6.3014e-08,
         "decimals": 18,
-        "priceUsd": 0.00016625
+        "priceUsd": 0.00016627
       },
       {
         "address": "0x63706e401c06ac8513145b7687a14804d17f814b",
-        "balance": "4032428378952685",
-        "balanceUsd": 0.467318124837,
+        "balance": "37839441454997218",
+        "balanceUsd": 4.037468403248,
         "decimals": 18,
-        "priceUsd": 115.89
+        "priceUsd": 106.7
       },
       {
         "address": "0x6444c6c2d527d85ea97032da9a7504d6d1448ecf",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.512366
+        "priceUsd": 0.509071
       },
       {
         "address": "0x64fcc3a02eeeba05ef701b7eed066c6ebd5d4e51",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.00546817
+        "priceUsd": 0.00498055
       },
       {
         "address": "0x6537aef3eb037e3da7f7ff6dbf52038dd6d7fc75",
@@ -795,7 +816,7 @@
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 5.803e-05
+        "priceUsd": 5.495e-05
       },
       {
         "address": "0x674b82f208b453c22310b47ae134984b14b4a407",
@@ -807,30 +828,30 @@
       {
         "address": "0x688aee022aa544f150678b8e5720b6b96a9e9a2f",
         "balance": "1049747887949787735",
-        "balanceUsd": 0.248382947264,
+        "balanceUsd": 0.23048684527,
         "decimals": 18,
-        "priceUsd": 0.236612
+        "priceUsd": 0.219564
       },
       {
         "address": "0x696f9436b67233384889472cd7cd58a6fb5df4f1",
-        "balance": "126162266037164469",
-        "balanceUsd": 0.017786860915,
+        "balance": "27867686813677880474",
+        "balanceUsd": 4.07879824511,
         "decimals": 18,
-        "priceUsd": 0.140984
+        "priceUsd": 0.146363
       },
       {
         "address": "0x6985884c4392d348587b19cb9eaaf157f13271cd",
         "balance": "7412556960130778",
-        "balanceUsd": 0.016381750882,
+        "balanceUsd": 0.015418118477,
         "decimals": 18,
-        "priceUsd": 2.21
+        "priceUsd": 2.08
       },
       {
         "address": "0x6b2504a03ca4d43d0d73776f6ad46dab2f2a4cfd",
-        "balance": "47301745424119860083",
-        "balanceUsd": 0.995468543573,
+        "balance": "738162199453948237396",
+        "balanceUsd": 13.527826205585,
         "decimals": 18,
-        "priceUsd": 0.02104507
+        "priceUsd": 0.01832636
       },
       {
         "address": "0x6b8b8c0b220058704a7fda56493ccb8388d9e661",
@@ -842,9 +863,9 @@
       {
         "address": "0x6c240dda6b5c336df09a4d011139beaaa1ea2aa2",
         "balance": "137369887812",
-        "balanceUsd": 7.6058e-08,
+        "balanceUsd": 7.2032e-08,
         "decimals": 18,
-        "priceUsd": 0.553676
+        "priceUsd": 0.524362
       },
       {
         "address": "0x6ce9b0b0750f48274d8f59a4bc42bdc22574d686",
@@ -856,9 +877,9 @@
       {
         "address": "0x6e2c81b6c2c0e02360f00a0da694e489acb0b05e",
         "balance": "14108760997456035610",
-        "balanceUsd": 0.2906922557,
+        "balanceUsd": 0.261229635548,
         "decimals": 18,
-        "priceUsd": 0.02060367
+        "priceUsd": 0.01851542
       },
       {
         "address": "0x6e8c690a7677ab88b3d665d447d14ac9affcbdaa",
@@ -870,9 +891,9 @@
       {
         "address": "0x7002458b1df59eccb57387bc79ffc7c29e22e6f7",
         "balance": "23271761417759691180",
-        "balanceUsd": 0.536910021915,
+        "balanceUsd": 0.519290738628,
         "decimals": 18,
-        "priceUsd": 0.02307131
+        "priceUsd": 0.0223142
       },
       {
         "address": "0x70609b534425d50bcfd6306bbf80e8051514437f",
@@ -884,9 +905,9 @@
       {
         "address": "0x7252c865c05378ffc15120f428dd65804dd0ce63",
         "balance": "834064769949439760",
-        "balanceUsd": 0.009241879705,
+        "balanceUsd": 0.009277669425,
         "decimals": 18,
-        "priceUsd": 0.01108053
+        "priceUsd": 0.01112344
       },
       {
         "address": "0x7267b6e617635f81c8afd0994bdc30b595219a1d",
@@ -898,16 +919,16 @@
       {
         "address": "0x7300b37dfdfab110d83290a29dfb31b1740219fe",
         "balance": "8114381910415627",
-        "balanceUsd": 0.000117637846,
+        "balanceUsd": 0.000112117389,
         "decimals": 18,
-        "priceUsd": 0.01449745
+        "priceUsd": 0.01381712
       },
       {
         "address": "0x7431ada8a591c955a994a21710752ef9b882b8e3",
         "balance": "1660494218545",
-        "balanceUsd": 2.324692e-06,
+        "balanceUsd": 2.175247e-06,
         "decimals": 18,
-        "priceUsd": 1.4
+        "priceUsd": 1.31
       },
       {
         "address": "0x755606469d38f04b39ee06f5e0f0189a764ccebe",
@@ -919,65 +940,65 @@
       {
         "address": "0x764a726d9ced0433a8d7643335919deb03a9a935",
         "balance": "4059965",
-        "balanceUsd": 0.05638130235,
+        "balanceUsd": 0.054459355519,
         "decimals": 6,
-        "priceUsd": 0.01388714
+        "priceUsd": 0.01341375
       },
       {
         "address": "0x767a739d1a152639e9ea1d8c1bd55fdc5b217d7f",
         "balance": "51748238762963195541",
-        "balanceUsd": 1.210230885126,
+        "balanceUsd": 0.991689275629,
         "decimals": 18,
-        "priceUsd": 0.0233869
+        "priceUsd": 0.01916373
       },
       {
         "address": "0x7750741868cc4a865d9c0f619e6e642fd61f642f",
         "balance": "134141895443379",
-        "balanceUsd": 3.1228e-07,
+        "balanceUsd": 2.95906e-07,
         "decimals": 18,
-        "priceUsd": 0.00232798
+        "priceUsd": 0.00220592
       },
       {
         "address": "0x7750c092e284e2c7366f50c8306f43c7eb2e82a2",
         "balance": "5813480794693287",
-        "balanceUsd": 0.000757025656,
+        "balanceUsd": 0.000690170626,
         "decimals": 18,
-        "priceUsd": 0.130219
+        "priceUsd": 0.118719
       },
       {
         "address": "0x78b3c724a2f663d11373c4a1978689271895256f",
         "balance": "1293050239024",
-        "balanceUsd": 1.581e-09,
+        "balanceUsd": 1.508e-09,
         "decimals": 18,
-        "priceUsd": 0.00122283
+        "priceUsd": 0.00116644
       },
       {
         "address": "0x79bbf4508b1391af3a0f4b30bb5fc4aa9ab0e07c",
         "balance": "235444340000",
-        "balanceUsd": 2.05755e-07,
+        "balanceUsd": 1.87603e-07,
         "decimals": 18,
-        "priceUsd": 0.873902
+        "priceUsd": 0.796804
       },
       {
         "address": "0x7aafd31a321d3627b30a8e2171264b56852187fe",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.080373
+        "priceUsd": 0.078955
       },
       {
         "address": "0x7ba6f01772924a82d9626c126347a28299e98c98",
-        "balance": "1270731827789130",
-        "balanceUsd": 2.776930263268,
+        "balance": "5524250094705284",
+        "balanceUsd": 11.420116493281,
         "decimals": 18,
-        "priceUsd": 2185.3
+        "priceUsd": 2067.27
       },
       {
         "address": "0x7ce02e86354ea0cc3b302aeadc0ab56bc7eb44b8",
         "balance": "89004703871095760",
-        "balanceUsd": 0.010459387775,
+        "balanceUsd": 0.008741864005,
         "decimals": 18,
-        "priceUsd": 0.117515
+        "priceUsd": 0.098218
       },
       {
         "address": "0x7e2a4abd22d513c34f347038d4b8c37cb3571f92",
@@ -991,7 +1012,7 @@
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.00757127
+        "priceUsd": 0.00703401
       },
       {
         "address": "0x80458932df364461034d98796257cae8cc1432a4",
@@ -1012,49 +1033,49 @@
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.280119
+        "priceUsd": 0.280352
       },
       {
         "address": "0x820c137fa70c8691f0e44dc420a5e53c168921dc",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.999765
+        "priceUsd": 0.999827
       },
       {
         "address": "0x820c5f0fb255a1d18fd0ebb0f1ccefbc4d546da7",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 4.43e-06
+        "priceUsd": 4.16e-06
       },
       {
         "address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-        "balance": "140051580",
-        "balanceUsd": 140.0263707156,
+        "balance": "198994815",
+        "balanceUsd": 198.970736627385,
         "decimals": 6,
-        "priceUsd": 0.99982
+        "priceUsd": 0.999879
       },
       {
         "address": "0x83f31af747189c2fa9e5deb253200c505eff6ed2",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 236.29
+        "priceUsd": 222.84
       },
       {
         "address": "0x868fced65edbf0056c4163515dd840e9f287a4c3",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.04246234
+        "priceUsd": 0.03191333
       },
       {
         "address": "0x88fb150bdc53a65fe94dea0c9ba0a6daf8c6e196",
         "balance": "122307456076301",
-        "balanceUsd": 0.001158251609,
+        "balanceUsd": 0.001095874806,
         "decimals": 18,
-        "priceUsd": 9.47
+        "priceUsd": 8.96
       },
       {
         "address": "0x8d12f17740392c7322ceba621c1904b464f138b5",
@@ -1075,28 +1096,28 @@
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.00736829
+        "priceUsd": 0.00722685
       },
       {
         "address": "0x9126236476efba9ad8ab77855c60eb5bf37586eb",
         "balance": "390406750239758945",
-        "balanceUsd": 0.021309962055,
+        "balanceUsd": 0.01957109039,
         "decimals": 18,
-        "priceUsd": 0.054584
+        "priceUsd": 0.05013
       },
       {
         "address": "0x93dc5cb35627a759848c7a7f0079ea7b49e435a5",
-        "balance": "118233761057189721",
+        "balance": "1091445560882460984",
         "balanceUsd": 0.0,
         "decimals": 18,
         "priceUsd": 0.0
       },
       {
         "address": "0x940181a94a35a4569e4529a3cdfb74e38fd98631",
-        "balance": "45732797644907997",
-        "balanceUsd": 0.015569319363,
+        "balance": "15526690891875393419",
+        "balanceUsd": 5.073656782738,
         "decimals": 18,
-        "priceUsd": 0.340441
+        "priceUsd": 0.32677
       },
       {
         "address": "0x976be5b361d8da7ae0efc6a7f1960eda73eb433a",
@@ -1108,44 +1129,44 @@
       {
         "address": "0x9818b6c09f5ecc843060927e8587c427c7c93583",
         "balance": "119648002328819691",
-        "balanceUsd": 0.000577369811,
+        "balanceUsd": 0.000546578397,
         "decimals": 18,
-        "priceUsd": 0.00482557
+        "priceUsd": 0.00456822
       },
       {
         "address": "0x98d0baa52b2d063e780de12f615f963fe8537553",
         "balance": "666768806437740",
-        "balanceUsd": 0.000268328438,
+        "balanceUsd": 0.000261522062,
         "decimals": 18,
-        "priceUsd": 0.402431
+        "priceUsd": 0.392223
       },
       {
         "address": "0x9a26f5433671751c3276a065f57e5a02d2817973",
         "balance": "5224024260605",
-        "balanceUsd": 2.691e-09,
+        "balanceUsd": 2.498e-09,
         "decimals": 18,
-        "priceUsd": 0.0005151
+        "priceUsd": 0.00047823
       },
       {
         "address": "0x9a33406165f562e16c3abd82fd1185482e01b49a",
         "balance": "248467200446549",
-        "balanceUsd": 1.76352e-07,
+        "balanceUsd": 1.66659e-07,
         "decimals": 18,
-        "priceUsd": 0.00070976
+        "priceUsd": 0.00067075
       },
       {
         "address": "0x9b5e262cf9bb04869ab40b19af91d2dc85761722",
         "balance": "3404014232256902",
-        "balanceUsd": 0.003775055188,
+        "balanceUsd": 0.003100988885,
         "decimals": 16,
-        "priceUsd": 0.01109001
+        "priceUsd": 0.0091098
       },
       {
         "address": "0x9b8df6e244526ab5f6e6400d331db28c8fdddb55",
-        "balance": "6002041602292077",
-        "balanceUsd": 0.558730052757,
+        "balance": "38371418075154507",
+        "balanceUsd": 3.350975940503,
         "decimals": 18,
-        "priceUsd": 93.09
+        "priceUsd": 87.33
       },
       {
         "address": "0x9ba29ceefab2e5700d1fc62869cf54b17cbb6e7f",
@@ -1159,7 +1180,7 @@
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 1.075
+        "priceUsd": 1.03
       },
       {
         "address": "0x9cbe0cc64876b278b683046e011da5a39ea78744",
@@ -1170,17 +1191,17 @@
       },
       {
         "address": "0x9d0e8f5b25384c7310cb8c6ae32c8fbeb645d083",
-        "balance": "520712448112837173",
-        "balanceUsd": 0.048581950696,
+        "balance": "63341571790203429418",
+        "balanceUsd": 5.299979336402,
         "decimals": 18,
-        "priceUsd": 0.093299
+        "priceUsd": 0.083673
       },
       {
         "address": "0x9d56c29e820dd13b0580b185d0e0dc301d27581d",
         "balance": "1722353780841",
-        "balanceUsd": 1.624615e-06,
+        "balanceUsd": 1.507044e-06,
         "decimals": 18,
-        "priceUsd": 0.943253
+        "priceUsd": 0.874991
       },
       {
         "address": "0x9d5c1c400dc828a3409f9c209b83ff51a65d2a0e",
@@ -1192,9 +1213,9 @@
       {
         "address": "0x9eadbe35f3ee3bf3e28180070c429298a1b02f93",
         "balance": "318583753077350",
-        "balanceUsd": 4.1815711e-05,
+        "balanceUsd": 3.9656668e-05,
         "decimals": 18,
-        "priceUsd": 0.131255
+        "priceUsd": 0.124478
       },
       {
         "address": "0x9f62b62cf8cc3aea56a3ce8808cf13503d1131e7",
@@ -1206,9 +1227,9 @@
       {
         "address": "0xa1832f7f4e534ae557f9b5ab76de54b1873e498b",
         "balance": "586473647886094212",
-        "balanceUsd": 0.005155572544,
+        "balanceUsd": 0.004598176259,
         "decimals": 18,
-        "priceUsd": 0.0087908
+        "priceUsd": 0.00784038
       },
       {
         "address": "0xa2e9b0164551295211bb3c01ac964b92e6c54c53",
@@ -1234,30 +1255,30 @@
       {
         "address": "0xa3d1a8deb97b111454b294e2324efad13a9d8396",
         "balance": "1096648614805",
-        "balanceUsd": 1.425643e-06,
+        "balanceUsd": 1.414677e-06,
         "decimals": 18,
-        "priceUsd": 1.3
+        "priceUsd": 1.29
       },
       {
         "address": "0xa4a2e2ca3fbfe21aed83471d28b6f65a233c6e00",
-        "balance": "9672406368251428295",
-        "balanceUsd": 1.297514624675,
+        "balance": "58345059195159567131",
+        "balanceUsd": 6.915756556521,
         "decimals": 18,
-        "priceUsd": 0.134146
+        "priceUsd": 0.118532
       },
       {
         "address": "0xa53887f7e7c1bf5010b8627f1c1ba94fe7a5d6e0",
         "balance": "100622487019729569417",
-        "balanceUsd": 1.807396205221,
+        "balanceUsd": 1.761643160374,
         "decimals": 18,
-        "priceUsd": 0.01796215
+        "priceUsd": 0.01750745
       },
       {
         "address": "0xa749de6c28262b7ffbc5de27dc845dd7ecd2b358",
-        "balance": "10487846840477371643",
-        "balanceUsd": 0.089901088967,
+        "balance": "153161897409943364419",
+        "balanceUsd": 1.272583915105,
         "decimals": 18,
-        "priceUsd": 0.00857193
+        "priceUsd": 0.00830875
       },
       {
         "address": "0xa7fb72bd1410690cecfb31297f4d418bfddbe83e",
@@ -1271,49 +1292,49 @@
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.319104
+        "priceUsd": 0.300913
       },
       {
         "address": "0xa88594d404727625a9437c3f886c7643872296ae",
         "balance": "951673674917570992",
-        "balanceUsd": 0.004252201697,
+        "balanceUsd": 0.00412996873,
         "decimals": 18,
-        "priceUsd": 0.00446813
+        "priceUsd": 0.00433969
       },
       {
         "address": "0xa99f6e6785da0f5d6fb42495fe424bce029eeb3e",
         "balance": "31123833894109",
-        "balanceUsd": 4.0460984e-05,
+        "balanceUsd": 3.7971077e-05,
         "decimals": 18,
-        "priceUsd": 1.3
+        "priceUsd": 1.22
       },
       {
         "address": "0xaaa843fb2916c0b57454270418e121c626402aaa",
         "balance": "5115455757475",
-        "balanceUsd": 1.46822e-07,
+        "balanceUsd": 1.31197e-07,
         "decimals": 18,
-        "priceUsd": 0.02870169
+        "priceUsd": 0.02564724
       },
       {
         "address": "0xac1bd2486aaf3b5c0fc3fd868558b082a531b2b4",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.00020769
+        "priceUsd": 0.0001968
       },
       {
         "address": "0xac531eb26ca1d21b85126de8fb87e80e09002dcf",
         "balance": "19714609983817531",
-        "balanceUsd": 0.001630733394,
+        "balanceUsd": 0.001532554636,
         "decimals": 18,
-        "priceUsd": 0.082717
+        "priceUsd": 0.077737
       },
       {
         "address": "0xacfe6019ed1a7dc6f7b508c02d1b04ec88cc21bf",
-        "balance": "2871821821764195970",
-        "balanceUsd": 19.384797296908,
+        "balance": "6271253565284908386",
+        "balanceUsd": 38.881772104766,
         "decimals": 18,
-        "priceUsd": 6.75
+        "priceUsd": 6.2
       },
       {
         "address": "0xad03e2e457ebe290f364c9aa8133dcd0cda30c4e",
@@ -1325,23 +1346,23 @@
       {
         "address": "0xaea742f80922f7c94b8fd91686c9dfbdfe90d9e6",
         "balance": "500140425916339",
-        "balanceUsd": 3.71284e-07,
+        "balanceUsd": 3.49298e-07,
         "decimals": 18,
-        "priceUsd": 0.00074236
+        "priceUsd": 0.0006984
       },
       {
         "address": "0xafb89a09d82fbde58f18ac6437b3fc81724e4df6",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.00049084
+        "priceUsd": 0.00047082
       },
       {
         "address": "0xb0505e5a99abd03d94a1169e638b78edfed26ea4",
         "balance": "358942350505983",
-        "balanceUsd": 0.000348919244,
+        "balanceUsd": 0.000336523529,
         "decimals": 18,
-        "priceUsd": 0.972076
+        "priceUsd": 0.937542
       },
       {
         "address": "0xb0c26970e9dad9b5162fcaab1a5d13e604a6d9ac",
@@ -1355,35 +1376,35 @@
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.01682247
+        "priceUsd": 0.01570106
       },
       {
         "address": "0xb166e8b140d35d9d8226e40c09f757bac5a4d87d",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.00862885
+        "priceUsd": 0.00792873
       },
       {
         "address": "0xb1a03eda10342529bbf8eb700a06c60441fef25d",
         "balance": "157857302552531",
-        "balanceUsd": 5.50469e-07,
+        "balanceUsd": 5.20004e-07,
         "decimals": 18,
-        "priceUsd": 0.00348713
+        "priceUsd": 0.00329414
       },
       {
         "address": "0xb33ff54b9f7242ef1593d2c9bcd8f9df46c77935",
-        "balance": "1836620618110760",
-        "balanceUsd": 8.638417e-06,
+        "balance": "341660738543497350545",
+        "balanceUsd": 1.399158806661,
         "decimals": 18,
-        "priceUsd": 0.00470343
+        "priceUsd": 0.00409517
       },
       {
         "address": "0xb3b32f9f8827d4634fe7d973fa1034ec9fddb3b3",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.00032933
+        "priceUsd": 0.00030293
       },
       {
         "address": "0xb435cb9cee20efce58c452f646552c3ad744ed64",
@@ -1401,17 +1422,17 @@
       },
       {
         "address": "0xb676f87a6e701f0de8de5ab91b56b66109766db1",
-        "balance": "737953464240157694",
-        "balanceUsd": 0.019675204571,
+        "balance": "975535619344634671903",
+        "balanceUsd": 24.01359945402,
         "decimals": 18,
-        "priceUsd": 0.02666185
+        "priceUsd": 0.02461581
       },
       {
         "address": "0xb79dd08ea68a908a97220c76d19a6aa9cbde4376",
         "balance": "23048033",
-        "balanceUsd": 23.040404101077,
+        "balanceUsd": 23.094129066,
         "decimals": 6,
-        "priceUsd": 0.999669
+        "priceUsd": 1.002
       },
       {
         "address": "0xb96a7fa2dc5627eb76f91962e1e45e75e572c850",
@@ -1423,9 +1444,9 @@
       {
         "address": "0xb9926b3fbc5873db0182016d55727d5ae89e5efd",
         "balance": "228688391815371",
-        "balanceUsd": 6.314e-09,
+        "balanceUsd": 5.944e-09,
         "decimals": 18,
-        "priceUsd": 2.761e-05
+        "priceUsd": 2.599e-05
       },
       {
         "address": "0xb9a0c47adea84b1cf17a787c429bdeeeac01ccd7",
@@ -1437,9 +1458,9 @@
       {
         "address": "0xb9e1fd5a02d3a33b25a14d661414e6ed6954a721",
         "balance": "172745517602",
-        "balanceUsd": 2.1455e-08,
+        "balanceUsd": 2.008e-08,
         "decimals": 18,
-        "priceUsd": 0.124199
+        "priceUsd": 0.116242
       },
       {
         "address": "0xb9e5e7296466c7daea8133289fbb29e493e72956",
@@ -1450,17 +1471,17 @@
       },
       {
         "address": "0xbaa5cc21fd487b8fcc2f632f3f4e8d37262a0842",
-        "balance": "1720571660156611",
-        "balanceUsd": 0.003011000405,
+        "balance": "3877786168730070317",
+        "balanceUsd": 6.398347178405,
         "decimals": 18,
-        "priceUsd": 1.75
+        "priceUsd": 1.65
       },
       {
         "address": "0xbb22ff867f8ca3d5f2251b4084f6ec86d4666e14",
         "balance": "1260784710303",
-        "balanceUsd": 6.1656e-07,
+        "balanceUsd": 6.08725e-07,
         "decimals": 18,
-        "priceUsd": 0.489029
+        "priceUsd": 0.482814
       },
       {
         "address": "0xbcd73d9c3de8884c9aaaf9b2e4f0a48a64f12a1b",
@@ -1471,45 +1492,45 @@
       },
       {
         "address": "0xbf1aea8670d2528e08334083616dd9c5f3b087ae",
-        "balance": "1461030311958407247",
-        "balanceUsd": 1.461030311958,
+        "balance": "10541100751281105333",
+        "balanceUsd": 10.541100751281,
         "decimals": 18,
         "priceUsd": 1.0
       },
       {
         "address": "0xbf927b841994731c573bdf09ceb0c6b0aa887cdd",
         "balance": "13384565790442",
-        "balanceUsd": 9.0303e-07,
+        "balanceUsd": 9.99787e-07,
         "decimals": 18,
-        "priceUsd": 0.067468
+        "priceUsd": 0.074697
       },
       {
         "address": "0xc0041ef357b183448b235a8ea73ce4e4ec8c265f",
-        "balance": "71764271843016454",
-        "balanceUsd": 0.001233769926,
+        "balance": "65789082634672887540",
+        "balanceUsd": 1.056683192772,
         "decimals": 18,
-        "priceUsd": 0.01719198
+        "priceUsd": 0.01606168
       },
       {
         "address": "0xc0634090f2fe6c6d75e61be2b949464abb498973",
-        "balance": "6080138079618596",
-        "balanceUsd": 0.000953718299,
+        "balance": "11247192795416289358",
+        "balanceUsd": 1.609552019374,
         "decimals": 18,
-        "priceUsd": 0.156858
+        "priceUsd": 0.143107
       },
       {
         "address": "0xc08cd26474722ce93f4d0c34d16201461c10aa8c",
         "balance": "45601411687071667",
-        "balanceUsd": 0.002621260347,
+        "balanceUsd": 0.002519067583,
         "decimals": 18,
-        "priceUsd": 0.057482
+        "priceUsd": 0.055241
       },
       {
         "address": "0xc1cba3fcea344f92d9239c08c0568f6f2f0ee452",
         "balance": "92150449033",
-        "balanceUsd": 0.000248717748,
+        "balanceUsd": 0.000235138458,
         "decimals": 18,
-        "priceUsd": 2699.04
+        "priceUsd": 2551.68
       },
       {
         "address": "0xc2170f20f85381b2014eebc1d29f7c77c52ab6fb",
@@ -1521,72 +1542,79 @@
       {
         "address": "0xc48823ec67720a04a9dfd8c7d109b2c3d6622094",
         "balance": "3263381723349052923",
-        "balanceUsd": 0.007310888807,
+        "balanceUsd": 0.006826570326,
         "decimals": 18,
-        "priceUsd": 0.00224028
+        "priceUsd": 0.00209187
       },
       {
         "address": "0xc55e93c62874d8100dbd2dfe307edc1036ad5434",
         "balance": "1044174939722",
-        "balanceUsd": 0.000140399762,
+        "balanceUsd": 0.00013525198,
         "decimals": 18,
-        "priceUsd": 134.46
+        "priceUsd": 129.53
+      },
+      {
+        "address": "0xc5fed7c8ccc75d8a72b601a66dffd7a489073f0b",
+        "balance": "16647546737516",
+        "balanceUsd": 1.435301537068,
+        "decimals": 12,
+        "priceUsd": 0.086217
       },
       {
         "address": "0xc729777d0470f30612b1564fd96e8dd26f5814e3",
         "balance": "87791515955869716",
-        "balanceUsd": 0.006709466607,
+        "balanceUsd": 0.006229861555,
         "decimals": 18,
-        "priceUsd": 0.076425
+        "priceUsd": 0.070962
       },
       {
         "address": "0xc9d23ed2adb0f551369946bd377f8644ce1ca5c4",
         "balance": "7150509542867",
-        "balanceUsd": 6.50046e-07,
+        "balanceUsd": 6.20957e-07,
         "decimals": 18,
-        "priceUsd": 0.090909
+        "priceUsd": 0.086841
       },
       {
         "address": "0xca73ed1815e5915489570014e024b7ebe65de679",
         "balance": "678804084175484",
-        "balanceUsd": 7.53459e-07,
+        "balanceUsd": 7.34473e-07,
         "decimals": 18,
-        "priceUsd": 0.00110998
+        "priceUsd": 0.00108201
       },
       {
         "address": "0xcb17c9db87b595717c857a08468793f5bab6445f",
-        "balance": "26054955",
-        "balanceUsd": 14.7497100255,
+        "balance": "26341027",
+        "balanceUsd": 14.4243463852,
         "decimals": 8,
-        "priceUsd": 56.61
+        "priceUsd": 54.76
       },
       {
         "address": "0xcb585250f852c6c6bf90434ab21a00f02833a4af",
-        "balance": "9007323",
-        "balanceUsd": 12.79039866,
+        "balance": "11495403",
+        "balanceUsd": 15.86365614,
         "decimals": 6,
-        "priceUsd": 1.42
+        "priceUsd": 1.38
       },
       {
         "address": "0xcbada732173e39521cdbe8bf59a6dc85a9fc7b8c",
-        "balance": "28732963",
-        "balanceUsd": 7.872171003851,
+        "balance": "38037244",
+        "balanceUsd": 9.7841300879,
         "decimals": 6,
-        "priceUsd": 0.273977
+        "priceUsd": 0.257225
       },
       {
         "address": "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
-        "balance": "479809",
+        "balance": "511806",
         "balanceUsd": 0.0,
         "decimals": 8,
         "priceUsd": 0.0
       },
       {
         "address": "0xcbd06e5a2b0c65597161de254aa074e489deb510",
-        "balance": "31858425",
-        "balanceUsd": 0.031406991118,
+        "balance": "3189435434",
+        "balanceUsd": 2.926594059884,
         "decimals": 8,
-        "priceUsd": 0.098583
+        "priceUsd": 0.091759
       },
       {
         "address": "0xcc486cc1b2a7a06c1ecce031d1a437d591a114ce",
@@ -1598,9 +1626,9 @@
       {
         "address": "0xcd2f22236dd9dfe2356d7c543161d4d260fd9bcb",
         "balance": "30676079473155535",
-        "balanceUsd": 0.00194547696,
+        "balanceUsd": 0.001895751035,
         "decimals": 18,
-        "priceUsd": 0.06342
+        "priceUsd": 0.061799
       },
       {
         "address": "0xd01c8f05a9b7d5c2672a590b563ced2cb50d24a6",
@@ -1612,9 +1640,9 @@
       {
         "address": "0xd02f50e1017f493ffffa70c8fcf09e349e11d6c9",
         "balance": "509182858",
-        "balanceUsd": 2.323427e-06,
+        "balanceUsd": 2.268909e-06,
         "decimals": 18,
-        "priceUsd": 4563.05
+        "priceUsd": 4455.98
       },
       {
         "address": "0xd24ea96b9bf1af69d34e7fc8c6d740bae5f32b9b",
@@ -1626,16 +1654,16 @@
       {
         "address": "0xd262a4c7108c8139b2b189758e8d17c3dfc91a38",
         "balance": "98200928724339342",
-        "balanceUsd": 0.001173363617,
+        "balanceUsd": 0.001118558661,
         "decimals": 18,
-        "priceUsd": 0.0119486
+        "priceUsd": 0.01139051
       },
       {
         "address": "0xd403d1624daef243fbcbd4a80d8a6f36affe32b2",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 9.42
+        "priceUsd": 8.91
       },
       {
         "address": "0xd40d12d80859d9a11973a1fba6f42d1cd777ab2e",
@@ -1647,16 +1675,16 @@
       {
         "address": "0xd4554bea546efa83c1e6b389ecac40ea999b3e78",
         "balance": "25001130814798695",
-        "balanceUsd": 0.000832032633,
+        "balanceUsd": 0.000817620731,
         "decimals": 18,
-        "priceUsd": 0.0332798
+        "priceUsd": 0.03270335
       },
       {
         "address": "0xd52333441c0553facb259600fa833a69186893a5",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.01679401
+        "priceUsd": 0.01557748
       },
       {
         "address": "0xd637304fb099bdd05e184c2370b88abfce1ebf72",
@@ -1668,30 +1696,30 @@
       {
         "address": "0xd769d56f479e9e72a77bb1523e866a33098feec5",
         "balance": "564041988265091",
-        "balanceUsd": 2.08115e-07,
+        "balanceUsd": 2.02288e-07,
         "decimals": 18,
-        "priceUsd": 0.00036897
+        "priceUsd": 0.00035864
       },
       {
         "address": "0xd85c31854c2b0fb40aaa9e2fc4da23c21f829d46",
         "balance": "985435879808246263",
-        "balanceUsd": 0.001432114255,
+        "balanceUsd": 0.001451911662,
         "decimals": 18,
-        "priceUsd": 0.00145328
+        "priceUsd": 0.00147337
       },
       {
         "address": "0xd89d90d26b48940fa8f58385fe84625d468e057a",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.00438361
+        "priceUsd": 0.00427596
       },
       {
         "address": "0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca",
         "balance": "8033064",
-        "balanceUsd": 8.027810376144,
+        "balanceUsd": 8.033064,
         "decimals": 6,
-        "priceUsd": 0.999346
+        "priceUsd": 1.0
       },
       {
         "address": "0xda142587a8c3d073cecfd6b1aad5dd0460ff0b92",
@@ -1710,37 +1738,44 @@
       {
         "address": "0xdbfefd2e8460a6ee4955a68582f85708baea60a3",
         "balance": "88097160420940",
-        "balanceUsd": 0.192641179721,
+        "balanceUsd": 0.181663392561,
         "decimals": 18,
-        "priceUsd": 2186.69
+        "priceUsd": 2062.08
       },
       {
         "address": "0xdcefd8c8fcc492630b943abcab3429f12ea9fea2",
         "balance": "2477425",
-        "balanceUsd": 0.000107799005,
+        "balanceUsd": 0.000105897284,
         "decimals": 9,
-        "priceUsd": 0.04351252
+        "priceUsd": 0.0427449
+      },
+      {
+        "address": "0xdd468a1ddc392dcdbef6db6e34e89aa338f9f186",
+        "balance": "18901370578498544",
+        "balanceUsd": 0.0,
+        "decimals": 18,
+        "priceUsd": 0.0
       },
       {
         "address": "0xe0023e73aab4fe9a22f059a9d27e857e027ee3dc",
         "balance": "38444754003895",
-        "balanceUsd": 1.45535e-07,
+        "balanceUsd": 1.38167e-07,
         "decimals": 18,
-        "priceUsd": 0.00378555
+        "priceUsd": 0.0035939
       },
       {
         "address": "0xe1bfa25468af64e366ddafc9d91bcc6c97439a14",
         "balance": "208502053259453",
-        "balanceUsd": 2.49614e-07,
+        "balanceUsd": 2.4818e-07,
         "decimals": 18,
-        "priceUsd": 0.00119718
+        "priceUsd": 0.0011903
       },
       {
         "address": "0xe22c243c7559c667a1eb94b593369d192c5fbac0",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 209.71
+        "priceUsd": 195.02
       },
       {
         "address": "0xe33454b0151f7401d2800a2c39bd2e0bfc213c65",
@@ -1761,21 +1796,21 @@
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.999859
+        "priceUsd": 0.999562
       },
       {
         "address": "0xe62bfbe57763ec24c0f130426f34dbce11fc5b06",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.02947232
+        "priceUsd": 0.03040726
       },
       {
         "address": "0xe642657e4f43e6dcf0bd73ef24008394574dee28",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 2.172e-05
+        "priceUsd": 1.446e-05
       },
       {
         "address": "0xe908e7c1b801cbb09700abd9e1a7f61ce4ebb920",
@@ -1794,23 +1829,23 @@
       {
         "address": "0xea17df5cf6d172224892b5477a16acb111182478",
         "balance": "101511678",
-        "balanceUsd": 9.3176554e-05,
+        "balanceUsd": 8.7398509e-05,
         "decimals": 9,
-        "priceUsd": 0.00091789
+        "priceUsd": 0.00086097
       },
       {
         "address": "0xeab49138ba2ea6dd776220fe26b7b8e446638956",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.02450722
+        "priceUsd": 0.02461761
       },
       {
         "address": "0xeb466342c4d449bc9f53a865d5cb90586f405215",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 6,
-        "priceUsd": 0.999553
+        "priceUsd": 0.999721
       },
       {
         "address": "0xeb92d414136373deaae640f75ccd793622ffdf45",
@@ -1836,9 +1871,9 @@
       {
         "address": "0xed6e000def95780fb89734c07ee2ce9f6dcaf110",
         "balance": "2146684280162753",
-        "balanceUsd": 0.000283250697,
+        "balanceUsd": 0.000265317297,
         "decimals": 18,
-        "priceUsd": 0.131948
+        "priceUsd": 0.123594
       },
       {
         "address": "0xed7b04a3fdcc4b0718f76ab796d58f39212815cc",
@@ -1850,30 +1885,30 @@
       {
         "address": "0xeec468333ccc16d4bf1cef497a56cf8c0aae4ca3",
         "balance": "5839734145998069",
-        "balanceUsd": 9.21977e-07,
+        "balanceUsd": 7.2109e-07,
         "decimals": 18,
-        "priceUsd": 0.00015788
+        "priceUsd": 0.00012348
       },
       {
         "address": "0xef22cb48b8483df6152e1423b19df5553bbd818b",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.00541113
+        "priceUsd": 0.00533278
       },
       {
         "address": "0xef4461891dfb3ac8572ccf7c794664a8dd927945",
         "balance": "9722212347435832",
-        "balanceUsd": 0.000603253554,
+        "balanceUsd": 0.000559348043,
         "decimals": 18,
-        "priceUsd": 0.062049
+        "priceUsd": 0.057533
       },
       {
         "address": "0xeff2a458e464b07088bdb441c21a42ab4b61e07e",
         "balance": "542064510881531",
-        "balanceUsd": 3.1856047e-05,
+        "balanceUsd": 2.946229e-05,
         "decimals": 18,
-        "priceUsd": 0.058768
+        "priceUsd": 0.054352
       },
       {
         "address": "0xf0c9afa1d49a85417734da1740beabbaa2463c57",
@@ -1894,63 +1929,63 @@
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.00689179
+        "priceUsd": 0.00648373
       },
       {
         "address": "0xf3df0a31ec5ea438150987805e841f960b9471b6",
         "balance": "50594467380978746",
-        "balanceUsd": 0.000933251379,
+        "balanceUsd": 0.000878129213,
         "decimals": 18,
-        "priceUsd": 0.01844572
+        "priceUsd": 0.01735623
       },
       {
         "address": "0xf43eb8de897fbc7f2502483b2bef7bb9ea179229",
-        "balance": "43597861704527382",
-        "balanceUsd": 0.248507811716,
+        "balance": "256942400926605900",
+        "balanceUsd": 1.408044357078,
         "decimals": 18,
-        "priceUsd": 5.7
+        "priceUsd": 5.48
       },
       {
         "address": "0xf4d97f2da56e8c3098f3a8d538db630a2606a024",
-        "balance": "5750981968386471",
-        "balanceUsd": 5.20458117157,
+        "balance": "12460899691039247",
+        "balanceUsd": 10.061802673523,
         "decimals": 18,
-        "priceUsd": 904.99
+        "priceUsd": 807.47
       },
       {
         "address": "0xf544251d25f3d243a36b07e7e7962a678f952691",
         "balance": "52666240528686",
-        "balanceUsd": 1.786111e-06,
+        "balanceUsd": 1.723647e-06,
         "decimals": 18,
-        "priceUsd": 0.03391377
+        "priceUsd": 0.03272774
       },
       {
         "address": "0xf732a566121fa6362e9e0fbdd6d66e5c8c925e49",
         "balance": "14557398068296299",
-        "balanceUsd": 0.000105040362,
+        "balanceUsd": 0.000102601706,
         "decimals": 18,
-        "priceUsd": 0.0072156
+        "priceUsd": 0.00704808
       },
       {
         "address": "0xf7c1cefcf7e1dd8161e00099facd3e1db9e528ee",
         "balance": "3747962112914935",
-        "balanceUsd": 9.86351e-07,
+        "balanceUsd": 9.19937e-07,
         "decimals": 18,
-        "priceUsd": 0.00026317
+        "priceUsd": 0.00024545
       },
       {
         "address": "0xf9569cfb8fd265e91aa478d86ae8c78b8af55df4",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.00877203
+        "priceUsd": 0.00855702
       },
       {
         "address": "0xfa980ced6895ac314e7de34ef1bfae90a5add21b",
         "balance": "818212799978708",
-        "balanceUsd": 0.00028734979,
+        "balanceUsd": 0.000264068363,
         "decimals": 18,
-        "priceUsd": 0.351192
+        "priceUsd": 0.322738
       },
       {
         "address": "0xfaf87e196a29969094be35dfb0ab9d0b8518db84",
@@ -1962,9 +1997,9 @@
       {
         "address": "0xfb31f85a8367210b2e4ed2360d2da9dc2d2ccc95",
         "balance": "2554657947818130253",
-        "balanceUsd": 0.038244634541,
+        "balanceUsd": 0.034091731488,
         "decimals": 18,
-        "priceUsd": 0.01497055
+        "priceUsd": 0.01334493
       },
       {
         "address": "0xfb584ace7f491e2930491a8d01a28db308aeb65f",
@@ -1975,17 +2010,17 @@
       },
       {
         "address": "0xfbb75a59193a3525a8825bebe7d4b56899e2f7e1",
-        "balance": "37808031987843999",
-        "balanceUsd": 0.003160033122,
+        "balance": "19712010663119902555",
+        "balanceUsd": 1.525433657176,
         "decimals": 18,
-        "priceUsd": 0.083581
+        "priceUsd": 0.077386
       },
       {
         "address": "0xfc48314ad4ad5bd36a84e8307b86a68a01d95d9c",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.02200642
+        "priceUsd": 0.03003245
       },
       {
         "address": "0xfd755cff1f0f65c1e163b33c66a0e082ce6f87ff",
@@ -1996,10 +2031,10 @@
       },
       {
         "address": "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2",
-        "balance": "44803972",
-        "balanceUsd": 44.784527076152,
+        "balance": "47262023",
+        "balanceUsd": 47.239195442891,
         "decimals": 6,
-        "priceUsd": 0.999566
+        "priceUsd": 0.999517
       },
       {
         "address": "0xfe14b5f077ba011b91c09cd263b3c38aea045058",
@@ -2010,131 +2045,209 @@
       },
       {
         "address": "0xff8104251e7761163fac3211ef5583fb3f8583d6",
-        "balance": "512668081487203262",
-        "balanceUsd": 0.006441484757,
+        "balance": "146114102696334188280",
+        "balanceUsd": 1.804525240851,
         "decimals": 18,
-        "priceUsd": 0.01256463
+        "priceUsd": 0.01235011
       }
     ],
     "minUsd": 1.0
   },
   "liqState": {
     "last_tx_hash": "0xd001e582d48632c353d68d95f1f0dae1ddf5c5ca08f8e9dec5874320f11398ad",
-    "last_update": 1774446319
+    "last_update": 1774532738
   },
   "liqTokens": [
     {
+      "address": "0x043eb4b75d0805c43d7c834902e335621983cf03",
+      "decimals": 18,
+      "priceUsd": 0.724042,
+      "source": "coingecko"
+    },
+    {
       "address": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
       "decimals": 6,
-      "priceUsd": 0.782133,
+      "priceUsd": 0.779492,
       "source": "coingecko"
     },
     {
       "address": "0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b",
       "decimals": 18,
-      "priceUsd": 0.743067,
+      "priceUsd": 0.694826,
       "source": "coingecko"
     },
     {
       "address": "0x1111111111166b7fe7bd91427724b487980afc69",
       "decimals": 18,
-      "priceUsd": 0.01626933,
+      "priceUsd": 0.01553145,
       "source": "coingecko"
     },
     {
       "address": "0x11dc28d01984079b7efe7763b533e6ed9e3722b9",
       "decimals": 18,
-      "priceUsd": 0.050722,
+      "priceUsd": 0.04229666,
       "source": "coingecko"
     },
     {
       "address": "0x1217bfe6c773eec6cc4a38b5dc45b92292b6e189",
       "decimals": 6,
-      "priceUsd": 1.0,
+      "priceUsd": 0.999299,
+      "source": "coingecko"
+    },
+    {
+      "address": "0x1f16e03c1a5908818f47f6ee7bb16690b40d0671",
+      "decimals": 18,
+      "priceUsd": 0.04033232,
       "source": "coingecko"
     },
     {
       "address": "0x311935cd80b76769bf2ecc9d8ab7635b2139cf82",
       "decimals": 9,
-      "priceUsd": 93.28,
+      "priceUsd": 87.37,
       "source": "coingecko"
     },
     {
       "address": "0x3e31966d4f81c72d2a55310a6365a56a4393e98d",
       "decimals": 6,
-      "priceUsd": 0.079118,
+      "priceUsd": 0.077889,
       "source": "coingecko"
     },
     {
       "address": "0x4200000000000000000000000000000000000006",
       "decimals": 18,
-      "priceUsd": 2192.94,
+      "priceUsd": 2073.64,
       "source": "coingecko"
     },
     {
       "address": "0x449b3317a6d1efb1bc3ba0700c9eaa4ffff4ae65",
       "decimals": 6,
-      "priceUsd": 0.696316,
+      "priceUsd": 0.690079,
+      "source": "coingecko"
+    },
+    {
+      "address": "0x4f9fd6be4a90f2620860d680c0d4d5fb53d1a825",
+      "decimals": 18,
+      "priceUsd": 0.02423266,
       "source": "coingecko"
     },
     {
       "address": "0x526728dbc96689597f85ae4cd716d4f7fccbae9d",
       "decimals": 18,
-      "priceUsd": 0.996083,
+      "priceUsd": 0.996246,
+      "source": "coingecko"
+    },
+    {
+      "address": "0x590830dfdf9a3f68afcdde2694773debdf267774",
+      "decimals": 18,
+      "priceUsd": 0.02046292,
       "source": "coingecko"
     },
     {
       "address": "0x5b2193fdc451c1f847be09ca9d13a4bf60f8c86b",
       "decimals": 18,
-      "priceUsd": 0.056862,
+      "priceUsd": 0.060032,
       "source": "coingecko"
     },
     {
       "address": "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42",
       "decimals": 6,
-      "priceUsd": 1.16,
+      "priceUsd": 1.15,
       "source": "coingecko"
     },
     {
-      "address": "0x767a739d1a152639e9ea1d8c1bd55fdc5b217d7f",
+      "address": "0x63706e401c06ac8513145b7687a14804d17f814b",
       "decimals": 18,
-      "priceUsd": 0.0233869,
+      "priceUsd": 106.7,
+      "source": "coingecko"
+    },
+    {
+      "address": "0x696f9436b67233384889472cd7cd58a6fb5df4f1",
+      "decimals": 18,
+      "priceUsd": 0.146363,
+      "source": "coingecko"
+    },
+    {
+      "address": "0x6b2504a03ca4d43d0d73776f6ad46dab2f2a4cfd",
+      "decimals": 18,
+      "priceUsd": 0.01832636,
       "source": "coingecko"
     },
     {
       "address": "0x7ba6f01772924a82d9626c126347a28299e98c98",
       "decimals": 18,
-      "priceUsd": 2185.3,
+      "priceUsd": 2067.27,
       "source": "coingecko"
     },
     {
       "address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
       "decimals": 6,
-      "priceUsd": 0.99982,
+      "priceUsd": 0.999879,
+      "source": "coingecko"
+    },
+    {
+      "address": "0x940181a94a35a4569e4529a3cdfb74e38fd98631",
+      "decimals": 18,
+      "priceUsd": 0.32677,
+      "source": "coingecko"
+    },
+    {
+      "address": "0x9b8df6e244526ab5f6e6400d331db28c8fdddb55",
+      "decimals": 18,
+      "priceUsd": 87.33,
+      "source": "coingecko"
+    },
+    {
+      "address": "0x9d0e8f5b25384c7310cb8c6ae32c8fbeb645d083",
+      "decimals": 18,
+      "priceUsd": 0.083673,
       "source": "coingecko"
     },
     {
       "address": "0xa4a2e2ca3fbfe21aed83471d28b6f65a233c6e00",
       "decimals": 18,
-      "priceUsd": 0.134146,
+      "priceUsd": 0.118532,
       "source": "coingecko"
     },
     {
       "address": "0xa53887f7e7c1bf5010b8627f1c1ba94fe7a5d6e0",
       "decimals": 18,
-      "priceUsd": 0.01796215,
+      "priceUsd": 0.01750745,
+      "source": "coingecko"
+    },
+    {
+      "address": "0xa749de6c28262b7ffbc5de27dc845dd7ecd2b358",
+      "decimals": 18,
+      "priceUsd": 0.00830875,
       "source": "coingecko"
     },
     {
       "address": "0xacfe6019ed1a7dc6f7b508c02d1b04ec88cc21bf",
       "decimals": 18,
-      "priceUsd": 6.75,
+      "priceUsd": 6.2,
+      "source": "coingecko"
+    },
+    {
+      "address": "0xb33ff54b9f7242ef1593d2c9bcd8f9df46c77935",
+      "decimals": 18,
+      "priceUsd": 0.00409517,
+      "source": "coingecko"
+    },
+    {
+      "address": "0xb676f87a6e701f0de8de5ab91b56b66109766db1",
+      "decimals": 18,
+      "priceUsd": 0.02461581,
       "source": "coingecko"
     },
     {
       "address": "0xb79dd08ea68a908a97220c76d19a6aa9cbde4376",
       "decimals": 6,
-      "priceUsd": 0.999669,
+      "priceUsd": 1.002,
+      "source": "coingecko"
+    },
+    {
+      "address": "0xbaa5cc21fd487b8fcc2f632f3f4e8d37262a0842",
+      "decimals": 18,
+      "priceUsd": 1.65,
       "source": "coingecko"
     },
     {
@@ -2144,39 +2257,81 @@
       "source": "coingecko"
     },
     {
+      "address": "0xc0041ef357b183448b235a8ea73ce4e4ec8c265f",
+      "decimals": 18,
+      "priceUsd": 0.01606168,
+      "source": "coingecko"
+    },
+    {
+      "address": "0xc0634090f2fe6c6d75e61be2b949464abb498973",
+      "decimals": 18,
+      "priceUsd": 0.143107,
+      "source": "coingecko"
+    },
+    {
+      "address": "0xc5fed7c8ccc75d8a72b601a66dffd7a489073f0b",
+      "decimals": 12,
+      "priceUsd": 0.086217,
+      "source": "coingecko"
+    },
+    {
       "address": "0xcb17c9db87b595717c857a08468793f5bab6445f",
       "decimals": 8,
-      "priceUsd": 56.61,
+      "priceUsd": 54.76,
       "source": "coingecko"
     },
     {
       "address": "0xcb585250f852c6c6bf90434ab21a00f02833a4af",
       "decimals": 6,
-      "priceUsd": 1.42,
+      "priceUsd": 1.38,
       "source": "coingecko"
     },
     {
       "address": "0xcbada732173e39521cdbe8bf59a6dc85a9fc7b8c",
       "decimals": 6,
-      "priceUsd": 0.273977,
+      "priceUsd": 0.257225,
+      "source": "coingecko"
+    },
+    {
+      "address": "0xcbd06e5a2b0c65597161de254aa074e489deb510",
+      "decimals": 8,
+      "priceUsd": 0.091759,
       "source": "coingecko"
     },
     {
       "address": "0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca",
       "decimals": 6,
-      "priceUsd": 0.999346,
+      "priceUsd": 1.0,
+      "source": "coingecko"
+    },
+    {
+      "address": "0xf43eb8de897fbc7f2502483b2bef7bb9ea179229",
+      "decimals": 18,
+      "priceUsd": 5.48,
       "source": "coingecko"
     },
     {
       "address": "0xf4d97f2da56e8c3098f3a8d538db630a2606a024",
       "decimals": 18,
-      "priceUsd": 904.99,
+      "priceUsd": 807.47,
+      "source": "coingecko"
+    },
+    {
+      "address": "0xfbb75a59193a3525a8825bebe7d4b56899e2f7e1",
+      "decimals": 18,
+      "priceUsd": 0.077386,
       "source": "coingecko"
     },
     {
       "address": "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2",
       "decimals": 6,
-      "priceUsd": 0.999566,
+      "priceUsd": 0.999517,
+      "source": "coingecko"
+    },
+    {
+      "address": "0xff8104251e7761163fac3211ef5583fb3f8583d6",
+      "decimals": 18,
+      "priceUsd": 0.01235011,
       "source": "coingecko"
     }
   ],
@@ -2185,37 +2340,44 @@
       {
         "address": "0x00000000a22c618fd6b4d7e9a335c4b96b189a38",
         "balance": "354324857249419680351",
-        "balanceUsd": 1.392018350433,
+        "balanceUsd": 1.277372999621,
         "decimals": 18,
-        "priceUsd": 0.00392865
+        "priceUsd": 0.00360509
       },
       {
         "address": "0x00f3c42833c3170159af4e92dbb451fb3f708917",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 8,
-        "priceUsd": 2.43
+        "priceUsd": 2.31
       },
       {
         "address": "0x00fbac94fec8d4089d3fe979f39454f48c71a65d",
         "balance": "10933693296122100",
-        "balanceUsd": 0.00081515057,
+        "balanceUsd": 0.000820945427,
         "decimals": 18,
-        "priceUsd": 0.074554
+        "priceUsd": 0.075084
+      },
+      {
+        "address": "0x01b4db9b14e0a5935b666a9b6fe723639508222b",
+        "balance": "0",
+        "balanceUsd": 0.0,
+        "decimals": 18,
+        "priceUsd": 0.0
       },
       {
         "address": "0x03569cc076654f82679c4ba2124d64774781b01d",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 1.005
+        "priceUsd": 1.004
       },
       {
         "address": "0x043eb4b75d0805c43d7c834902e335621983cf03",
-        "balance": "6042977449748028022",
-        "balanceUsd": 4.405777741198,
+        "balance": "33794349758645395141",
+        "balanceUsd": 24.468528587949,
         "decimals": 18,
-        "priceUsd": 0.729074
+        "priceUsd": 0.724042
       },
       {
         "address": "0x0467659ab956c74cfc8ef273d117ec0a3ca19972",
@@ -2227,16 +2389,16 @@
       {
         "address": "0x04c0599ae5a44757c0af6f9ec3b93da8976c150a",
         "balance": "10754076",
-        "balanceUsd": 2.5723e-08,
+        "balanceUsd": 2.4326e-08,
         "decimals": 18,
-        "priceUsd": 2391.91
+        "priceUsd": 2262.06
       },
       {
         "address": "0x04d5ddf5f3a8939889f11e97f8c4bb48317f1938",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.993818
+        "priceUsd": 0.994252
       },
       {
         "address": "0x06088387eadce2ca0e8ce940c74f1c8939fbbcf5",
@@ -2248,23 +2410,23 @@
       {
         "address": "0x07d15798a67253d76cea61f0ea6f57aedc59dffb",
         "balance": "1500000000000000000000",
-        "balanceUsd": 0.010455,
+        "balanceUsd": 0.009765,
         "decimals": 18,
-        "priceUsd": 6.97e-06
+        "priceUsd": 6.51e-06
       },
       {
         "address": "0x080d43c2164afdbc3712422ce78ab902ccab5ca1",
         "balance": "7953067838611182",
-        "balanceUsd": 1.5601533e-05,
+        "balanceUsd": 1.6209625e-05,
         "decimals": 18,
-        "priceUsd": 0.0019617
+        "priceUsd": 0.00203816
       },
       {
         "address": "0x084382d1cc4f4dfd1769b1cc1ac2a9b1f8365e90",
         "balance": "53200134990870587",
-        "balanceUsd": 8.053436e-06,
+        "balanceUsd": 7.328319e-06,
         "decimals": 18,
-        "priceUsd": 0.00015138
+        "priceUsd": 0.00013775
       },
       {
         "address": "0x091b1dbbdd959d7553ba817150ed59fb24c3eac9",
@@ -2276,30 +2438,30 @@
       {
         "address": "0x0a4c9cb2778ab3302996a34befcf9a8bc288c33b",
         "balance": "2989",
-        "balanceUsd": 0.002337795537,
+        "balanceUsd": 0.002329901588,
         "decimals": 6,
-        "priceUsd": 0.782133
+        "priceUsd": 0.779492
       },
       {
         "address": "0x0b2558bdbc7ffec0f327fb3579c23dabd1699706",
         "balance": "735373113407762162",
-        "balanceUsd": 0.019080255535,
+        "balanceUsd": 0.018465373306,
         "decimals": 18,
-        "priceUsd": 0.02594636
+        "priceUsd": 0.02511021
       },
       {
         "address": "0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b",
-        "balance": "14566785285490976496",
-        "balanceUsd": 10.824097441734,
+        "balance": "146562940462472801277",
+        "balanceUsd": 101.835741669778,
         "decimals": 18,
-        "priceUsd": 0.743067
+        "priceUsd": 0.694826
       },
       {
         "address": "0x0c03ce270b4826ec62e7dd007f0b716068639f7b",
         "balance": "221614322107015767",
-        "balanceUsd": 0.062233955548,
+        "balanceUsd": 0.066479421117,
         "decimals": 18,
-        "priceUsd": 0.280821
+        "priceUsd": 0.299978
       },
       {
         "address": "0x0c75780ee8a70355597d0e4ccda6a123d9834b32",
@@ -2311,16 +2473,16 @@
       {
         "address": "0x0ceac003b0d2479bebec9f4b2ebad0a803759bbf",
         "balance": "877258566213",
-        "balanceUsd": 4.03576e-07,
+        "balanceUsd": 3.88575e-07,
         "decimals": 18,
-        "priceUsd": 0.460042
+        "priceUsd": 0.442942
       },
       {
         "address": "0x0d97f261b1e88845184f678e2d1e7a98d9fd38de",
         "balance": "24682538146340253",
-        "balanceUsd": 2.50034e-07,
+        "balanceUsd": 2.34484e-07,
         "decimals": 18,
-        "priceUsd": 1.013e-05
+        "priceUsd": 9.5e-06
       },
       {
         "address": "0x0e2ffe16778964f32770fa38b8a86751cc9e5f22",
@@ -2339,23 +2501,23 @@
       {
         "address": "0x1111111111166b7fe7bd91427724b487980afc69",
         "balance": "455852315203290257995",
-        "balanceUsd": 7.416411747306,
+        "balanceUsd": 7.080047440964,
         "decimals": 18,
-        "priceUsd": 0.01626933
+        "priceUsd": 0.01553145
       },
       {
         "address": "0x11dc28d01984079b7efe7763b533e6ed9e3722b9",
-        "balance": "57770996913704709415",
-        "balanceUsd": 2.930260505457,
+        "balance": "1412007479942452878155",
+        "balanceUsd": 59.723200296583,
         "decimals": 18,
-        "priceUsd": 0.050722
+        "priceUsd": 0.04229666
       },
       {
         "address": "0x1217bfe6c773eec6cc4a38b5dc45b92292b6e189",
         "balance": "357251",
-        "balanceUsd": 0.357251,
+        "balanceUsd": 0.357000567049,
         "decimals": 6,
-        "priceUsd": 1.0
+        "priceUsd": 0.999299
       },
       {
         "address": "0x13c9c2305965641024069f22350d23dcb837237b",
@@ -2381,9 +2543,9 @@
       {
         "address": "0x16ee7ecac70d1028e7712751e2ee6ba808a7dd92",
         "balance": "134424267848050890398",
-        "balanceUsd": 4.695789179029,
+        "balanceUsd": 4.5790605218,
         "decimals": 18,
-        "priceUsd": 0.0349326
+        "priceUsd": 0.03406424
       },
       {
         "address": "0x182214259d6a36db5dad514f4e737afb2dec816d",
@@ -2395,44 +2557,44 @@
       {
         "address": "0x194f360d130f2393a5e9f3117a6a1b78abea1624",
         "balance": "148960110366729459968",
-        "balanceUsd": 0.457693345512,
+        "balanceUsd": 0.442314703717,
         "decimals": 18,
-        "priceUsd": 0.00307259
+        "priceUsd": 0.00296935
       },
       {
         "address": "0x1aa8fd5bcce2231c6100d55bf8b377cff33acfc3",
         "balance": "1526932510132485779",
-        "balanceUsd": 0.3985507622,
+        "balanceUsd": 0.440330689542,
         "decimals": 18,
-        "priceUsd": 0.261014
+        "priceUsd": 0.288376
       },
       {
         "address": "0x1bc0c42215582d5a085795f4badbac3ff36d1bcb",
         "balance": "507794795376742583",
-        "balanceUsd": 13.400704649992,
+        "balanceUsd": 12.903065750523,
         "decimals": 18,
-        "priceUsd": 26.39
+        "priceUsd": 25.41
       },
       {
         "address": "0x1c4cca7c5db003824208adda61bd749e55f463a3",
         "balance": "1055208573297878875",
-        "balanceUsd": 0.011073126622,
+        "balanceUsd": 0.009933817926,
         "decimals": 18,
-        "priceUsd": 0.01049378
+        "priceUsd": 0.00941408
       },
       {
         "address": "0x1c7a460413dd4e964f96d8dfc56e7223ce88cd85",
         "balance": "27156975162515855",
-        "balanceUsd": 0.002870166391,
+        "balanceUsd": 0.002698452837,
         "decimals": 18,
-        "priceUsd": 0.105688
+        "priceUsd": 0.099365
       },
       {
         "address": "0x1db0c569ebb4a8b57ac01833b9792f526305e062",
         "balance": "60178403304535552",
-        "balanceUsd": 3.4390754e-05,
+        "balanceUsd": 3.1225972e-05,
         "decimals": 18,
-        "priceUsd": 0.00057148
+        "priceUsd": 0.00051889
       },
       {
         "address": "0x1e2ea5db3aeb89f9cdf8a89a54d151872f833851",
@@ -2443,17 +2605,17 @@
       },
       {
         "address": "0x1f16e03c1a5908818f47f6ee7bb16690b40d0671",
-        "balance": "152420668434949224739",
-        "balanceUsd": 6.714854442735,
+        "balance": "1685903145294358047813",
+        "balanceUsd": 67.996385145019,
         "decimals": 18,
-        "priceUsd": 0.04405475
+        "priceUsd": 0.04033232
       },
       {
         "address": "0x2081ab0d9ec9e4303234ab26d86b20b3367946ee",
         "balance": "24509718785082626477",
-        "balanceUsd": 4.982286615194,
+        "balanceUsd": 4.591699736635,
         "decimals": 18,
-        "priceUsd": 0.203278
+        "priceUsd": 0.187342
       },
       {
         "address": "0x20fbd133897ef802e0235db77bb19a071e257d41",
@@ -2465,16 +2627,16 @@
       {
         "address": "0x226a2fa2556c48245e57cd1cba4c6c9e67077dd2",
         "balance": "14964597591796955470",
-        "balanceUsd": 0.272882430006,
+        "balanceUsd": 0.257105105119,
         "decimals": 18,
-        "priceUsd": 0.0182352
+        "priceUsd": 0.01718089
       },
       {
         "address": "0x22e6966b799c4d5b13be962e1d117b56327fda66",
         "balance": "1218779218972759",
-        "balanceUsd": 0.000366776981,
+        "balanceUsd": 0.00035289021,
         "decimals": 18,
-        "priceUsd": 0.300938
+        "priceUsd": 0.289544
       },
       {
         "address": "0x23234097f73c3380c123cd6e27e16e66ae71cb75",
@@ -2486,13 +2648,13 @@
       {
         "address": "0x23471e7250bcd7ee21df3f39ed6151931d1e076b",
         "balance": "12849528987834341924",
-        "balanceUsd": 0.980136372134,
+        "balanceUsd": 1.159451549159,
         "decimals": 18,
-        "priceUsd": 0.076278
+        "priceUsd": 0.090233
       },
       {
         "address": "0x236aa50979d5f3de3bd1eeb40e81137f22ab794b",
-        "balance": "12527972222949",
+        "balance": "176678499194501",
         "balanceUsd": 0.0,
         "decimals": 18,
         "priceUsd": 0.0
@@ -2500,16 +2662,16 @@
       {
         "address": "0x24914cb6bd01e6a0cf2a9c0478e33c25926e6a0c",
         "balance": "55787952441057041",
-        "balanceUsd": 0.003365129291,
+        "balanceUsd": 0.003188950937,
         "decimals": 18,
-        "priceUsd": 0.06032
+        "priceUsd": 0.057162
       },
       {
         "address": "0x24fcfc492c1393274b6bcd568ac9e225bec93584",
         "balance": "27541596708419818",
-        "balanceUsd": 0.000848823197,
+        "balanceUsd": 0.000810645862,
         "decimals": 18,
-        "priceUsd": 0.03081968
+        "priceUsd": 0.02943351
       },
       {
         "address": "0x25dcf191058288edcbe1597a4c2d8dea0943acae",
@@ -2521,16 +2683,16 @@
       {
         "address": "0x2615a94df961278dcbc41fb0a54fec5f10a693ae",
         "balance": "4194585189277142",
-        "balanceUsd": 0.005956310969,
+        "balanceUsd": 0.005788527561,
         "decimals": 18,
-        "priceUsd": 1.42
+        "priceUsd": 1.38
       },
       {
         "address": "0x26f3901ac8a79c50fb0d8289c74f0d09adc42e29",
         "balance": "335295506",
         "balanceUsd": 2e-12,
         "decimals": 18,
-        "priceUsd": 0.00653117
+        "priceUsd": 0.00625748
       },
       {
         "address": "0x292e23bbaa444c382a1ce91089b71e38cdc8245b",
@@ -2542,30 +2704,30 @@
       {
         "address": "0x2a06a17cbc6d0032cac2c6696da90f29d39a1a29",
         "balance": "1211174",
-        "balanceUsd": 0.000223644854,
+        "balanceUsd": 0.000213846335,
         "decimals": 8,
-        "priceUsd": 0.01846513
+        "priceUsd": 0.01765612
       },
       {
         "address": "0x2a0a59d6b975828e781ecac125dba40d7ee5ddc0",
         "balance": "433110364668705066",
-        "balanceUsd": 0.206868669029,
+        "balanceUsd": 0.197501358061,
         "decimals": 18,
-        "priceUsd": 0.477635
+        "priceUsd": 0.456007
       },
       {
         "address": "0x2ae3f1ec7f1f5012cfeab0185bfc7aa3cf0dec22",
         "balance": "159963700071834",
-        "balanceUsd": 0.395291098159,
+        "balanceUsd": 0.373163319528,
         "decimals": 18,
-        "priceUsd": 2471.13
+        "priceUsd": 2332.8
       },
       {
         "address": "0x2b11834ed1feaed4b4b3a86a6f571315e25a884d",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.01371673
+        "priceUsd": 0.01308364
       },
       {
         "address": "0x2c5cf1997efcae3ca8e6c26ca623e453b9203d5f",
@@ -2586,14 +2748,14 @@
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 1.56053e-07
+        "priceUsd": 1.44327e-07
       },
       {
         "address": "0x2dad3a13ef0c6366220f989157009e501e7938f8",
         "balance": "195707741085042617",
-        "balanceUsd": 0.001382722161,
+        "balanceUsd": 0.001337208368,
         "decimals": 18,
-        "priceUsd": 0.00706524
+        "priceUsd": 0.00683268
       },
       {
         "address": "0x2f0269d0319201a0ef96dea70bd89180d3a9a0e8",
@@ -2605,23 +2767,23 @@
       {
         "address": "0x306acd0c07c430abbbb2e74ef7bde94f32a898c0",
         "balance": "157731153899570307",
-        "balanceUsd": 0.003164656357,
+        "balanceUsd": 0.003096024377,
         "decimals": 18,
-        "priceUsd": 0.02006361
+        "priceUsd": 0.01962849
       },
       {
         "address": "0x30c7235866872213f68cb1f08c37cb9eccb93452",
         "balance": "5648564679239871",
-        "balanceUsd": 0.000191953422,
+        "balanceUsd": 0.000176168339,
         "decimals": 18,
-        "priceUsd": 0.03398269
+        "priceUsd": 0.03118816
       },
       {
         "address": "0x311935cd80b76769bf2ecc9d8ab7635b2139cf82",
         "balance": "8688594",
-        "balanceUsd": 0.81047204832,
+        "balanceUsd": 0.75912245778,
         "decimals": 9,
-        "priceUsd": 93.28
+        "priceUsd": 87.37
       },
       {
         "address": "0x3319e7bd7e8792f313aef8f572cbb0470bfd38a2",
@@ -2633,44 +2795,51 @@
       {
         "address": "0x3489256febdb1dc930dc3743617ad387cd6d3568",
         "balance": "2885104520534",
-        "balanceUsd": 2.6084e-08,
+        "balanceUsd": 2.4774e-08,
         "decimals": 18,
-        "priceUsd": 0.00904081
+        "priceUsd": 0.00858701
       },
       {
         "address": "0x352b850b733ab8bab50aed1dab5d22e3186ce984",
         "balance": "1604835920714602430",
-        "balanceUsd": 0.002496932112,
+        "balanceUsd": 0.002603108057,
         "decimals": 18,
-        "priceUsd": 0.00155588
+        "priceUsd": 0.00162204
       },
       {
         "address": "0x35e5db674d8e93a03d814fa0ada70731efe8a4b9",
         "balance": "71218757802",
-        "balanceUsd": 2.2387e-08,
+        "balanceUsd": 2.3172e-08,
         "decimals": 18,
-        "priceUsd": 0.314339
+        "priceUsd": 0.325359
       },
       {
         "address": "0x368181499736d0c0cc614dbb145e2ec1ac86b8c6",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 1.024
+        "priceUsd": 1.022
+      },
+      {
+        "address": "0x36a280467bd6e068ae8edeb5c252dddeae04f7a3",
+        "balance": "0",
+        "balanceUsd": 0.0,
+        "decimals": 8,
+        "priceUsd": 0.0
       },
       {
         "address": "0x370923d39f139c64813f173a1bf0b4f9ba36a24f",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.00068433
+        "priceUsd": 0.00068434
       },
       {
         "address": "0x39d5313c3750140e5042887413ba8aa6145a9bd2",
         "balance": "34087044424",
-        "balanceUsd": 2.42359e-07,
+        "balanceUsd": 2.19861e-07,
         "decimals": 18,
-        "priceUsd": 7.11
+        "priceUsd": 6.45
       },
       {
         "address": "0x3ac6d169bb8d9fe36458c4a422412727ef59e09c",
@@ -2682,16 +2851,16 @@
       {
         "address": "0x3e31966d4f81c72d2a55310a6365a56a4393e98d",
         "balance": "96772254",
-        "balanceUsd": 7.656427191972,
+        "balanceUsd": 7.537494091806,
         "decimals": 6,
-        "priceUsd": 0.079118
+        "priceUsd": 0.077889
       },
       {
         "address": "0x3ee5e23eee121094f1cfc0ccc79d6c809ebd22e5",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 4.495e-05
+        "priceUsd": 4.473e-05
       },
       {
         "address": "0x3f0ef001d521f8e66a3ac9ef835cf0c9b049919f",
@@ -2702,10 +2871,10 @@
       },
       {
         "address": "0x4200000000000000000000000000000000000006",
-        "balance": "70356136316225376",
-        "balanceUsd": 154.286785573303,
+        "balance": "540236069986886161",
+        "balanceUsd": 1120.255124167606,
         "decimals": 18,
-        "priceUsd": 2192.94
+        "priceUsd": 2073.64
       },
       {
         "address": "0x430d3834c385b5064050bf73c725ecc614111140",
@@ -2717,9 +2886,9 @@
       {
         "address": "0x449b3317a6d1efb1bc3ba0700c9eaa4ffff4ae65",
         "balance": "7982787",
-        "balanceUsd": 5.558542312692,
+        "balanceUsd": 5.508753670173,
         "decimals": 6,
-        "priceUsd": 0.696316
+        "priceUsd": 0.690079
       },
       {
         "address": "0x45bbff28b665bc2663250890bc92d2d0a08cd80c",
@@ -2731,72 +2900,79 @@
       {
         "address": "0x4621b7a9c75199271f773ebd9a499dbd165c3191",
         "balance": "1174839116655",
-        "balanceUsd": 1.164678e-06,
+        "balanceUsd": 1.165799e-06,
         "decimals": 18,
-        "priceUsd": 0.991351
+        "priceUsd": 0.992305
       },
       {
         "address": "0x4a0c64af541439898448659aedcec8e8e819fc53",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.0299171
+        "priceUsd": 0.02822893
       },
       {
         "address": "0x4bfaa776991e85e5f8b1255461cbbd216cfc714f",
         "balance": "19296143552068",
-        "balanceUsd": 4.19882e-07,
+        "balanceUsd": 3.91108e-07,
         "decimals": 18,
-        "priceUsd": 0.02175988
+        "priceUsd": 0.02026873
       },
       {
         "address": "0x4c87da04887a1f9f21f777e3a8dd55c3c9f84701",
         "balance": "29434430421601339330",
-        "balanceUsd": 0.008962195375,
+        "balanceUsd": 0.008878601592,
         "decimals": 18,
-        "priceUsd": 0.00030448
+        "priceUsd": 0.00030164
       },
       {
         "address": "0x4da9a0f397db1397902070f93a4d6ddbc0e0e6e8",
         "balance": "5662204572122972325",
-        "balanceUsd": 36.011621078702,
+        "balanceUsd": 34.709314027114,
         "decimals": 18,
-        "priceUsd": 6.36
+        "priceUsd": 6.13
       },
       {
         "address": "0x4e200fe2f3efb977d5fd9c430a41531fb04d97b8",
         "balance": "3392977823186804346",
-        "balanceUsd": 0.192928112004,
+        "balanceUsd": 0.183180086718,
         "decimals": 18,
-        "priceUsd": 0.056861
+        "priceUsd": 0.053988
       },
       {
         "address": "0x4e74d4db6c0726ccded4656d0bce448876bb4c7a",
         "balance": "899010062863402681",
-        "balanceUsd": 0.869696940754,
+        "balanceUsd": 0.855584280787,
         "decimals": 18,
-        "priceUsd": 0.967394
+        "priceUsd": 0.951696
       },
       {
         "address": "0x4eb92702ba4cfbf80561bad64d89c706ac824960",
         "balance": "1580716224754533127",
-        "balanceUsd": 0.193612446073,
+        "balanceUsd": 0.185332654488,
         "decimals": 18,
-        "priceUsd": 0.122484
+        "priceUsd": 0.117246
       },
       {
         "address": "0x4ed4e862860bed51a9570b96d89af5e1b0efefed",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.00075388
+        "priceUsd": 0.00071414
+      },
+      {
+        "address": "0x4f4ded4b99f3c76fa9af75275b545e807e252540",
+        "balance": "0",
+        "balanceUsd": 0.0,
+        "decimals": 8,
+        "priceUsd": 0.0
       },
       {
         "address": "0x4f9fd6be4a90f2620860d680c0d4d5fb53d1a825",
-        "balance": "58083675371016791167",
-        "balanceUsd": 1.496425992013,
+        "balance": "626915450182341598215",
+        "balanceUsd": 15.191828953016,
         "decimals": 18,
-        "priceUsd": 0.02576328
+        "priceUsd": 0.02423266
       },
       {
         "address": "0x507b8c8053c20c40d8f448d9b9a4054a981544a7",
@@ -2808,16 +2984,16 @@
       {
         "address": "0x50da645f148798f68ef2d7db7c1cb22a6819bb2c",
         "balance": "215339417",
-        "balanceUsd": 0.665448326596,
+        "balanceUsd": 0.618405277558,
         "decimals": 8,
-        "priceUsd": 0.309023
+        "priceUsd": 0.287177
       },
       {
         "address": "0x50f88fe97f72cd3e75b9eb4f747f59bceba80d59",
         "balance": "2142660394604111661",
-        "balanceUsd": 0.00357217913,
+        "balanceUsd": 0.003407365693,
         "decimals": 18,
-        "priceUsd": 0.00166717
+        "priceUsd": 0.00159025
       },
       {
         "address": "0x511cfa6620e8d62ee790931416499d7921ee2eab",
@@ -2828,17 +3004,17 @@
       },
       {
         "address": "0x526728dbc96689597f85ae4cd716d4f7fccbae9d",
-        "balance": "8335478816536800206",
-        "balanceUsd": 8.302828746012,
+        "balance": "115391974799680123856",
+        "balanceUsd": 114.958793326282,
         "decimals": 18,
-        "priceUsd": 0.996083
+        "priceUsd": 0.996246
       },
       {
         "address": "0x532f27101965dd16442e59d40670faf5ebb142e4",
         "balance": "540682801236658292799",
-        "balanceUsd": 3.749867720181,
+        "balanceUsd": 3.55727650638,
         "decimals": 18,
-        "priceUsd": 0.00693543
+        "priceUsd": 0.00657923
       },
       {
         "address": "0x5359b789214659f0c2ccbf01373aeaffa470b182",
@@ -2850,37 +3026,37 @@
       {
         "address": "0x548f93779fbc992010c07467cbaf329dd5f059b7",
         "balance": "337586133441729949",
-        "balanceUsd": 0.149213746154,
+        "balanceUsd": 0.142155495276,
         "decimals": 18,
-        "priceUsd": 0.442002
+        "priceUsd": 0.421094
       },
       {
         "address": "0x55cd6469f597452b5a7536e2cd98fde4c1247ee4",
         "balance": "798286035345614856",
-        "balanceUsd": 0.005487961041,
+        "balanceUsd": 0.005054467776,
         "decimals": 18,
-        "priceUsd": 0.00687468
+        "priceUsd": 0.00633165
       },
       {
         "address": "0x56f8ad6112c2db9f9848243531b277ce1c3be30c",
         "balance": "492591905766197282",
-        "balanceUsd": 1.755105e-05,
+        "balanceUsd": 1.7442679e-05,
         "decimals": 18,
-        "priceUsd": 3.563e-05
+        "priceUsd": 3.541e-05
       },
       {
         "address": "0x58538e6a46e07434d7e7375bc268d3cb839c0133",
         "balance": "2024745691705756",
-        "balanceUsd": 0.000201978506,
+        "balanceUsd": 0.000198663998,
         "decimals": 18,
-        "priceUsd": 0.099755
+        "priceUsd": 0.098118
       },
       {
         "address": "0x590830dfdf9a3f68afcdde2694773debdf267774",
-        "balance": "141631770597383659954",
-        "balanceUsd": 1.637552196918,
+        "balance": "2588151656209155672456",
+        "balanceUsd": 52.961140288875,
         "decimals": 18,
-        "priceUsd": 0.01156204
+        "priceUsd": 0.02046292
       },
       {
         "address": "0x597c44171437c95863b49b6bea9c6e4b31c11151",
@@ -2892,16 +3068,16 @@
       {
         "address": "0x5ab3d4c385b400f3abb49e80de2faf6a88a7b691",
         "balance": "313925587230849614695",
-        "balanceUsd": 17.939591607894,
+        "balanceUsd": 16.968933692176,
         "decimals": 18,
-        "priceUsd": 0.057146
+        "priceUsd": 0.054054
       },
       {
         "address": "0x5b2193fdc451c1f847be09ca9d13a4bf60f8c86b",
         "balance": "1079816307860833098029",
-        "balanceUsd": 61.400514897583,
+        "balanceUsd": 64.823532593502,
         "decimals": 18,
-        "priceUsd": 0.056862
+        "priceUsd": 0.060032
       },
       {
         "address": "0x5cca011eab2de4114fb0d21c0336d82a838af2aa",
@@ -2913,51 +3089,51 @@
       {
         "address": "0x5cda0e1ca4ce2af96315f7f8963c85399c172204",
         "balance": "1168645636842856",
-        "balanceUsd": 0.216643528158,
+        "balanceUsd": 0.209187568995,
         "decimals": 18,
-        "priceUsd": 185.38
+        "priceUsd": 179.0
       },
       {
         "address": "0x5ed25e305e08f58afd7995eac72563e6be65a617",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 1.29
+        "priceUsd": 1.22
       },
       {
         "address": "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42",
-        "balance": "1700002",
-        "balanceUsd": 1.97200232,
+        "balance": "12692207",
+        "balanceUsd": 14.59603805,
         "decimals": 6,
-        "priceUsd": 1.16
+        "priceUsd": 1.15
       },
       {
         "address": "0x616b416f777e3dc904a44aa259a475bf26d06ef9",
         "balance": "28552014115423960",
-        "balanceUsd": 4.746772e-06,
+        "balanceUsd": 4.747343e-06,
         "decimals": 18,
-        "priceUsd": 0.00016625
+        "priceUsd": 0.00016627
       },
       {
         "address": "0x63706e401c06ac8513145b7687a14804d17f814b",
-        "balance": "33276493133574451",
-        "balanceUsd": 3.85641278925,
+        "balance": "371342218824198895",
+        "balanceUsd": 39.622214748542,
         "decimals": 18,
-        "priceUsd": 115.89
+        "priceUsd": 106.7
       },
       {
         "address": "0x6444c6c2d527d85ea97032da9a7504d6d1448ecf",
         "balance": "1810185781533",
-        "balanceUsd": 9.27478e-07,
+        "balanceUsd": 9.21513e-07,
         "decimals": 18,
-        "priceUsd": 0.512366
+        "priceUsd": 0.509071
       },
       {
         "address": "0x64fcc3a02eeeba05ef701b7eed066c6ebd5d4e51",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.00546817
+        "priceUsd": 0.00498055
       },
       {
         "address": "0x6537aef3eb037e3da7f7ff6dbf52038dd6d7fc75",
@@ -2971,7 +3147,7 @@
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 5.803e-05
+        "priceUsd": 5.495e-05
       },
       {
         "address": "0x674b82f208b453c22310b47ae134984b14b4a407",
@@ -2983,30 +3159,30 @@
       {
         "address": "0x688aee022aa544f150678b8e5720b6b96a9e9a2f",
         "balance": "10200381645558812148",
-        "balanceUsd": 2.413532701919,
+        "balanceUsd": 2.239636595625,
         "decimals": 18,
-        "priceUsd": 0.236612
+        "priceUsd": 0.219564
       },
       {
         "address": "0x696f9436b67233384889472cd7cd58a6fb5df4f1",
-        "balance": "338025660991531253630",
-        "balanceUsd": 47.65620978923,
+        "balance": "615437291734147273629",
+        "balanceUsd": 90.077248330085,
         "decimals": 18,
-        "priceUsd": 0.140984
+        "priceUsd": 0.146363
       },
       {
         "address": "0x6985884c4392d348587b19cb9eaaf157f13271cd",
         "balance": "49286657735450289543",
-        "balanceUsd": 108.923513595345,
+        "balanceUsd": 102.516248089737,
         "decimals": 18,
-        "priceUsd": 2.21
+        "priceUsd": 2.08
       },
       {
         "address": "0x6b2504a03ca4d43d0d73776f6ad46dab2f2a4cfd",
-        "balance": "226046885104078688657",
-        "balanceUsd": 4.757172520297,
+        "balance": "7134561405957906373316",
+        "balanceUsd": 130.750540767691,
         "decimals": 18,
-        "priceUsd": 0.02104507
+        "priceUsd": 0.01832636
       },
       {
         "address": "0x6b8b8c0b220058704a7fda56493ccb8388d9e661",
@@ -3018,9 +3194,9 @@
       {
         "address": "0x6c240dda6b5c336df09a4d011139beaaa1ea2aa2",
         "balance": "11500590063699",
-        "balanceUsd": 6.367601e-06,
+        "balanceUsd": 6.030472e-06,
         "decimals": 18,
-        "priceUsd": 0.553676
+        "priceUsd": 0.524362
       },
       {
         "address": "0x6ce9b0b0750f48274d8f59a4bc42bdc22574d686",
@@ -3032,9 +3208,9 @@
       {
         "address": "0x6e2c81b6c2c0e02360f00a0da694e489acb0b05e",
         "balance": "61879117642525181647",
-        "balanceUsd": 1.274936919798,
+        "balanceUsd": 1.145717852381,
         "decimals": 18,
-        "priceUsd": 0.02060367
+        "priceUsd": 0.01851542
       },
       {
         "address": "0x6e8c690a7677ab88b3d665d447d14ac9affcbdaa",
@@ -3046,9 +3222,9 @@
       {
         "address": "0x7002458b1df59eccb57387bc79ffc7c29e22e6f7",
         "balance": "11380231994928312836",
-        "balanceUsd": 0.262556860227,
+        "balanceUsd": 0.253940772781,
         "decimals": 18,
-        "priceUsd": 0.02307131
+        "priceUsd": 0.0223142
       },
       {
         "address": "0x70609b534425d50bcfd6306bbf80e8051514437f",
@@ -3060,9 +3236,9 @@
       {
         "address": "0x7252c865c05378ffc15120f428dd65804dd0ce63",
         "balance": "149460104776418101963",
-        "balanceUsd": 1.656097174778,
+        "balanceUsd": 1.662510507874,
         "decimals": 18,
-        "priceUsd": 0.01108053
+        "priceUsd": 0.01112344
       },
       {
         "address": "0x7267b6e617635f81c8afd0994bdc30b595219a1d",
@@ -3074,16 +3250,16 @@
       {
         "address": "0x7300b37dfdfab110d83290a29dfb31b1740219fe",
         "balance": "234291357469504361821",
-        "balanceUsd": 3.396627240346,
+        "balanceUsd": 3.237231801119,
         "decimals": 18,
-        "priceUsd": 0.01449745
+        "priceUsd": 0.01381712
       },
       {
         "address": "0x7431ada8a591c955a994a21710752ef9b882b8e3",
         "balance": "511624048464555",
-        "balanceUsd": 0.000716273668,
+        "balanceUsd": 0.000670227503,
         "decimals": 18,
-        "priceUsd": 1.4
+        "priceUsd": 1.31
       },
       {
         "address": "0x755606469d38f04b39ee06f5e0f0189a764ccebe",
@@ -3095,65 +3271,65 @@
       {
         "address": "0x764a726d9ced0433a8d7643335919deb03a9a935",
         "balance": "366760",
-        "balanceUsd": 0.005093247466,
+        "balanceUsd": 0.00491962695,
         "decimals": 6,
-        "priceUsd": 0.01388714
+        "priceUsd": 0.01341375
       },
       {
         "address": "0x767a739d1a152639e9ea1d8c1bd55fdc5b217d7f",
         "balance": "234209633965925905096",
-        "balanceUsd": 5.477437288598,
+        "balanceUsd": 4.488330188722,
         "decimals": 18,
-        "priceUsd": 0.0233869
+        "priceUsd": 0.01916373
       },
       {
         "address": "0x7750741868cc4a865d9c0f619e6e642fd61f642f",
         "balance": "14410519316841350",
-        "balanceUsd": 3.3547401e-05,
+        "balanceUsd": 3.1788453e-05,
         "decimals": 18,
-        "priceUsd": 0.00232798
+        "priceUsd": 0.00220592
       },
       {
         "address": "0x7750c092e284e2c7366f50c8306f43c7eb2e82a2",
         "balance": "196216013664313025",
-        "balanceUsd": 0.025551053083,
+        "balanceUsd": 0.023294568926,
         "decimals": 18,
-        "priceUsd": 0.130219
+        "priceUsd": 0.118719
       },
       {
         "address": "0x78b3c724a2f663d11373c4a1978689271895256f",
         "balance": "97415035287987",
-        "balanceUsd": 1.19122e-07,
+        "balanceUsd": 1.13629e-07,
         "decimals": 18,
-        "priceUsd": 0.00122283
+        "priceUsd": 0.00116644
       },
       {
         "address": "0x79bbf4508b1391af3a0f4b30bb5fc4aa9ab0e07c",
         "balance": "19263590323410",
-        "balanceUsd": 1.683449e-05,
+        "balanceUsd": 1.5349306e-05,
         "decimals": 18,
-        "priceUsd": 0.873902
+        "priceUsd": 0.796804
       },
       {
         "address": "0x7aafd31a321d3627b30a8e2171264b56852187fe",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.080373
+        "priceUsd": 0.078955
       },
       {
         "address": "0x7ba6f01772924a82d9626c126347a28299e98c98",
-        "balance": "4216022522109614",
-        "balanceUsd": 9.213274017566,
+        "balance": "46750650955825662",
+        "balanceUsd": 96.64621820145,
         "decimals": 18,
-        "priceUsd": 2185.3
+        "priceUsd": 2067.27
       },
       {
         "address": "0x7ce02e86354ea0cc3b302aeadc0ab56bc7eb44b8",
         "balance": "15122124663034580556",
-        "balanceUsd": 1.777076479777,
+        "balanceUsd": 1.485264840154,
         "decimals": 18,
-        "priceUsd": 0.117515
+        "priceUsd": 0.098218
       },
       {
         "address": "0x7e2a4abd22d513c34f347038d4b8c37cb3571f92",
@@ -3167,7 +3343,7 @@
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.00757127
+        "priceUsd": 0.00703401
       },
       {
         "address": "0x80458932df364461034d98796257cae8cc1432a4",
@@ -3185,52 +3361,52 @@
       },
       {
         "address": "0x81034fb34009115f215f5d5f564aac9ffa46a1dc",
-        "balance": "4397151117671365805206090",
-        "balanceUsd": 1231725.5739309853,
+        "balance": "4397049246371365805206090",
+        "balanceUsd": 1232721.5503187052,
         "decimals": 18,
-        "priceUsd": 0.280119
+        "priceUsd": 0.280352
       },
       {
         "address": "0x820c137fa70c8691f0e44dc420a5e53c168921dc",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.999765
+        "priceUsd": 0.999827
       },
       {
         "address": "0x820c5f0fb255a1d18fd0ebb0f1ccefbc4d546da7",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 4.43e-06
+        "priceUsd": 4.16e-06
       },
       {
         "address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-        "balance": "458726195",
-        "balanceUsd": 458.6436242849,
+        "balance": "1035950909",
+        "balanceUsd": 1035.825558940011,
         "decimals": 6,
-        "priceUsd": 0.99982
+        "priceUsd": 0.999879
       },
       {
         "address": "0x83f31af747189c2fa9e5deb253200c505eff6ed2",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 236.29
+        "priceUsd": 222.84
       },
       {
         "address": "0x868fced65edbf0056c4163515dd840e9f287a4c3",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.04246234
+        "priceUsd": 0.03191333
       },
       {
         "address": "0x88fb150bdc53a65fe94dea0c9ba0a6daf8c6e196",
         "balance": "13594759233661141",
-        "balanceUsd": 0.128742369943,
+        "balanceUsd": 0.121809042734,
         "decimals": 18,
-        "priceUsd": 9.47
+        "priceUsd": 8.96
       },
       {
         "address": "0x8d12f17740392c7322ceba621c1904b464f138b5",
@@ -3249,30 +3425,30 @@
       {
         "address": "0x8fe815417913a93ea99049fc0718ee1647a2a07c",
         "balance": "46136457088811",
-        "balanceUsd": 3.39947e-07,
+        "balanceUsd": 3.33421e-07,
         "decimals": 18,
-        "priceUsd": 0.00736829
+        "priceUsd": 0.00722685
       },
       {
         "address": "0x9126236476efba9ad8ab77855c60eb5bf37586eb",
         "balance": "17518316660092249682",
-        "balanceUsd": 0.956219796574,
+        "balanceUsd": 0.87819321417,
         "decimals": 18,
-        "priceUsd": 0.054584
+        "priceUsd": 0.05013
       },
       {
         "address": "0x93dc5cb35627a759848c7a7f0079ea7b49e435a5",
-        "balance": "3144888203080524283",
+        "balance": "12876879391374659256",
         "balanceUsd": 0.0,
         "decimals": 18,
         "priceUsd": 0.0
       },
       {
         "address": "0x940181a94a35a4569e4529a3cdfb74e38fd98631",
-        "balance": "8237974141730753756",
-        "balanceUsd": 2.804544154785,
+        "balance": "163045537907861806534",
+        "balanceUsd": 53.278390422152,
         "decimals": 18,
-        "priceUsd": 0.340441
+        "priceUsd": 0.32677
       },
       {
         "address": "0x976be5b361d8da7ae0efc6a7f1960eda73eb433a",
@@ -3284,44 +3460,44 @@
       {
         "address": "0x9818b6c09f5ecc843060927e8587c427c7c93583",
         "balance": "17838619523088278937",
-        "balanceUsd": 0.086081507212,
+        "balanceUsd": 0.081490738478,
         "decimals": 18,
-        "priceUsd": 0.00482557
+        "priceUsd": 0.00456822
       },
       {
         "address": "0x98d0baa52b2d063e780de12f615f963fe8537553",
         "balance": "19758845648218918",
-        "balanceUsd": 0.007951572013,
+        "balanceUsd": 0.007749873717,
         "decimals": 18,
-        "priceUsd": 0.402431
+        "priceUsd": 0.392223
       },
       {
         "address": "0x9a26f5433671751c3276a065f57e5a02d2817973",
         "balance": "492395151703171",
-        "balanceUsd": 2.53633e-07,
+        "balanceUsd": 2.35478e-07,
         "decimals": 18,
-        "priceUsd": 0.0005151
+        "priceUsd": 0.00047823
       },
       {
         "address": "0x9a33406165f562e16c3abd82fd1185482e01b49a",
         "balance": "67206730357250926",
-        "balanceUsd": 4.7700649e-05,
+        "balanceUsd": 4.5078914e-05,
         "decimals": 18,
-        "priceUsd": 0.00070976
+        "priceUsd": 0.00067075
       },
       {
         "address": "0x9b5e262cf9bb04869ab40b19af91d2dc85761722",
         "balance": "474879342386798492",
-        "balanceUsd": 0.526641665586,
+        "balanceUsd": 0.432605583328,
         "decimals": 16,
-        "priceUsd": 0.01109001
+        "priceUsd": 0.0091098
       },
       {
         "address": "0x9b8df6e244526ab5f6e6400d331db28c8fdddb55",
-        "balance": "22330451901672555",
-        "balanceUsd": 2.078741767527,
+        "balance": "346019998885207370",
+        "balanceUsd": 30.217926502645,
         "decimals": 18,
-        "priceUsd": 93.09
+        "priceUsd": 87.33
       },
       {
         "address": "0x9ba29ceefab2e5700d1fc62869cf54b17cbb6e7f",
@@ -3335,7 +3511,7 @@
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 1.075
+        "priceUsd": 1.03
       },
       {
         "address": "0x9cbe0cc64876b278b683046e011da5a39ea78744",
@@ -3346,17 +3522,17 @@
       },
       {
         "address": "0x9d0e8f5b25384c7310cb8c6ae32c8fbeb645d083",
-        "balance": "44184306807026177554",
-        "balanceUsd": 4.122351640789,
+        "balance": "672384714640198364720",
+        "balanceUsd": 56.260446228089,
         "decimals": 18,
-        "priceUsd": 0.093299
+        "priceUsd": 0.083673
       },
       {
         "address": "0x9d56c29e820dd13b0580b185d0e0dc301d27581d",
         "balance": "184707329940764",
-        "balanceUsd": 0.000174225743,
+        "balanceUsd": 0.000161617251,
         "decimals": 18,
-        "priceUsd": 0.943253
+        "priceUsd": 0.874991
       },
       {
         "address": "0x9d5c1c400dc828a3409f9c209b83ff51a65d2a0e",
@@ -3368,9 +3544,9 @@
       {
         "address": "0x9eadbe35f3ee3bf3e28180070c429298a1b02f93",
         "balance": "34165404508450496",
-        "balanceUsd": 0.004484380169,
+        "balanceUsd": 0.004252841222,
         "decimals": 18,
-        "priceUsd": 0.131255
+        "priceUsd": 0.124478
       },
       {
         "address": "0x9f62b62cf8cc3aea56a3ce8808cf13503d1131e7",
@@ -3382,9 +3558,9 @@
       {
         "address": "0xa1832f7f4e534ae557f9b5ab76de54b1873e498b",
         "balance": "125687534260457039754",
-        "balanceUsd": 1.104893976177,
+        "balanceUsd": 0.985438029865,
         "decimals": 18,
-        "priceUsd": 0.0087908
+        "priceUsd": 0.00784038
       },
       {
         "address": "0xa2e9b0164551295211bb3c01ac964b92e6c54c53",
@@ -3410,30 +3586,30 @@
       {
         "address": "0xa3d1a8deb97b111454b294e2324efad13a9d8396",
         "balance": "225657301171382",
-        "balanceUsd": 0.000293354492,
+        "balanceUsd": 0.000291097919,
         "decimals": 18,
-        "priceUsd": 1.3
+        "priceUsd": 1.29
       },
       {
         "address": "0xa4a2e2ca3fbfe21aed83471d28b6f65a233c6e00",
-        "balance": "47471117193938758996",
-        "balanceUsd": 6.368060487098,
+        "balance": "534191303393298070340",
+        "balanceUsd": 63.318763573814,
         "decimals": 18,
-        "priceUsd": 0.134146
+        "priceUsd": 0.118532
       },
       {
         "address": "0xa53887f7e7c1bf5010b8627f1c1ba94fe7a5d6e0",
         "balance": "121472823015467705005",
-        "balanceUsd": 2.181913067927,
+        "balanceUsd": 2.126679375302,
         "decimals": 18,
-        "priceUsd": 0.01796215
+        "priceUsd": 0.01750745
       },
       {
         "address": "0xa749de6c28262b7ffbc5de27dc845dd7ecd2b358",
-        "balance": "97832516820761391128",
-        "balanceUsd": 0.838613485911,
+        "balance": "1524554432019040107734",
+        "balanceUsd": 12.667141637038,
         "decimals": 18,
-        "priceUsd": 0.00857193
+        "priceUsd": 0.00830875
       },
       {
         "address": "0xa7fb72bd1410690cecfb31297f4d418bfddbe83e",
@@ -3447,49 +3623,49 @@
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.319104
+        "priceUsd": 0.300913
       },
       {
         "address": "0xa88594d404727625a9437c3f886c7643872296ae",
         "balance": "102124749305251226102",
-        "balanceUsd": 0.456306656113,
+        "balanceUsd": 0.443189753313,
         "decimals": 18,
-        "priceUsd": 0.00446813
+        "priceUsd": 0.00433969
       },
       {
         "address": "0xa99f6e6785da0f5d6fb42495fe424bce029eeb3e",
         "balance": "4525175495490470",
-        "balanceUsd": 0.005882728144,
+        "balanceUsd": 0.005520714104,
         "decimals": 18,
-        "priceUsd": 1.3
+        "priceUsd": 1.22
       },
       {
         "address": "0xaaa843fb2916c0b57454270418e121c626402aaa",
         "balance": "405615114484289",
-        "balanceUsd": 1.1641839e-05,
+        "balanceUsd": 1.0402908e-05,
         "decimals": 18,
-        "priceUsd": 0.02870169
+        "priceUsd": 0.02564724
       },
       {
         "address": "0xac1bd2486aaf3b5c0fc3fd868558b082a531b2b4",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.00020769
+        "priceUsd": 0.0001968
       },
       {
         "address": "0xac531eb26ca1d21b85126de8fb87e80e09002dcf",
         "balance": "3473360958427381814",
-        "balanceUsd": 0.287305998398,
+        "balanceUsd": 0.270008660825,
         "decimals": 18,
-        "priceUsd": 0.082717
+        "priceUsd": 0.077737
       },
       {
         "address": "0xacfe6019ed1a7dc6f7b508c02d1b04ec88cc21bf",
-        "balance": "7568936373505882624",
-        "balanceUsd": 51.090320521165,
+        "balance": "41562810861146340706",
+        "balanceUsd": 257.689427339107,
         "decimals": 18,
-        "priceUsd": 6.75
+        "priceUsd": 6.2
       },
       {
         "address": "0xad03e2e457ebe290f364c9aa8133dcd0cda30c4e",
@@ -3501,23 +3677,23 @@
       {
         "address": "0xaea742f80922f7c94b8fd91686c9dfbdfe90d9e6",
         "balance": "117870291893611681",
-        "balanceUsd": 8.750219e-05,
+        "balanceUsd": 8.2320612e-05,
         "decimals": 18,
-        "priceUsd": 0.00074236
+        "priceUsd": 0.0006984
       },
       {
         "address": "0xafb89a09d82fbde58f18ac6437b3fc81724e4df6",
         "balance": "1070326756326325",
-        "balanceUsd": 5.25359e-07,
+        "balanceUsd": 5.03931e-07,
         "decimals": 18,
-        "priceUsd": 0.00049084
+        "priceUsd": 0.00047082
       },
       {
         "address": "0xb0505e5a99abd03d94a1169e638b78edfed26ea4",
         "balance": "744307458319288572",
-        "balanceUsd": 0.723523416853,
+        "balanceUsd": 0.697819503088,
         "decimals": 18,
-        "priceUsd": 0.972076
+        "priceUsd": 0.937542
       },
       {
         "address": "0xb0c26970e9dad9b5162fcaab1a5d13e604a6d9ac",
@@ -3531,35 +3707,35 @@
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.01682247
+        "priceUsd": 0.01570106
       },
       {
         "address": "0xb166e8b140d35d9d8226e40c09f757bac5a4d87d",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.00862885
+        "priceUsd": 0.00792873
       },
       {
         "address": "0xb1a03eda10342529bbf8eb700a06c60441fef25d",
         "balance": "47880380661032557",
-        "balanceUsd": 0.000166965112,
+        "balanceUsd": 0.000157724677,
         "decimals": 18,
-        "priceUsd": 0.00348713
+        "priceUsd": 0.00329414
       },
       {
         "address": "0xb33ff54b9f7242ef1593d2c9bcd8f9df46c77935",
-        "balance": "349823786577900252",
-        "balanceUsd": 0.001645371693,
+        "balance": "3416894324698588415681",
+        "balanceUsd": 13.992763131676,
         "decimals": 18,
-        "priceUsd": 0.00470343
+        "priceUsd": 0.00409517
       },
       {
         "address": "0xb3b32f9f8827d4634fe7d973fa1034ec9fddb3b3",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.00032933
+        "priceUsd": 0.00030293
       },
       {
         "address": "0xb435cb9cee20efce58c452f646552c3ad744ed64",
@@ -3577,17 +3753,17 @@
       },
       {
         "address": "0xb676f87a6e701f0de8de5ab91b56b66109766db1",
-        "balance": "114907991171809825425",
-        "balanceUsd": 3.063659624424,
+        "balance": "9862757633378079141937",
+        "balanceUsd": 242.779767979284,
         "decimals": 18,
-        "priceUsd": 0.02666185
+        "priceUsd": 0.02461581
       },
       {
         "address": "0xb79dd08ea68a908a97220c76d19a6aa9cbde4376",
         "balance": "286337",
-        "balanceUsd": 0.286242222453,
+        "balanceUsd": 0.286909674,
         "decimals": 6,
-        "priceUsd": 0.999669
+        "priceUsd": 1.002
       },
       {
         "address": "0xb96a7fa2dc5627eb76f91962e1e45e75e572c850",
@@ -3599,9 +3775,9 @@
       {
         "address": "0xb9926b3fbc5873db0182016d55727d5ae89e5efd",
         "balance": "37762382828266210",
-        "balanceUsd": 1.042619e-06,
+        "balanceUsd": 9.81444e-07,
         "decimals": 18,
-        "priceUsd": 2.761e-05
+        "priceUsd": 2.599e-05
       },
       {
         "address": "0xb9a0c47adea84b1cf17a787c429bdeeeac01ccd7",
@@ -3613,9 +3789,9 @@
       {
         "address": "0xb9e1fd5a02d3a33b25a14d661414e6ed6954a721",
         "balance": "65044826986735",
-        "balanceUsd": 8.078502e-06,
+        "balanceUsd": 7.560941e-06,
         "decimals": 18,
-        "priceUsd": 0.124199
+        "priceUsd": 0.116242
       },
       {
         "address": "0xb9e5e7296466c7daea8133289fbb29e493e72956",
@@ -3626,17 +3802,17 @@
       },
       {
         "address": "0xbaa5cc21fd487b8fcc2f632f3f4e8d37262a0842",
-        "balance": "164877106066899611",
-        "balanceUsd": 0.288534935617,
+        "balance": "38925028023582446945",
+        "balanceUsd": 64.226296238911,
         "decimals": 18,
-        "priceUsd": 1.75
+        "priceUsd": 1.65
       },
       {
         "address": "0xbb22ff867f8ca3d5f2251b4084f6ec86d4666e14",
         "balance": "97143795177365",
-        "balanceUsd": 4.7506133e-05,
+        "balanceUsd": 4.6902384e-05,
         "decimals": 18,
-        "priceUsd": 0.489029
+        "priceUsd": 0.482814
       },
       {
         "address": "0xbcd73d9c3de8884c9aaaf9b2e4f0a48a64f12a1b",
@@ -3647,8 +3823,8 @@
       },
       {
         "address": "0xbf1aea8670d2528e08334083616dd9c5f3b087ae",
-        "balance": "6119714260589140147",
-        "balanceUsd": 6.119714260589,
+        "balance": "96919235516336182238",
+        "balanceUsd": 96.919235516336,
         "decimals": 18,
         "priceUsd": 1.0
       },
@@ -3657,35 +3833,35 @@
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.067468
+        "priceUsd": 0.074697
       },
       {
         "address": "0xc0041ef357b183448b235a8ea73ce4e4ec8c265f",
-        "balance": "9973505812199326781",
-        "balanceUsd": 0.171464312453,
+        "balance": "667138126442781698919",
+        "balanceUsd": 10.715359102723,
         "decimals": 18,
-        "priceUsd": 0.01719198
+        "priceUsd": 0.01606168
       },
       {
         "address": "0xc0634090f2fe6c6d75e61be2b949464abb498973",
-        "balance": "194066698881378556",
-        "balanceUsd": 0.030440914253,
+        "balance": "112603728549943343683",
+        "balanceUsd": 16.114381781597,
         "decimals": 18,
-        "priceUsd": 0.156858
+        "priceUsd": 0.143107
       },
       {
         "address": "0xc08cd26474722ce93f4d0c34d16201461c10aa8c",
         "balance": "115968542219489652177",
-        "balanceUsd": 6.666103743861,
+        "balanceUsd": 6.406218240747,
         "decimals": 18,
-        "priceUsd": 0.057482
+        "priceUsd": 0.055241
       },
       {
         "address": "0xc1cba3fcea344f92d9239c08c0568f6f2f0ee452",
         "balance": "10493491718726685",
-        "balanceUsd": 28.322353888512,
+        "balanceUsd": 26.776032948841,
         "decimals": 18,
-        "priceUsd": 2699.04
+        "priceUsd": 2551.68
       },
       {
         "address": "0xc2170f20f85381b2014eebc1d29f7c77c52ab6fb",
@@ -3697,72 +3873,79 @@
       {
         "address": "0xc48823ec67720a04a9dfd8c7d109b2c3d6622094",
         "balance": "324887469278465846547",
-        "balanceUsd": 0.727838899675,
+        "balanceUsd": 0.67962235036,
         "decimals": 18,
-        "priceUsd": 0.00224028
+        "priceUsd": 0.00209187
       },
       {
         "address": "0xc55e93c62874d8100dbd2dfe307edc1036ad5434",
         "balance": "123236371140030",
-        "balanceUsd": 0.016570362463,
+        "balanceUsd": 0.015962807154,
         "decimals": 18,
-        "priceUsd": 134.46
+        "priceUsd": 129.53
+      },
+      {
+        "address": "0xc5fed7c8ccc75d8a72b601a66dffd7a489073f0b",
+        "balance": "166473298191421",
+        "balanceUsd": 14.35282835017,
+        "decimals": 12,
+        "priceUsd": 0.086217
       },
       {
         "address": "0xc729777d0470f30612b1564fd96e8dd26f5814e3",
         "balance": "16295882460669993116",
-        "balanceUsd": 1.245412817057,
+        "balanceUsd": 1.156388411174,
         "decimals": 18,
-        "priceUsd": 0.076425
+        "priceUsd": 0.070962
       },
       {
         "address": "0xc9d23ed2adb0f551369946bd377f8644ce1ca5c4",
         "balance": "2193722838523133",
-        "balanceUsd": 0.00019942915,
+        "balanceUsd": 0.000190505085,
         "decimals": 18,
-        "priceUsd": 0.090909
+        "priceUsd": 0.086841
       },
       {
         "address": "0xca73ed1815e5915489570014e024b7ebe65de679",
         "balance": "81452113509442845",
-        "balanceUsd": 9.0410217e-05,
+        "balanceUsd": 8.8132001e-05,
         "decimals": 18,
-        "priceUsd": 0.00110998
+        "priceUsd": 0.00108201
       },
       {
         "address": "0xcb17c9db87b595717c857a08468793f5bab6445f",
-        "balance": "2268672",
-        "balanceUsd": 1.2842952192,
+        "balance": "5129335",
+        "balanceUsd": 2.808823846,
         "decimals": 8,
-        "priceUsd": 56.61
+        "priceUsd": 54.76
       },
       {
         "address": "0xcb585250f852c6c6bf90434ab21a00f02833a4af",
-        "balance": "606383",
-        "balanceUsd": 0.86106386,
+        "balance": "25486614",
+        "balanceUsd": 35.17152732,
         "decimals": 6,
-        "priceUsd": 1.42
+        "priceUsd": 1.38
       },
       {
         "address": "0xcbada732173e39521cdbe8bf59a6dc85a9fc7b8c",
-        "balance": "5580431",
-        "balanceUsd": 1.528909744087,
+        "balance": "98621093",
+        "balanceUsd": 25.367810646925,
         "decimals": 6,
-        "priceUsd": 0.273977
+        "priceUsd": 0.257225
       },
       {
         "address": "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
-        "balance": "243404",
+        "balance": "563379",
         "balanceUsd": 0.0,
         "decimals": 8,
         "priceUsd": 0.0
       },
       {
         "address": "0xcbd06e5a2b0c65597161de254aa074e489deb510",
-        "balance": "717168193",
-        "balanceUsd": 0.707005919705,
+        "balance": "32292526605",
+        "balanceUsd": 29.631299487482,
         "decimals": 8,
-        "priceUsd": 0.098583
+        "priceUsd": 0.091759
       },
       {
         "address": "0xcc486cc1b2a7a06c1ecce031d1a437d591a114ce",
@@ -3774,9 +3957,9 @@
       {
         "address": "0xcd2f22236dd9dfe2356d7c543161d4d260fd9bcb",
         "balance": "121478550058713382936",
-        "balanceUsd": 7.704169644724,
+        "balanceUsd": 7.507252915078,
         "decimals": 18,
-        "priceUsd": 0.06342
+        "priceUsd": 0.061799
       },
       {
         "address": "0xd01c8f05a9b7d5c2672a590b563ced2cb50d24a6",
@@ -3788,9 +3971,9 @@
       {
         "address": "0xd02f50e1017f493ffffa70c8fcf09e349e11d6c9",
         "balance": "12628466925",
-        "balanceUsd": 5.7624326e-05,
+        "balanceUsd": 5.6272196e-05,
         "decimals": 18,
-        "priceUsd": 4563.05
+        "priceUsd": 4455.98
       },
       {
         "address": "0xd24ea96b9bf1af69d34e7fc8c6d740bae5f32b9b",
@@ -3802,16 +3985,16 @@
       {
         "address": "0xd262a4c7108c8139b2b189758e8d17c3dfc91a38",
         "balance": "208666613674093387",
-        "balanceUsd": 0.0024932739,
+        "balanceUsd": 0.00237681915,
         "decimals": 18,
-        "priceUsd": 0.0119486
+        "priceUsd": 0.01139051
       },
       {
         "address": "0xd403d1624daef243fbcbd4a80d8a6f36affe32b2",
         "balance": "52787601062",
-        "balanceUsd": 4.97259e-07,
+        "balanceUsd": 4.70338e-07,
         "decimals": 18,
-        "priceUsd": 9.42
+        "priceUsd": 8.91
       },
       {
         "address": "0xd40d12d80859d9a11973a1fba6f42d1cd777ab2e",
@@ -3823,16 +4006,16 @@
       {
         "address": "0xd4554bea546efa83c1e6b389ecac40ea999b3e78",
         "balance": "822326581964360464",
-        "balanceUsd": 0.027366864182,
+        "balanceUsd": 0.026892834024,
         "decimals": 18,
-        "priceUsd": 0.0332798
+        "priceUsd": 0.03270335
       },
       {
         "address": "0xd52333441c0553facb259600fa833a69186893a5",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.01679401
+        "priceUsd": 0.01557748
       },
       {
         "address": "0xd637304fb099bdd05e184c2370b88abfce1ebf72",
@@ -3844,30 +4027,30 @@
       {
         "address": "0xd769d56f479e9e72a77bb1523e866a33098feec5",
         "balance": "172765747556832626",
-        "balanceUsd": 6.3745378e-05,
+        "balanceUsd": 6.1960708e-05,
         "decimals": 18,
-        "priceUsd": 0.00036897
+        "priceUsd": 0.00035864
       },
       {
         "address": "0xd85c31854c2b0fb40aaa9e2fc4da23c21f829d46",
         "balance": "39063300444841303516",
-        "balanceUsd": 0.05676991327,
+        "balanceUsd": 0.057554694976,
         "decimals": 18,
-        "priceUsd": 0.00145328
+        "priceUsd": 0.00147337
       },
       {
         "address": "0xd89d90d26b48940fa8f58385fe84625d468e057a",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.00438361
+        "priceUsd": 0.00427596
       },
       {
         "address": "0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca",
         "balance": "16606",
-        "balanceUsd": 0.016595139676,
+        "balanceUsd": 0.016606,
         "decimals": 6,
-        "priceUsd": 0.999346
+        "priceUsd": 1.0
       },
       {
         "address": "0xda142587a8c3d073cecfd6b1aad5dd0460ff0b92",
@@ -3886,37 +4069,44 @@
       {
         "address": "0xdbfefd2e8460a6ee4955a68582f85708baea60a3",
         "balance": "172083573278892",
-        "balanceUsd": 0.376293428853,
+        "balanceUsd": 0.354850094787,
         "decimals": 18,
-        "priceUsd": 2186.69
+        "priceUsd": 2062.08
       },
       {
         "address": "0xdcefd8c8fcc492630b943abcab3429f12ea9fea2",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 9,
-        "priceUsd": 0.04351252
+        "priceUsd": 0.0427449
+      },
+      {
+        "address": "0xdd468a1ddc392dcdbef6db6e34e89aa338f9f186",
+        "balance": "189011242927443898",
+        "balanceUsd": 0.0,
+        "decimals": 18,
+        "priceUsd": 0.0
       },
       {
         "address": "0xe0023e73aab4fe9a22f059a9d27e857e027ee3dc",
         "balance": "11793810578607603",
-        "balanceUsd": 4.464606e-05,
+        "balanceUsd": 4.2385776e-05,
         "decimals": 18,
-        "priceUsd": 0.00378555
+        "priceUsd": 0.0035939
       },
       {
         "address": "0xe1bfa25468af64e366ddafc9d91bcc6c97439a14",
         "balance": "63860865175198052",
-        "balanceUsd": 7.6452951e-05,
+        "balanceUsd": 7.6013588e-05,
         "decimals": 18,
-        "priceUsd": 0.00119718
+        "priceUsd": 0.0011903
       },
       {
         "address": "0xe22c243c7559c667a1eb94b593369d192c5fbac0",
         "balance": "216111154",
-        "balanceUsd": 4.5321e-08,
+        "balanceUsd": 4.2146e-08,
         "decimals": 18,
-        "priceUsd": 209.71
+        "priceUsd": 195.02
       },
       {
         "address": "0xe33454b0151f7401d2800a2c39bd2e0bfc213c65",
@@ -3935,23 +4125,23 @@
       {
         "address": "0xe5020a6d073a794b6e7f05678707de47986fb0b6",
         "balance": "38342771555",
-        "balanceUsd": 3.8337e-08,
+        "balanceUsd": 3.8326e-08,
         "decimals": 18,
-        "priceUsd": 0.999859
+        "priceUsd": 0.999562
       },
       {
         "address": "0xe62bfbe57763ec24c0f130426f34dbce11fc5b06",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.02947232
+        "priceUsd": 0.03040726
       },
       {
         "address": "0xe642657e4f43e6dcf0bd73ef24008394574dee28",
         "balance": "2274985714322901",
-        "balanceUsd": 4.9413e-08,
+        "balanceUsd": 3.2896e-08,
         "decimals": 18,
-        "priceUsd": 2.172e-05
+        "priceUsd": 1.446e-05
       },
       {
         "address": "0xe908e7c1b801cbb09700abd9e1a7f61ce4ebb920",
@@ -3970,23 +4160,23 @@
       {
         "address": "0xea17df5cf6d172224892b5477a16acb111182478",
         "balance": "5686215409",
-        "balanceUsd": 0.005219320262,
+        "balanceUsd": 0.004895660881,
         "decimals": 9,
-        "priceUsd": 0.00091789
+        "priceUsd": 0.00086097
       },
       {
         "address": "0xeab49138ba2ea6dd776220fe26b7b8e446638956",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.02450722
+        "priceUsd": 0.02461761
       },
       {
         "address": "0xeb466342c4d449bc9f53a865d5cb90586f405215",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 6,
-        "priceUsd": 0.999553
+        "priceUsd": 0.999721
       },
       {
         "address": "0xeb92d414136373deaae640f75ccd793622ffdf45",
@@ -4012,9 +4202,9 @@
       {
         "address": "0xed6e000def95780fb89734c07ee2ce9f6dcaf110",
         "balance": "658077416507800250",
-        "balanceUsd": 0.086831998953,
+        "balanceUsd": 0.081334420216,
         "decimals": 18,
-        "priceUsd": 0.131948
+        "priceUsd": 0.123594
       },
       {
         "address": "0xed7b04a3fdcc4b0718f76ab796d58f39212815cc",
@@ -4026,30 +4216,30 @@
       {
         "address": "0xeec468333ccc16d4bf1cef497a56cf8c0aae4ca3",
         "balance": "6795630367362885519",
-        "balanceUsd": 0.001072894122,
+        "balanceUsd": 0.000839124438,
         "decimals": 18,
-        "priceUsd": 0.00015788
+        "priceUsd": 0.00012348
       },
       {
         "address": "0xef22cb48b8483df6152e1423b19df5553bbd818b",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.00541113
+        "priceUsd": 0.00533278
       },
       {
         "address": "0xef4461891dfb3ac8572ccf7c794664a8dd927945",
         "balance": "498062091086096849",
-        "balanceUsd": 0.03090425469,
+        "balanceUsd": 0.028655006286,
         "decimals": 18,
-        "priceUsd": 0.062049
+        "priceUsd": 0.057533
       },
       {
         "address": "0xeff2a458e464b07088bdb441c21a42ab4b61e07e",
         "balance": "8730222720150690",
-        "balanceUsd": 0.000513057729,
+        "balanceUsd": 0.000474505065,
         "decimals": 18,
-        "priceUsd": 0.058768
+        "priceUsd": 0.054352
       },
       {
         "address": "0xf0c9afa1d49a85417734da1740beabbaa2463c57",
@@ -4068,65 +4258,65 @@
       {
         "address": "0xf1a7000000950c7ad8aff13118bb7ab561a448ee",
         "balance": "216825930029491",
-        "balanceUsd": 1.494319e-06,
+        "balanceUsd": 1.405841e-06,
         "decimals": 18,
-        "priceUsd": 0.00689179
+        "priceUsd": 0.00648373
       },
       {
         "address": "0xf3df0a31ec5ea438150987805e841f960b9471b6",
         "balance": "8377272438095760341",
-        "balanceUsd": 0.154524821757,
+        "balanceUsd": 0.145397867208,
         "decimals": 18,
-        "priceUsd": 0.01844572
+        "priceUsd": 0.01735623
       },
       {
         "address": "0xf43eb8de897fbc7f2502483b2bef7bb9ea179229",
-        "balance": "719006699678327275",
-        "balanceUsd": 4.098338188166,
+        "balance": "2852424293004579001",
+        "balanceUsd": 15.631285125665,
         "decimals": 18,
-        "priceUsd": 5.7
+        "priceUsd": 5.48
       },
       {
         "address": "0xf4d97f2da56e8c3098f3a8d538db630a2606a024",
-        "balance": "6239282021331791",
-        "balanceUsd": 5.646487836485,
+        "balance": "73337584942401446",
+        "balanceUsd": 59.217899713441,
         "decimals": 18,
-        "priceUsd": 904.99
+        "priceUsd": 807.47
       },
       {
         "address": "0xf544251d25f3d243a36b07e7e7962a678f952691",
         "balance": "10288971287309534",
-        "balanceUsd": 0.000348937806,
+        "balanceUsd": 0.000336734777,
         "decimals": 18,
-        "priceUsd": 0.03391377
+        "priceUsd": 0.03272774
       },
       {
         "address": "0xf732a566121fa6362e9e0fbdd6d66e5c8c925e49",
         "balance": "342776208417828879",
-        "balanceUsd": 0.002473336009,
+        "balanceUsd": 0.002415914139,
         "decimals": 18,
-        "priceUsd": 0.0072156
+        "priceUsd": 0.00704808
       },
       {
         "address": "0xf7c1cefcf7e1dd8161e00099facd3e1db9e528ee",
         "balance": "345096043232482727",
-        "balanceUsd": 9.0818926e-05,
+        "balanceUsd": 8.4703824e-05,
         "decimals": 18,
-        "priceUsd": 0.00026317
+        "priceUsd": 0.00024545
       },
       {
         "address": "0xf9569cfb8fd265e91aa478d86ae8c78b8af55df4",
         "balance": "0",
         "balanceUsd": 0.0,
         "decimals": 18,
-        "priceUsd": 0.00877203
+        "priceUsd": 0.00855702
       },
       {
         "address": "0xfa980ced6895ac314e7de34ef1bfae90a5add21b",
         "balance": "25478566768600927",
-        "balanceUsd": 0.008947868821,
+        "balanceUsd": 0.008222901682,
         "decimals": 18,
-        "priceUsd": 0.351192
+        "priceUsd": 0.322738
       },
       {
         "address": "0xfaf87e196a29969094be35dfb0ab9d0b8518db84",
@@ -4138,9 +4328,9 @@
       {
         "address": "0xfb31f85a8367210b2e4ed2360d2da9dc2d2ccc95",
         "balance": "498162267786922361481",
-        "balanceUsd": 7.457763138018,
+        "balanceUsd": 6.647940592258,
         "decimals": 18,
-        "priceUsd": 0.01497055
+        "priceUsd": 0.01334493
       },
       {
         "address": "0xfb584ace7f491e2930491a8d01a28db308aeb65f",
@@ -4151,17 +4341,17 @@
       },
       {
         "address": "0xfbb75a59193a3525a8825bebe7d4b56899e2f7e1",
-        "balance": "5321287737042055407",
-        "balanceUsd": 0.44475855035,
+        "balance": "202060750490439125700",
+        "balanceUsd": 15.636673237453,
         "decimals": 18,
-        "priceUsd": 0.083581
+        "priceUsd": 0.077386
       },
       {
         "address": "0xfc48314ad4ad5bd36a84e8307b86a68a01d95d9c",
         "balance": "9083099162843",
-        "balanceUsd": 1.99886e-07,
+        "balanceUsd": 2.72788e-07,
         "decimals": 18,
-        "priceUsd": 0.02200642
+        "priceUsd": 0.03003245
       },
       {
         "address": "0xfd755cff1f0f65c1e163b33c66a0e082ce6f87ff",
@@ -4172,10 +4362,10 @@
       },
       {
         "address": "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2",
-        "balance": "2344341",
-        "balanceUsd": 2.343323556006,
+        "balance": "26924287",
+        "balanceUsd": 26.911282569379,
         "decimals": 6,
-        "priceUsd": 0.999566
+        "priceUsd": 0.999517
       },
       {
         "address": "0xfe14b5f077ba011b91c09cd263b3c38aea045058",
@@ -4186,263 +4376,281 @@
       },
       {
         "address": "0xff8104251e7761163fac3211ef5583fb3f8583d6",
-        "balance": "82641540822499962827",
-        "balanceUsd": 1.038360383065,
+        "balance": "1538636915035060636513",
+        "balanceUsd": 19.002335150744,
         "decimals": 18,
-        "priceUsd": 0.01256463
+        "priceUsd": 0.01235011
       }
     ],
     "minUsd": 1.0
   },
   "state": {
     "last_tx_hash": "0x323880518e85655e259fe501ed617b1af4372f79b881d6b1febfd287fe3f73de",
-    "last_update": 1774446319
+    "last_update": 1774532738
   },
   "tokens": [
     {
       "address": "0x00000000a22c618fd6b4d7e9a335c4b96b189a38",
       "decimals": 18,
-      "priceUsd": 0.00392865,
+      "priceUsd": 0.00360509,
       "source": "coingecko"
     },
     {
       "address": "0x043eb4b75d0805c43d7c834902e335621983cf03",
       "decimals": 18,
-      "priceUsd": 0.729074,
+      "priceUsd": 0.724042,
       "source": "coingecko"
     },
     {
       "address": "0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b",
       "decimals": 18,
-      "priceUsd": 0.743067,
+      "priceUsd": 0.694826,
       "source": "coingecko"
     },
     {
       "address": "0x1111111111166b7fe7bd91427724b487980afc69",
       "decimals": 18,
-      "priceUsd": 0.01626933,
+      "priceUsd": 0.01553145,
       "source": "coingecko"
     },
     {
       "address": "0x11dc28d01984079b7efe7763b533e6ed9e3722b9",
       "decimals": 18,
-      "priceUsd": 0.050722,
+      "priceUsd": 0.04229666,
       "source": "coingecko"
     },
     {
       "address": "0x16ee7ecac70d1028e7712751e2ee6ba808a7dd92",
       "decimals": 18,
-      "priceUsd": 0.0349326,
+      "priceUsd": 0.03406424,
       "source": "coingecko"
     },
     {
       "address": "0x1bc0c42215582d5a085795f4badbac3ff36d1bcb",
       "decimals": 18,
-      "priceUsd": 26.39,
+      "priceUsd": 25.41,
       "source": "coingecko"
     },
     {
       "address": "0x1f16e03c1a5908818f47f6ee7bb16690b40d0671",
       "decimals": 18,
-      "priceUsd": 0.04405475,
+      "priceUsd": 0.04033232,
       "source": "coingecko"
     },
     {
       "address": "0x2081ab0d9ec9e4303234ab26d86b20b3367946ee",
       "decimals": 18,
-      "priceUsd": 0.203278,
+      "priceUsd": 0.187342,
+      "source": "coingecko"
+    },
+    {
+      "address": "0x23471e7250bcd7ee21df3f39ed6151931d1e076b",
+      "decimals": 18,
+      "priceUsd": 0.090233,
       "source": "coingecko"
     },
     {
       "address": "0x3e31966d4f81c72d2a55310a6365a56a4393e98d",
       "decimals": 6,
-      "priceUsd": 0.079118,
+      "priceUsd": 0.077889,
       "source": "coingecko"
     },
     {
       "address": "0x4200000000000000000000000000000000000006",
       "decimals": 18,
-      "priceUsd": 2192.94,
+      "priceUsd": 2073.64,
       "source": "coingecko"
     },
     {
       "address": "0x449b3317a6d1efb1bc3ba0700c9eaa4ffff4ae65",
       "decimals": 6,
-      "priceUsd": 0.696316,
+      "priceUsd": 0.690079,
       "source": "coingecko"
     },
     {
       "address": "0x4da9a0f397db1397902070f93a4d6ddbc0e0e6e8",
       "decimals": 18,
-      "priceUsd": 6.36,
+      "priceUsd": 6.13,
       "source": "coingecko"
     },
     {
       "address": "0x4f9fd6be4a90f2620860d680c0d4d5fb53d1a825",
       "decimals": 18,
-      "priceUsd": 0.02576328,
+      "priceUsd": 0.02423266,
       "source": "coingecko"
     },
     {
       "address": "0x526728dbc96689597f85ae4cd716d4f7fccbae9d",
       "decimals": 18,
-      "priceUsd": 0.996083,
+      "priceUsd": 0.996246,
       "source": "coingecko"
     },
     {
       "address": "0x532f27101965dd16442e59d40670faf5ebb142e4",
       "decimals": 18,
-      "priceUsd": 0.00693543,
+      "priceUsd": 0.00657923,
       "source": "coingecko"
     },
     {
       "address": "0x590830dfdf9a3f68afcdde2694773debdf267774",
       "decimals": 18,
-      "priceUsd": 0.01156204,
+      "priceUsd": 0.02046292,
       "source": "coingecko"
     },
     {
       "address": "0x5ab3d4c385b400f3abb49e80de2faf6a88a7b691",
       "decimals": 18,
-      "priceUsd": 0.057146,
+      "priceUsd": 0.054054,
       "source": "coingecko"
     },
     {
       "address": "0x5b2193fdc451c1f847be09ca9d13a4bf60f8c86b",
       "decimals": 18,
-      "priceUsd": 0.056862,
+      "priceUsd": 0.060032,
       "source": "coingecko"
     },
     {
       "address": "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42",
       "decimals": 6,
-      "priceUsd": 1.16,
+      "priceUsd": 1.15,
       "source": "coingecko"
     },
     {
       "address": "0x63706e401c06ac8513145b7687a14804d17f814b",
       "decimals": 18,
-      "priceUsd": 115.89,
+      "priceUsd": 106.7,
       "source": "coingecko"
     },
     {
       "address": "0x688aee022aa544f150678b8e5720b6b96a9e9a2f",
       "decimals": 18,
-      "priceUsd": 0.236612,
+      "priceUsd": 0.219564,
       "source": "coingecko"
     },
     {
       "address": "0x696f9436b67233384889472cd7cd58a6fb5df4f1",
       "decimals": 18,
-      "priceUsd": 0.140984,
+      "priceUsd": 0.146363,
       "source": "coingecko"
     },
     {
       "address": "0x6985884c4392d348587b19cb9eaaf157f13271cd",
       "decimals": 18,
-      "priceUsd": 2.21,
+      "priceUsd": 2.08,
       "source": "coingecko"
     },
     {
       "address": "0x6b2504a03ca4d43d0d73776f6ad46dab2f2a4cfd",
       "decimals": 18,
-      "priceUsd": 0.02104507,
+      "priceUsd": 0.01832636,
       "source": "coingecko"
     },
     {
       "address": "0x6e2c81b6c2c0e02360f00a0da694e489acb0b05e",
       "decimals": 18,
-      "priceUsd": 0.02060367,
+      "priceUsd": 0.01851542,
       "source": "coingecko"
     },
     {
       "address": "0x7252c865c05378ffc15120f428dd65804dd0ce63",
       "decimals": 18,
-      "priceUsd": 0.01108053,
+      "priceUsd": 0.01112344,
       "source": "coingecko"
     },
     {
       "address": "0x7300b37dfdfab110d83290a29dfb31b1740219fe",
       "decimals": 18,
-      "priceUsd": 0.01449745,
+      "priceUsd": 0.01381712,
       "source": "coingecko"
     },
     {
       "address": "0x767a739d1a152639e9ea1d8c1bd55fdc5b217d7f",
       "decimals": 18,
-      "priceUsd": 0.0233869,
+      "priceUsd": 0.01916373,
       "source": "coingecko"
     },
     {
       "address": "0x7ba6f01772924a82d9626c126347a28299e98c98",
       "decimals": 18,
-      "priceUsd": 2185.3,
+      "priceUsd": 2067.27,
       "source": "coingecko"
     },
     {
       "address": "0x7ce02e86354ea0cc3b302aeadc0ab56bc7eb44b8",
       "decimals": 18,
-      "priceUsd": 0.117515,
+      "priceUsd": 0.098218,
       "source": "coingecko"
     },
     {
       "address": "0x81034fb34009115f215f5d5f564aac9ffa46a1dc",
       "decimals": 18,
-      "priceUsd": 0.280119,
+      "priceUsd": 0.280352,
       "source": "coingecko"
     },
     {
       "address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
       "decimals": 6,
-      "priceUsd": 0.99982,
+      "priceUsd": 0.999879,
       "source": "coingecko"
     },
     {
       "address": "0x940181a94a35a4569e4529a3cdfb74e38fd98631",
       "decimals": 18,
-      "priceUsd": 0.340441,
+      "priceUsd": 0.32677,
       "source": "coingecko"
     },
     {
       "address": "0x9b8df6e244526ab5f6e6400d331db28c8fdddb55",
       "decimals": 18,
-      "priceUsd": 93.09,
+      "priceUsd": 87.33,
       "source": "coingecko"
     },
     {
       "address": "0x9d0e8f5b25384c7310cb8c6ae32c8fbeb645d083",
       "decimals": 18,
-      "priceUsd": 0.093299,
-      "source": "coingecko"
-    },
-    {
-      "address": "0xa1832f7f4e534ae557f9b5ab76de54b1873e498b",
-      "decimals": 18,
-      "priceUsd": 0.0087908,
+      "priceUsd": 0.083673,
       "source": "coingecko"
     },
     {
       "address": "0xa4a2e2ca3fbfe21aed83471d28b6f65a233c6e00",
       "decimals": 18,
-      "priceUsd": 0.134146,
+      "priceUsd": 0.118532,
       "source": "coingecko"
     },
     {
       "address": "0xa53887f7e7c1bf5010b8627f1c1ba94fe7a5d6e0",
       "decimals": 18,
-      "priceUsd": 0.01796215,
+      "priceUsd": 0.01750745,
+      "source": "coingecko"
+    },
+    {
+      "address": "0xa749de6c28262b7ffbc5de27dc845dd7ecd2b358",
+      "decimals": 18,
+      "priceUsd": 0.00830875,
       "source": "coingecko"
     },
     {
       "address": "0xacfe6019ed1a7dc6f7b508c02d1b04ec88cc21bf",
       "decimals": 18,
-      "priceUsd": 6.75,
+      "priceUsd": 6.2,
+      "source": "coingecko"
+    },
+    {
+      "address": "0xb33ff54b9f7242ef1593d2c9bcd8f9df46c77935",
+      "decimals": 18,
+      "priceUsd": 0.00409517,
       "source": "coingecko"
     },
     {
       "address": "0xb676f87a6e701f0de8de5ab91b56b66109766db1",
       "decimals": 18,
-      "priceUsd": 0.02666185,
+      "priceUsd": 0.02461581,
+      "source": "coingecko"
+    },
+    {
+      "address": "0xbaa5cc21fd487b8fcc2f632f3f4e8d37262a0842",
+      "decimals": 18,
+      "priceUsd": 1.65,
       "source": "coingecko"
     },
     {
@@ -4452,71 +4660,107 @@
       "source": "coingecko"
     },
     {
+      "address": "0xc0041ef357b183448b235a8ea73ce4e4ec8c265f",
+      "decimals": 18,
+      "priceUsd": 0.01606168,
+      "source": "coingecko"
+    },
+    {
+      "address": "0xc0634090f2fe6c6d75e61be2b949464abb498973",
+      "decimals": 18,
+      "priceUsd": 0.143107,
+      "source": "coingecko"
+    },
+    {
       "address": "0xc08cd26474722ce93f4d0c34d16201461c10aa8c",
       "decimals": 18,
-      "priceUsd": 0.057482,
+      "priceUsd": 0.055241,
       "source": "coingecko"
     },
     {
       "address": "0xc1cba3fcea344f92d9239c08c0568f6f2f0ee452",
       "decimals": 18,
-      "priceUsd": 2699.04,
+      "priceUsd": 2551.68,
+      "source": "coingecko"
+    },
+    {
+      "address": "0xc5fed7c8ccc75d8a72b601a66dffd7a489073f0b",
+      "decimals": 12,
+      "priceUsd": 0.086217,
       "source": "coingecko"
     },
     {
       "address": "0xc729777d0470f30612b1564fd96e8dd26f5814e3",
       "decimals": 18,
-      "priceUsd": 0.076425,
+      "priceUsd": 0.070962,
       "source": "coingecko"
     },
     {
       "address": "0xcb17c9db87b595717c857a08468793f5bab6445f",
       "decimals": 8,
-      "priceUsd": 56.61,
+      "priceUsd": 54.76,
+      "source": "coingecko"
+    },
+    {
+      "address": "0xcb585250f852c6c6bf90434ab21a00f02833a4af",
+      "decimals": 6,
+      "priceUsd": 1.38,
       "source": "coingecko"
     },
     {
       "address": "0xcbada732173e39521cdbe8bf59a6dc85a9fc7b8c",
       "decimals": 6,
-      "priceUsd": 0.273977,
+      "priceUsd": 0.257225,
+      "source": "coingecko"
+    },
+    {
+      "address": "0xcbd06e5a2b0c65597161de254aa074e489deb510",
+      "decimals": 8,
+      "priceUsd": 0.091759,
       "source": "coingecko"
     },
     {
       "address": "0xcd2f22236dd9dfe2356d7c543161d4d260fd9bcb",
       "decimals": 18,
-      "priceUsd": 0.06342,
+      "priceUsd": 0.061799,
       "source": "coingecko"
     },
     {
       "address": "0xf43eb8de897fbc7f2502483b2bef7bb9ea179229",
       "decimals": 18,
-      "priceUsd": 5.7,
+      "priceUsd": 5.48,
       "source": "coingecko"
     },
     {
       "address": "0xf4d97f2da56e8c3098f3a8d538db630a2606a024",
       "decimals": 18,
-      "priceUsd": 904.99,
+      "priceUsd": 807.47,
       "source": "coingecko"
     },
     {
       "address": "0xfb31f85a8367210b2e4ed2360d2da9dc2d2ccc95",
       "decimals": 18,
-      "priceUsd": 0.01497055,
+      "priceUsd": 0.01334493,
+      "source": "coingecko"
+    },
+    {
+      "address": "0xfbb75a59193a3525a8825bebe7d4b56899e2f7e1",
+      "decimals": 18,
+      "priceUsd": 0.077386,
       "source": "coingecko"
     },
     {
       "address": "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2",
       "decimals": 6,
-      "priceUsd": 0.999566,
+      "priceUsd": 0.999517,
       "source": "coingecko"
     },
     {
       "address": "0xff8104251e7761163fac3211ef5583fb3f8583d6",
       "decimals": 18,
-      "priceUsd": 0.01256463,
+      "priceUsd": 0.01235011,
       "source": "coingecko"
     }
   ],
-  "updateTimestamp": 1774446319
+  "updateTimestamp": 1774532738
 }
