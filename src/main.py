@@ -4,7 +4,10 @@ import logging
 import base64
 import hashlib
 import time
+import threading
+from collections import deque
 from datetime import datetime, timezone
+from http.server import HTTPServer, BaseHTTPRequestHandler
 
 from dotenv import load_dotenv
 from github import Github, Auth
@@ -23,6 +26,39 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
+
+# --------------- status log (in-memory ring buffer) ---------------
+_status_log = deque(maxlen=200)
+_status_lock = threading.Lock()
+
+def _log_status(entry: dict):
+    entry.setdefault("ts", datetime.now(timezone.utc).isoformat())
+    with _status_lock:
+        _status_log.append(entry)
+
+class _StatusHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        with _status_lock:
+            entries = list(_status_log)
+        body = json.dumps({"status": "ok", "log": entries}, indent=2).encode()
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def log_message(self, format, *args):
+        pass  # suppress request logs
+
+def _start_status_server():
+    port = int(os.environ.get("PORT", "8080"))
+    try:
+        server = HTTPServer(("0.0.0.0", port), _StatusHandler)
+        t = threading.Thread(target=server.serve_forever, daemon=True)
+        t.start()
+        logger.info(f"Status server listening on port {port}")
+    except OSError as e:
+        logger.warning(f"Could not start status server on port {port}: {e}")
 
 def _default_state():
     return {"last_tx_hash": None, "last_update": 0}
@@ -360,6 +396,8 @@ def _run_once() -> bool:
 
     updater = GitHubUpdater(github_token, github_repo, github_branch)
 
+    _log_status({"event": "run_start"})
+
     epochs_changed = False
     try:
         epochs_changed = _update_epochs(repo, updater, scanner)
@@ -367,8 +405,10 @@ def _run_once() -> bool:
             logger.info("[epochs] Published/updated epochs.json")
         else:
             logger.info("[epochs] No new funded epochs; skipped commit.")
+        _log_status({"event": "epochs", "changed": epochs_changed})
     except Exception as e:
         logger.exception(f"[epochs] failed: {e}")
+        _log_status({"event": "epochs", "error": str(e)})
 
 
     # Decide whether to update rewards (but do not return early)
@@ -408,6 +448,45 @@ def _run_once() -> bool:
     else:
         logger.info("FORCE_UPDATE=true — running full rewards update.")
         rewards_needed = True
+
+    # --- Check for claims (outgoing transfers from distributors) ---
+    epoch_claim_tx = epoch_state.get("last_claim_tx")
+    liq_claim_tx = liq_state.get("last_claim_tx")
+    claims_detected = False
+
+    try:
+        epoch_claim_new, epoch_claim_hash = scanner.check_for_new_outgoing_erc20(
+            epoch_distributor, last_seen_tx=epoch_claim_tx
+        )
+        if epoch_claim_hash:
+            epoch_claim_tx = epoch_claim_hash
+    except Exception:
+        epoch_claim_new = False
+
+    try:
+        liq_claim_new, liq_claim_hash = scanner.check_for_new_outgoing_erc20(
+            liq_distributor, last_seen_tx=liq_claim_tx
+        )
+        if liq_claim_hash:
+            liq_claim_tx = liq_claim_hash
+    except Exception:
+        liq_claim_new = False
+
+    claims_detected = bool(epoch_claim_new or liq_claim_new)
+    if claims_detected:
+        logger.info(f"Claims detected: epoch={epoch_claim_new}, liq={liq_claim_new}")
+    else:
+        logger.info(f"No new claims (epoch_last={epoch_claim_tx}, liq_last={liq_claim_tx})")
+
+    _log_status({
+        "event": "probes",
+        "rewards_needed": rewards_needed,
+        "epoch_has_new": epoch_has_new if not force_update else "forced",
+        "liq_has_new": liq_has_new if not force_update else "forced",
+        "claims_detected": claims_detected,
+        "epoch_claim_new": epoch_claim_new,
+        "liq_claim_new": liq_claim_new,
+    })
 
     changed_rewards = False
     st_changed = False
@@ -485,7 +564,7 @@ def _run_once() -> bool:
                 "minUsd": min_usd,
                 "balances": snapshot_epoch
             },
-            "state": {"last_tx_hash": new_epoch_tx, "last_update": now_ts},
+            "state": {"last_tx_hash": new_epoch_tx, "last_update": now_ts, "last_claim_tx": epoch_claim_tx},
 
             # LIQ distributor
             "liqDistributor": liq_distributor.lower(),
@@ -501,7 +580,7 @@ def _run_once() -> bool:
                 "minUsd": min_usd,
                 "balances": snapshot_liq
             },
-            "liqState": {"last_tx_hash": new_liq_tx, "last_update": now_ts},
+            "liqState": {"last_tx_hash": new_liq_tx, "last_update": now_ts, "last_claim_tx": liq_claim_tx},
         }
 
         changed_rewards = _push_if_changed(repo, updater, "data/active_reward_tokens.json", active_payload)
@@ -517,6 +596,19 @@ def _run_once() -> bool:
             logger.info("Rewards: no content change; skipped commit.")
     else:
         logger.info("Rewards: no update needed; skipping balances/prices.")
+        # Persist claim state even if full rewards pipeline didn't run
+        if claims_detected:
+            try:
+                cur_active = _load_json(repo, updater.branch, "data/active_reward_tokens.json")
+                # Only update if we got a real payload (has distributor key), not an empty dict from API failure
+                if cur_active.get("distributor"):
+                    cur_active.setdefault("state", {})["last_claim_tx"] = epoch_claim_tx
+                    cur_active.setdefault("liqState", {})["last_claim_tx"] = liq_claim_tx
+                    _push_if_changed(repo, updater, "data/active_reward_tokens.json", cur_active)
+                else:
+                    logger.warning("Skipping claim state persist: active_reward_tokens.json load returned empty/invalid data")
+            except Exception as e:
+                logger.warning(f"Failed to persist claim state: {e}")
 
     # === stiAERO stakers publish ALWAYS runs ===
     try:
@@ -529,16 +621,25 @@ def _run_once() -> bool:
         logger.exception(f"[stakers] failed: {e}")
 
     sr_changed = False
+    sr_triggers = {
+        "rewards_needed": rewards_needed, "changed_rewards": changed_rewards,
+        "epochs_changed": epochs_changed, "st_changed": st_changed,
+        "claims_detected": claims_detected, "force_update": force_update,
+    }
+    sr_should_run = any(sr_triggers.values())
     try:
-        if rewards_needed or changed_rewards or epochs_changed or st_changed or force_update:
+        if sr_should_run:
             sr_changed = _update_staker_rewards(repo, updater)
         if sr_changed:
             logger.info("[staker_rewards] Published/updated staker_rewards.json")
         else:
             logger.info("[staker_rewards] No change; skipped commit.")
+        _log_status({"event": "staker_rewards", "ran": sr_should_run, "changed": sr_changed, "triggers": sr_triggers})
     except Exception as e:
         logger.exception(f"[staker_rewards] failed: {e}")
+        _log_status({"event": "staker_rewards", "error": str(e), "triggers": sr_triggers})
 
+    _log_status({"event": "run_end", "any_changed": bool(changed_rewards or st_changed or epochs_changed or sr_changed)})
     return changed_rewards or st_changed or epochs_changed or sr_changed
 
 
@@ -548,6 +649,8 @@ def main():
     Default behaviour: LISTEN & LOOP.
     Set LOOP=0 to run once and exit.
     """
+    _start_status_server()
+
     loop = os.environ.get("LOOP", "0") == "1"
     delay = int(os.environ.get("POLL_INTERVAL", "60"))
 
@@ -561,6 +664,7 @@ def main():
             _run_once()
         except Exception as e:
             logger.exception(f"run_once failed: {e}")
+            _log_status({"event": "run_error", "error": str(e)})
         time.sleep(delay)
 
 

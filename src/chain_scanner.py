@@ -112,6 +112,48 @@ class ChainScanner:
             # fail-closed to avoid noisy commits on transient errors
             return False, None
 
+    def check_for_new_outgoing_erc20(self, distributor_address: str, last_seen_tx: str | None = None) -> tuple[bool, str | None]:
+        """
+        Check for new outgoing (claim) token transfers FROM distributor_address.
+        Returns (has_new, newest_outgoing_tx_hash).
+        """
+        try:
+            from_addr_lc = distributor_address.lower()
+            params = {
+                "chainid": self.chain_id,
+                "module": "account",
+                "action": "tokentx",
+                "address": distributor_address,
+                "page": 1,
+                "offset": 10,
+                "sort": "desc",
+                "apikey": self.explorer_api_key,
+            }
+            r = requests.get(self.explorer_base_url, params=params, timeout=30)
+            if r.status_code != 200:
+                logger.warning(f"Etherscan outgoing probe HTTP {r.status_code}: {r.text[:200]}")
+                return False, None
+
+            data = r.json()
+            if data.get("status") != "1" or "result" not in data or not data["result"]:
+                return False, None
+
+            # Find the most recent outgoing transfer (claim)
+            for tx in data["result"]:
+                if tx.get("from", "").lower() == from_addr_lc:
+                    head_hash = tx.get("hash")
+                    if not head_hash:
+                        continue
+                    if last_seen_tx and str(head_hash).lower() == str(last_seen_tx).lower():
+                        return False, None
+                    return True, head_hash
+
+            return False, None
+
+        except Exception as e:
+            logger.warning(f"[check_for_new_outgoing_erc20] probe failed: {e}")
+            return False, None
+
     def latest_block(self) -> int:
         try:
             return int(self.w3.eth.block_number)
