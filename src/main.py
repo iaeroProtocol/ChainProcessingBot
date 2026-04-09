@@ -637,13 +637,13 @@ def _run_once() -> bool:
 
     sr_changed = False
 
-    # Check if staker_rewards is stale (>1 hour old)
+    # Check if staker_rewards is stale (>4 hours old)
     sr_stale = False
     try:
         sr_data = _load_json(repo, updater.branch, "data/staker_rewards.json")
         sr_last = sr_data.get("updateTimestamp", 0)
         sr_age_hours = (datetime.now(timezone.utc).timestamp() - sr_last) / 3600 if sr_last else 999
-        sr_stale = sr_age_hours >= 1.0
+        sr_stale = sr_age_hours >= 4.0
         if sr_stale:
             logger.info(f"[staker_rewards] Stale ({sr_age_hours:.1f}h old) — forcing recalc")
     except Exception:
