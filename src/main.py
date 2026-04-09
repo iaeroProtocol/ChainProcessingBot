@@ -254,9 +254,24 @@ def _update_epochs(repo, updater: GitHubUpdater, scanner: ChainScanner) -> bool:
 
     return _push_if_changed(repo, updater, path, cur)
 
+def _sync_data_from_github(repo, branch: str, data_dir: str = "data"):
+    """Download latest data files from GitHub so local reads stay current."""
+    os.makedirs(data_dir, exist_ok=True)
+    for fname in ("epochs.json", "stakers.json", "active_reward_tokens.json"):
+        try:
+            f = repo.get_contents(f"{data_dir}/{fname}", ref=branch)
+            content = base64.b64decode(f.content).decode("utf-8")
+            with open(os.path.join(data_dir, fname), "w") as fh:
+                fh.write(content)
+        except Exception as e:
+            logger.warning(f"[sync] failed to download {fname}: {e}")
+
 def _update_staker_rewards(repo, updater: GitHubUpdater) -> bool:
     DATA_DIR = "data"
     out_path = f"{DATA_DIR}/staker_rewards.json"
+
+    # Sync latest data from GitHub before computing rewards
+    _sync_data_from_github(repo, updater.branch, DATA_DIR)
 
     # envs (reuse the ones you already set)
     rpc_url = os.environ.get("BASE_RPC_URL") or os.environ.get("RPC_URL")
