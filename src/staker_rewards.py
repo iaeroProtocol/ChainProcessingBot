@@ -166,6 +166,7 @@ def build_staker_rewards(
 
     rows = []
     totals_by_token_usd: Dict[str,float] = {}
+    token_meta: Dict[str, dict] = {}  # addr -> {symbol, decimals, priceUsd}
 
     def checksum_list(addrs_lc: List[str]) -> List[str]:
         out=[]
@@ -194,29 +195,37 @@ def build_staker_rewards(
                 if raw_i == 0:
                     continue
                 dec = int(dec_map.get(lo, 18))
-                human_dec = Decimal(raw_i) / (Decimal(10) ** dec)
-                human_str = pretty_decimal(human_dec)
-                human_float = float(human_dec)
+                human_float = float(Decimal(raw_i) / (Decimal(10) ** dec))
                 px = float(price_map.get(lo, 0.0))
                 usd = human_float * px
-                sym = symbol_resolver.get(lo)
+
+                # Build token metadata lookup (once per token)
+                if lo not in token_meta:
+                    token_meta[lo] = {
+                        "symbol": symbol_resolver.get(lo),
+                        "decimals": dec,
+                        "priceUsd": px,
+                    }
+
                 items.append({
                     "token": lo,
-                    "symbol": sym,
+                    "symbol": token_meta[lo]["symbol"],
                     "decimals": dec,
                     "amount": str(raw_i),
-                    "amountHuman": human_float,
-                    "amountHumanStr": human_str,
-                    "priceUsd": px,
-                    "usd": usd,
                     "epoch": eid,
+                    "priceUsd": px,
                 })
                 totals_by_token_usd[lo] = totals_by_token_usd.get(lo, 0.0) + usd
                 total_usd += usd
 
-        # (optional) sort items — newest epoch first, then by USD desc
-        items.sort(key=lambda r: (r["epoch"], r["usd"], r["symbol"]), reverse=True)
+        # sort items — newest epoch first, then by USD desc
+        items.sort(key=lambda r: (
+            r["epoch"],
+            float(int(r["amount"]) / (10 ** r["decimals"])) * r["priceUsd"],
+        ), reverse=True)
 
+        if not items:
+            continue
 
         rows.append({
             "address": user,
@@ -239,8 +248,9 @@ def build_staker_rewards(
         # Aggregate USD by token for this wallet's pending items
         wallet_token_usd: Dict[str, float] = {}
         for item in wallet["pending"]:
-            token = item["token"]
-            wallet_token_usd[token] = wallet_token_usd.get(token, 0.0) + item["usd"]
+            tok = item["token"]
+            usd_val = float(int(item["amount"]) / (10 ** item["decimals"])) * item["priceUsd"]
+            wallet_token_usd[tok] = wallet_token_usd.get(tok, 0.0) + usd_val
         
         # Get top 5 tokens for this wallet, sorted descending by USD
         sorted_tokens = sorted(
@@ -265,16 +275,15 @@ def build_staker_rewards(
         })
 
     out = {
-        # ===== NEW: Per-wallet summaries (>$50 owed) =====
+        "tokenMeta": token_meta,
         "walletSummaries": wallet_summaries,
-        # ===== Existing fields =====
         "asOf": int(time.time()),
         "lastUpdated": datetime.now(timezone.utc).isoformat(),
         "updateTimestamp": int(datetime.now(timezone.utc).timestamp()),
         "chainId": chain_id,
         "distributor": w3.to_checksum_address(dist_addr),
         "holderCount": len(rows),
-        "activeTokensNow": tok_universe,   # was active_now; use union or drop this field
+        "activeTokensNow": tok_universe,
         "fundedEpochs": all_funded,
         "currentEpoch": int(epochs.get("currentEpoch")) if epochs.get("currentEpoch") is not None else (all_funded[-1] if all_funded else None),
         "defaultEpochs": epoch_set,
