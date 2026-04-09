@@ -209,8 +209,11 @@ def build_staker_rewards(
 
                 items.append({
                     "token": lo,
+                    "symbol": token_meta[lo]["symbol"],
+                    "decimals": dec,
                     "amount": str(raw_i),
                     "epoch": eid,
+                    "priceUsd": px,
                 })
                 totals_by_token_usd[lo] = totals_by_token_usd.get(lo, 0.0) + usd
                 total_usd += usd
@@ -218,8 +221,7 @@ def build_staker_rewards(
         # sort items — newest epoch first, then by USD desc
         items.sort(key=lambda r: (
             r["epoch"],
-            float(int(r["amount"]) / (10 ** token_meta.get(r["token"], {}).get("decimals", 18)))
-                * token_meta.get(r["token"], {}).get("priceUsd", 0.0),
+            float(int(r["amount"]) / (10 ** r["decimals"])) * r["priceUsd"],
         ), reverse=True)
 
         if not items:
@@ -247,10 +249,7 @@ def build_staker_rewards(
         wallet_token_usd: Dict[str, float] = {}
         for item in wallet["pending"]:
             tok = item["token"]
-            meta = token_meta.get(tok, {})
-            dec = meta.get("decimals", 18)
-            px = meta.get("priceUsd", 0.0)
-            usd_val = float(int(item["amount"]) / (10 ** dec)) * px
+            usd_val = float(int(item["amount"]) / (10 ** item["decimals"])) * item["priceUsd"]
             wallet_token_usd[tok] = wallet_token_usd.get(tok, 0.0) + usd_val
         
         # Get top 5 tokens for this wallet, sorted descending by USD
