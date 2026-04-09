@@ -621,10 +621,21 @@ def _run_once() -> bool:
         logger.exception(f"[stakers] failed: {e}")
 
     sr_changed = False
+
+    # Force staker_rewards recalc at 00:30 UTC every Thursday
+    now_utc = datetime.now(timezone.utc)
+    poll_min = max(int(os.environ.get("POLL_INTERVAL", "60")) // 60, 1)
+    thursday_force = (now_utc.weekday() == 3
+                      and now_utc.hour == 0
+                      and 30 <= now_utc.minute < 30 + poll_min)
+    if thursday_force:
+        logger.info("[staker_rewards] Thursday 00:30 UTC forced recalculation")
+
     sr_triggers = {
         "rewards_needed": rewards_needed, "changed_rewards": changed_rewards,
         "epochs_changed": epochs_changed, "st_changed": st_changed,
         "claims_detected": claims_detected, "force_update": force_update,
+        "thursday_force": thursday_force,
     }
     sr_should_run = any(sr_triggers.values())
     try:
