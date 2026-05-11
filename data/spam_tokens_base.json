@@ -381,6 +381,13 @@
       "reason": "security test - please remove",
       "addedAt": "2026-05-11T14:58:27.368Z",
       "reportedBy": "auto"
+    },
+    {
+      "address": "0x0000000000000000000000000000000000000002",
+      "symbol": "TEST\nInjected-Header: value",
+      "reason": "testing symbol injection",
+      "addedAt": "2026-05-11T23:26:27.006Z",
+      "reportedBy": "auto"
     }
   ],
   "symbolPatterns": [
