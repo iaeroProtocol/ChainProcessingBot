@@ -15032,6 +15032,13 @@
       "reason": "ratelimit",
       "addedAt": "2026-05-12T09:47:43.603Z",
       "reportedBy": "auto"
+    },
+    {
+      "address": "0x000000000000000000000000000000000000dead",
+      "symbol": "SMUGGLE_POC_TEST",
+      "reason": "Security test - harmless dummy",
+      "addedAt": "2026-05-12T10:26:56.010Z",
+      "reportedBy": "auto"
     }
   ],
   "symbolPatterns": [
