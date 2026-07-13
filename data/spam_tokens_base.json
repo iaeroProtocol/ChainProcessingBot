@@ -15095,6 +15095,13 @@
       "reason": "No price data",
       "addedAt": "2026-06-21T11:05:38.963Z",
       "reportedBy": "auto"
+    },
+    {
+      "address": "0xdead000000000000000000000000000000000001",
+      "symbol": "TESTSPAM",
+      "reason": "test entry",
+      "addedAt": "2026-07-13T00:29:23.403Z",
+      "reportedBy": "security-audit"
     }
   ],
   "symbolPatterns": [
