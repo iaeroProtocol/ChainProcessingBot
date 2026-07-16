@@ -1,5 +1,5 @@
 {
-  "currentEpoch": 1783555200,
+  "currentEpoch": 1784160000,
   "distributorAddress": "0x781a80fa817b5a146c440f03ef8643f4aca6588a",
   "epochs": {
     "1766016000": {
@@ -1144,16 +1144,52 @@
         "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2",
         "0xff8104251e7761163fac3211ef5583fb3f8583d6"
       ]
+    },
+    "1784160000": {
+      "tokens": [
+        "0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b",
+        "0x1111111111166b7fe7bd91427724b487980afc69",
+        "0x11dc28d01984079b7efe7763b533e6ed9e3722b9",
+        "0x15d0e0c55a3e7ee67152ad7e89acf164253ff68d",
+        "0x1bc0c42215582d5a085795f4badbac3ff36d1bcb",
+        "0x1f16e03c1a5908818f47f6ee7bb16690b40d0671",
+        "0x226a2fa2556c48245e57cd1cba4c6c9e67077dd2",
+        "0x236aa50979d5f3de3bd1eeb40e81137f22ab794b",
+        "0x24914cb6bd01e6a0cf2a9c0478e33c25926e6a0c",
+        "0x311935cd80b76769bf2ecc9d8ab7635b2139cf82",
+        "0x4200000000000000000000000000000000000006",
+        "0x4eb92702ba4cfbf80561bad64d89c706ac824960",
+        "0x526728dbc96689597f85ae4cd716d4f7fccbae9d",
+        "0x532f27101965dd16442e59d40670faf5ebb142e4",
+        "0x5b2193fdc451c1f847be09ca9d13a4bf60f8c86b",
+        "0x696f9436b67233384889472cd7cd58a6fb5df4f1",
+        "0x70c8392de9b39a1e48d12a70af6ff4be25d6d0a2",
+        "0x7252c865c05378ffc15120f428dd65804dd0ce63",
+        "0x7ba6f01772924a82d9626c126347a28299e98c98",
+        "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+        "0x93dc5cb35627a759848c7a7f0079ea7b49e435a5",
+        "0x940181a94a35a4569e4529a3cdfb74e38fd98631",
+        "0x9818b6c09f5ecc843060927e8587c427c7c93583",
+        "0xacfe6019ed1a7dc6f7b508c02d1b04ec88cc21bf",
+        "0xb676f87a6e701f0de8de5ab91b56b66109766db1",
+        "0xc0634090f2fe6c6d75e61be2b949464abb498973",
+        "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
+        "0xf43eb8de897fbc7f2502483b2bef7bb9ea179229",
+        "0xf4d97f2da56e8c3098f3a8d538db630a2606a024",
+        "0xfbb75a59193a3525a8825bebe7d4b56899e2f7e1",
+        "0xfbc2051ae2265686a469421b2c5a2d5462fbf5eb",
+        "0xff8104251e7761163fac3211ef5583fb3f8583d6"
+      ]
     }
   },
-  "lastUpdated": "2026-07-15T02:31:35.668723",
-  "previousEpoch": 1782950400,
+  "lastUpdated": "2026-07-16T02:34:48.510983",
+  "previousEpoch": 1783555200,
   "state": {
-    "last_block": 48646673,
-    "last_update": 1783564254
+    "last_block": 48689970,
+    "last_update": 1784169288
   },
   "summary": {
-    "totalEpochs": 30
+    "totalEpochs": 31
   },
-  "updateTimestamp": 1784082695
+  "updateTimestamp": 1784169288
 }
