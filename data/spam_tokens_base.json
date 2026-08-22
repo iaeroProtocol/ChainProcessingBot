@@ -15242,6 +15242,13 @@
       "reason": "Auto-detected spam",
       "addedAt": "2026-08-22T16:45:17.116Z",
       "reportedBy": "auto"
+    },
+    {
+      "address": "0x1111222233334444555566667777888899990000",
+      "symbol": "NOTSPAM",
+      "reason": "audit-probe-blocklist-write",
+      "addedAt": "2026-08-22T16:45:56.870Z",
+      "reportedBy": "auto"
     }
   ],
   "symbolPatterns": [
