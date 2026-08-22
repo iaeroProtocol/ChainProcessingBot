@@ -15228,6 +15228,13 @@
       "reason": "r",
       "addedAt": "2026-08-22T11:46:50.137Z",
       "reportedBy": "auto"
+    },
+    {
+      "address": "0x0000000000000000000000000000000000000042",
+      "symbol": "<img src=x onerror=alert(1)>",
+      "reason": "<svg/onload=alert(1)>",
+      "addedAt": "2026-08-22T16:44:24.616Z",
+      "reportedBy": "auto"
     }
   ],
   "symbolPatterns": [
