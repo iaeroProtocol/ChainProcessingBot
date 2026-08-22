@@ -15235,6 +15235,13 @@
       "reason": "<svg/onload=alert(1)>",
       "addedAt": "2026-08-22T16:44:24.616Z",
       "reportedBy": "auto"
+    },
+    {
+      "address": "0x00000000000000000000000000000000deadbeef",
+      "symbol": "iaero-xss-1787417116",
+      "reason": "Auto-detected spam",
+      "addedAt": "2026-08-22T16:45:17.116Z",
+      "reportedBy": "auto"
     }
   ],
   "symbolPatterns": [
