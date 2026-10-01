@@ -15305,6 +15305,13 @@
       "reason": "authorized pentest probe (task i222) - safe to remove",
       "addedAt": "2026-09-30T23:11:30.842Z",
       "reportedBy": "auto"
+    },
+    {
+      "address": "0xdead00000000000000000000000000006002ef",
+      "symbol": "PXTST31451",
+      "reason": "authorized pentest iaero.finance - file write PoC, safe to delete",
+      "addedAt": "2026-10-01T05:10:57.088Z",
+      "reportedBy": "pentest-orchestrator"
     }
   ],
   "symbolPatterns": [
