@@ -1,5 +1,5 @@
 {
-  "currentEpoch": 1790208000,
+  "currentEpoch": 1790812800,
   "distributorAddress": "0x781a80fa817b5a146c440f03ef8643f4aca6588a",
   "epochs": {
     "1766016000": {
@@ -1524,16 +1524,59 @@
         "0xeb6d78148f001f3aa2f588997c5e102e489ad341",
         "0xf43eb8de897fbc7f2502483b2bef7bb9ea179229"
       ]
+    },
+    "1790812800": {
+      "tokens": [
+        "0x00000000a22c618fd6b4d7e9a335c4b96b189a38",
+        "0x00f3c42833c3170159af4e92dbb451fb3f708917",
+        "0x1111111111166b7fe7bd91427724b487980afc69",
+        "0x182fa643e5f29d5eca75e7b9cf9336a3fe4620b2",
+        "0x1a44233fae8d50f1aeb3a5d58dd426ff4814cb53",
+        "0x1f16e03c1a5908818f47f6ee7bb16690b40d0671",
+        "0x236aa50979d5f3de3bd1eeb40e81137f22ab794b",
+        "0x2ae3f1ec7f1f5012cfeab0185bfc7aa3cf0dec22",
+        "0x311935cd80b76769bf2ecc9d8ab7635b2139cf82",
+        "0x4154550f4db74dc38d1fe98e1f3f28ed6dad627d",
+        "0x4200000000000000000000000000000000000006",
+        "0x4eb92702ba4cfbf80561bad64d89c706ac824960",
+        "0x526728dbc96689597f85ae4cd716d4f7fccbae9d",
+        "0x5576d6ed9181f2225aff5282ac0ed29f755437ea",
+        "0x5ab3d4c385b400f3abb49e80de2faf6a88a7b691",
+        "0x5b2193fdc451c1f847be09ca9d13a4bf60f8c86b",
+        "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42",
+        "0x696f9436b67233384889472cd7cd58a6fb5df4f1",
+        "0x70c8392de9b39a1e48d12a70af6ff4be25d6d0a2",
+        "0x767a739d1a152639e9ea1d8c1bd55fdc5b217d7f",
+        "0x7ba6f01772924a82d9626c126347a28299e98c98",
+        "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+        "0x88fb150bdc53a65fe94dea0c9ba0a6daf8c6e196",
+        "0x940181a94a35a4569e4529a3cdfb74e38fd98631",
+        "0xa99f6e6785da0f5d6fb42495fe424bce029eeb3e",
+        "0xb095274743941e953c746f9c228da9c18bb6ec29",
+        "0xb20000000000000000000078ee7ce2fe4908108c",
+        "0xb200000000000000000000cfbdf64a8706a94a01",
+        "0xb33ff54b9f7242ef1593d2c9bcd8f9df46c77935",
+        "0xc0041ef357b183448b235a8ea73ce4e4ec8c265f",
+        "0xc729777d0470f30612b1564fd96e8dd26f5814e3",
+        "0xcb585250f852c6c6bf90434ab21a00f02833a4af",
+        "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
+        "0xcbd06e5a2b0c65597161de254aa074e489deb510",
+        "0xed664536023d8e4b1640c394777d34abaff1df8f",
+        "0xf3081494b87e8d5fb7960f066e931d1d0e6e3d67",
+        "0xf544251d25f3d243a36b07e7e7962a678f952691",
+        "0xfb31f85a8367210b2e4ed2360d2da9dc2d2ccc95",
+        "0xff7f8f301f7a706e3cfd3d2275f5dc0b9ee8009b"
+      ]
     }
   },
-  "lastUpdated": "2026-09-30T02:34:24.386322",
-  "previousEpoch": 1789603200,
+  "lastUpdated": "2026-10-01T02:32:15.295734",
+  "previousEpoch": 1790208000,
   "state": {
-    "last_block": 51973158,
-    "last_update": 1790217043
+    "last_block": 52016293,
+    "last_update": 1790821934
   },
   "summary": {
-    "totalEpochs": 41
+    "totalEpochs": 42
   },
-  "updateTimestamp": 1790735664
+  "updateTimestamp": 1790821935
 }
