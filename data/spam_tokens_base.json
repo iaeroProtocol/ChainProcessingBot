@@ -15312,6 +15312,13 @@
       "reason": "authorized pentest iaero.finance - file write PoC, safe to delete",
       "addedAt": "2026-10-01T05:10:57.088Z",
       "reportedBy": "pentest-orchestrator"
+    },
+    {
+      "address": "0xdead0000000000000000000000000000700e81",
+      "symbol": "PXTSTB1799",
+      "reason": "pentest write persistence check via pages.dev origin",
+      "addedAt": "2026-10-01T05:16:40.610Z",
+      "reportedBy": "pentest-orchestrator"
     }
   ],
   "symbolPatterns": [
