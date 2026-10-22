@@ -202,6 +202,129 @@ class ValueLiveTest(unittest.TestCase):
         self.assertNotIn("projectedStakerApyPct", live)
 
 
+def _g2(g, fees=None, inc=None, cfees=None, cinc=None, active=True):
+    """Gauge row with separate claimed fees / incentives (raw units)."""
+    r = _gauge(g, 1, fees=fees, inc=inc)
+    r["active"] = active
+    r["claimedFees"], r["claimedIncentives"] = dict(cfees or {}), dict(cinc or {})
+    r["claimed"] = {t: (cfees or {}).get(t, 0) + (cinc or {}).get(t, 0) for t in set(cfees or {}) | set(cinc or {})}
+    return r
+
+
+def _live(gauges, now, history=None, prices=PRICES, chains_extra=()):
+    chains = [_chain(8453, T0, now, 1, gauges)] + list(chains_extra)
+    return pe.value_live(chains, META, prices, 1584, 1_000_000 * E18, 0.8, 600_000.0, now_ts=now, prev_history=history)
+
+
+class TrailingTest(unittest.TestCase):
+    NOW = T0 + 10 * DAY
+
+    def point(self, ago, usdc_fees, aero_inc, gauge=G_CL, extra=None):
+        """History point `ago` seconds before NOW with cumulative USDC fees and AERO incentives (human units)."""
+        g = {f"8453:{gauge}": {"usd": 0, "fees": {USDC: usdc_fees}, "incentives": {AERO: aero_inc}}}
+        g.update(extra or {})
+        return {"asOf": self.NOW - ago, "chains": [8453], "accruedUSD": 0, "feesCumUSD": 0, "gauges": g}
+
+    def test_windows_are_null_without_history_and_a_point_is_recorded(self):
+        live = _live([_g2(G_CL, fees={USDC: 100 * 10**6}, inc={AERO: 50 * E18})], self.NOW)
+        self.assertEqual(live["trailing"], {"24h": None, "7d": None})
+        self.assertEqual(live["feesOnly"]["trailing"], {"24h": None, "7d": None})
+        self.assertAlmostEqual(live["feesOnly"]["usdPerDay"], 100 / 10)           # $100 fees over 10 days
+        self.assertEqual(live["alerts"], [])
+        (pt,) = live["history"]
+        self.assertEqual(pt["gauges"][f"8453:{G_CL}"]["fees"], {USDC: 100.0})
+        self.assertEqual(pt["gauges"][f"8453:{G_CL}"]["incentives"], {AERO: 50.0})
+        self.assertEqual((pt["asOf"], pt["chains"]), (self.NOW, [8453]))
+
+    def test_24h_and_7d_rates_use_the_right_snapshots(self):
+        hist = [self.point(9 * DAY, 0, 0), self.point(7 * DAY + 3600, 30, 100), self.point(5 * DAY, 50, 150),
+                self.point(DAY + 600, 90, 240)]
+        live = _live([_g2(G_CL, fees={USDC: 100 * 10**6}, inc={AERO: 250 * E18})], self.NOW, hist)
+        t24, t7 = live["trailing"]["24h"], live["trailing"]["7d"]
+        self.assertEqual((t24["snapshotAsOf"], t24["snapshotAgeHours"]), (self.NOW - DAY - 600, round((DAY + 600) / 3600, 2)))
+        self.assertEqual(t7["snapshotAsOf"], self.NOW - 7 * DAY - 3600)         # 6-8 d old; 5 d and 9 d ignored
+        d24 = (DAY + 600) / DAY
+        self.assertAlmostEqual(t24["usdPerDay"], (10 * 1.0 + 10 * 0.8) / d24)    # +10 USDC fees, +10 AERO incentives
+        d7 = (7 * DAY + 3600) / DAY
+        self.assertAlmostEqual(t7["usdPerDay"], (70 + 150 * 0.8) / d7)
+        self.assertAlmostEqual(t7["positionAprPct"], t7["usdPerDay"] * 365 / (1_000_000 * 0.8) * 100)
+        self.assertAlmostEqual(t7["projectedStakerApyPct"], t7["usdPerDay"] * 365 * 0.8 / 600_000 * 100)
+        self.assertAlmostEqual(live["feesOnly"]["trailing"]["24h"]["usdPerDay"], 10 / d24)
+        self.assertAlmostEqual(live["feesOnly"]["trailing"]["7d"]["usdPerDay"], 70 / d7)
+        self.assertAlmostEqual(live["gauges"][0]["usdPerDay24h"], t24["usdPerDay"])
+        self.assertTrue(t24["claimsComplete"])
+        self.assertFalse(t24["partial"])
+
+    def test_claims_are_cumulative_not_negative(self):
+        # yesterday 90 USDC unclaimed; since then 100 USDC claimed and 5 more accrued
+        hist = [self.point(DAY, 90, 0)]
+        live = _live([_g2(G_CL, fees={USDC: 5 * 10**6}, cfees={USDC: 100 * 10**6})], self.NOW, hist)
+        self.assertAlmostEqual(live["trailing"]["24h"]["usdPerDay"], 15.0)
+        self.assertFalse([a for a in live["alerts"] if a["type"] == "negative_delta"])
+
+    def test_price_moves_do_not_leak_into_the_rate(self):
+        hist = [self.point(DAY, 100, 1000)]
+        cheap = {8453: dict(PRICES[8453], **{AERO: 0.4})}
+        live = _live([_g2(G_CL, fees={USDC: 100 * 10**6}, inc={AERO: 1000 * E18})], self.NOW, hist, prices=cheap)
+        self.assertEqual(live["trailing"]["24h"]["usdPerDay"], 0.0)
+
+    def test_alerts_zero_gauge_drop_and_negative(self):
+        G2 = "0x" + "a9" * 20
+        other = {f"8453:{G2}": {"fees": {USDC: 500.0}, "incentives": {}}}
+        hist = [self.point(7 * DAY, 0, 0, extra={f"8453:{G2}": {"fees": {USDC: 0.0}, "incentives": {}}}),
+                self.point(DAY, 600, 0, extra=other)]
+        live = _live([_g2(G_CL, fees={USDC: 610 * 10**6}),         # +10 in 24h vs ~87/day over 7d -> drop
+                      _g2(G2, fees={USDC: 400 * 10**6})],          # 500 -> 400: negative (claims missed), clamped
+                     self.NOW, hist)
+        types = sorted(a["type"] for a in live["alerts"])
+        self.assertEqual(types, ["fees_rate_drop", "gauge_no_earnings_24h", "negative_delta", "rate_drop"])
+        zero = [a for a in live["alerts"] if a["type"] == "gauge_no_earnings_24h"][0]
+        self.assertEqual(zero["gauge"], G2)
+        drop = [a for a in live["alerts"] if a["type"] == "rate_drop"][0]
+        self.assertGreater(drop["dropPct"], 50)
+        with self.assertLogs("position_earnings", "WARNING") as logs:
+            _live([_g2(G_CL, fees={USDC: 610 * 10**6}), _g2(G2, fees={USDC: 400 * 10**6})], self.NOW, hist)
+        self.assertTrue(any("ALERT rate_drop" in m for m in logs.output))
+
+    def test_trickle_counts_as_nothing_but_unpriced_earnings_do_not(self):
+        X = "0x" + "77" * 20
+        hist = [self.point(DAY, 90, 0, extra={f"8453:{G_V2}": {"fees": {X: 1.0}, "incentives": {}}})]
+        live = _live([_g2(G_CL, fees={USDC: 90 * 10**6 + 300_000}),     # +$0.30 in a day -> "nothing"
+                      _g2(G_V2, fees={X: 5 * E18})],                     # unpriced token kept accruing -> no alert
+                     self.NOW, hist)
+        zero = [a for a in live["alerts"] if a["type"] == "gauge_no_earnings_24h"]
+        self.assertEqual([a["gauge"] for a in zero], [G_CL])
+        self.assertAlmostEqual(zero[0]["usdPerDay24h"], 0.3)
+
+    def test_inactive_gauge_with_no_earnings_is_not_alerted(self):
+        live = _live([_g2(G_CL, fees={USDC: 90 * 10**6}, active=False)], self.NOW, [self.point(DAY, 90, 0)])
+        self.assertEqual(live["alerts"], [])
+
+    def test_history_cadence_and_cap(self):
+        hist = [self.point(d * DAY, d, 0) for d in range(14, 0, -1)] + [self.point(3 * 3600, 0.5, 0)]
+        live = _live([_g2(G_CL, fees={USDC: 1 * 10**6})], self.NOW, hist)
+        ages = [self.NOW - h["asOf"] for h in live["history"]]
+        self.assertEqual(ages[-1], 0)                                   # current run appended
+        self.assertNotIn(3 * 3600, ages)                                # a point < 12 h old is replaced
+        self.assertTrue(all(a <= 10.5 * DAY for a in ages))
+        self.assertLessEqual(len(ages), pe.HISTORY_MAX_POINTS)
+
+    def test_partial_chain_coverage_is_excluded_and_flagged(self):
+        eth = _chain(1, T0, self.NOW, 1, [_g2("0x" + "dd" * 20, fees={USDC: 10 * 10**6})])
+        hist = [self.point(DAY, 90, 0)]                                  # Ethereum wasn't measured yesterday
+        live = _live([_g2(G_CL, fees={USDC: 100 * 10**6})], self.NOW, hist, chains_extra=[eth])
+        self.assertTrue(live["trailing"]["24h"]["partial"])
+        self.assertAlmostEqual(live["trailing"]["24h"]["usdPerDay"], 10.0)   # Base only
+        self.assertIn(f"1:{'0x' + 'dd' * 20}", live["history"][-1]["gauges"])
+
+    def test_spikes_in_trailing_rates_are_omitted(self):
+        hist = [self.point(DAY, 0, 0)]
+        with self.assertLogs("position_earnings", "WARNING"):
+            live = _live([_g2(G_CL, inc={AERO: 50_000_000 * E18})], self.NOW, hist)
+        self.assertIn("usdPerDay", live["trailing"]["24h"])
+        self.assertNotIn("positionAprPct", live["trailing"]["24h"])
+
+
 class BuildLiveTest(unittest.TestCase):
     def test_failed_chain_is_reported_unmeasured_and_prev_gauges_reused(self):
         good = FakeReader(base_answers(), logs=[])
@@ -220,8 +343,23 @@ class BuildLiveTest(unittest.TestCase):
                                  prev_live={"stakeId": 1584, "gauges": [{"chainId": 8453, "gauge": G_OLD}]}, now_ts=NOW)
             self.assertEqual(rcp.call_args_list[0].kwargs["extra_gauges"], (G_OLD,))
         self.assertEqual(live["unmeasuredChains"], [1, 4663])
+        self.assertEqual(len(live["history"]), 1)
         self.assertEqual([c["chainId"] for c in live["chains"]], [8453])
         self.assertGreater(live["accruedUSD"], 0)
+
+    def test_history_from_another_stake_is_ignored(self):
+        old_point = {"asOf": NOW - DAY, "chains": [8453], "gauges": {f"8453:{G_CL}": {"fees": {WETH: 0.0}, "incentives": {}}}}
+        pf = mock.Mock()
+        pf.fetch_batch.side_effect = lambda toks: {t: {"priceUsd": PRICES[8453].get(t, 0.0)} for t in toks}
+        with mock.patch.object(pe, "token_meta", return_value=META[8453]):
+            mine = pe.build_live([(FakeReader(base_answers(), logs=[]), pe.FACTORY_REGISTRY_BASE)], 1584, {8453: pf},
+                                 1_000_000 * E18, 0.8, 600_000.0, prev_live={"stakeId": 1584, "history": [old_point]}, now_ts=NOW)
+            other = pe.build_live([(FakeReader(base_answers(), logs=[]), pe.FACTORY_REGISTRY_BASE)], 1584, {8453: pf},
+                                  1_000_000 * E18, 0.8, 600_000.0, prev_live={"stakeId": 999, "history": [old_point]}, now_ts=NOW)
+        self.assertIsNotNone(mine["trailing"]["24h"])
+        self.assertEqual(len(mine["history"]), 2)
+        self.assertIsNone(other["trailing"]["24h"])
+        self.assertEqual(len(other["history"]), 1)
 
 
 class ChainReaderTest(unittest.TestCase):

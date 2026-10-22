@@ -19,7 +19,7 @@ Valuation uses CURRENT prices. usdPerDay = accruedUSD / elapsed days (since allo
 import math
 import time
 import logging
-from typing import Dict, List, Optional
+from typing import Callable, Dict, List, Optional
 
 from eth_utils import keccak
 
@@ -193,14 +193,15 @@ def read_chain_position(reader, token_id: int, leaf_voter: str = LEAF_VOTER, reg
                              reader.block_at(since))
     by_vrm = {r["vrm"]: r for r in rows}
     for r in rows:
-        r["claimed"] = {}
+        r["claimed"], r["claimedFees"], r["claimedIncentives"] = {}, {}, {}
     for lg in claims or []:
         r = by_vrm.get(str(lg["address"]).lower())
         if not r:
             continue
         topic0 = "0x" + (lg["topics"][0].hex() if hasattr(lg["topics"][0], "hex") else lg["topics"][0]).removeprefix("0x")
         amount = _topic_int(lg["data"]) if lg["data"] not in (b"", "0x") else 0
-        if topic0 == CLAIM_FEES_TOPIC:
+        is_fee = topic0 == CLAIM_FEES_TOPIC
+        if is_fee:
             token = "0x" + format(_topic_int(lg["topics"][3]), "040x")
         else:
             pid = _topic_int(lg["topics"][3])
@@ -211,6 +212,8 @@ def read_chain_position(reader, token_id: int, leaf_voter: str = LEAF_VOTER, reg
                 token = inc[0].lower() if inc else None
         if token:
             r["claimed"][token] = r["claimed"].get(token, 0) + amount
+            kind = r["claimedFees"] if is_fee else r["claimedIncentives"]
+            kind[token] = kind.get(token, 0) + amount
 
     return {"chainId": reader.chain_id, "block": reader.block, "blockTimestamp": reader.block_ts,
             "lastAllocated": last_alloc, "since": int(since), "chainAllocation": int(state[3]) if state else 0,
@@ -233,16 +236,91 @@ def _sane(name: str, v: Optional[float]) -> Optional[float]:
     return float(v)
 
 
+# ---------------- trailing windows over live.history ----------------
+# A history point stores per-gauge CUMULATIVE token amounts (claimed + unclaimed, fees and incentives apart),
+# keyed "chainId:gauge" (gauge addresses can repeat across chains). Deltas are valued at the CURRENT run's prices,
+# so price moves on the accumulated stock don't leak into the rate; claims are inside the cumulative, so they never
+# show up as negative deltas.
+DAY_SEC = 86400
+WINDOWS = {"24h": (20 * 3600, 36 * 3600, 24 * 3600),          # (min age, max age, target age) of the snapshot used
+           "7d": (6 * DAY_SEC, 8 * DAY_SEC, 7 * DAY_SEC)}
+HISTORY_MAX_AGE = int(10.5 * 86400)
+HISTORY_MAX_POINTS = 12
+HISTORY_MIN_SPACING = 12 * 3600         # one point per ~day; a newer run within 12 h replaces the newest point
+DROP_ALERT_RATIO = 0.5                  # 24h rate below 50% of the 7d rate -> alert
+ZERO_ALERT_USD_PER_DAY = 1.0            # an allocated gauge under $1/day over 24h counts as earning nothing
+
+
+def _sig(x: float) -> float:
+    return float(f"{x:.8g}")
+
+
+def pick_snapshot(history: List[dict], now_ts: int, window: str) -> Optional[dict]:
+    lo, hi, target = WINDOWS[window]
+    cands = [h for h in history or [] if lo <= now_ts - int(h.get("asOf", 0)) <= hi]
+    return min(cands, key=lambda h: abs(now_ts - int(h["asOf"]) - target)) if cands else None
+
+
+def window_delta(cur: dict, snap: dict, price: Callable[[int, str], float]) -> dict:
+    """USD earned between `snap` and `cur` (both history points), per gauge and in total, fees apart."""
+    days = (int(cur["asOf"]) - int(snap["asOf"])) / 86400.0
+    per_gauge, total, fees, negative = {}, 0.0, 0.0, []
+    snap_chains = set(snap.get("chains") or {int(k.split(":")[0]) for k in (snap.get("gauges") or {})})
+    cur_chains = set(cur.get("chains") or {int(k.split(":")[0]) for k in cur["gauges"]})
+    partial = snap_chains != cur_chains          # a chain measured in only one of the two points is left out
+    for key, g in cur["gauges"].items():
+        old = (snap.get("gauges") or {}).get(key) or {}
+        cid = int(key.split(":")[0])
+        if cid not in snap_chains:
+            continue
+        g_usd = g_fee = 0.0
+        moved_unpriced = False
+        for kind in ("fees", "incentives"):
+            for tok, amt in (g.get(kind) or {}).items():
+                d = float(amt) - float((old.get(kind) or {}).get(tok, 0.0))
+                if d < -1e-9 * max(1.0, abs(float(amt))):
+                    negative.append(key)
+                    d = 0.0
+                px = price(cid, tok)
+                if d > 0 and px <= 0:
+                    moved_unpriced = True
+                usd = d * px
+                g_usd += usd
+                if kind == "fees":
+                    g_fee += usd
+        rate = g_usd / days if days > 0 else 0.0
+        per_gauge[key] = {"usdPerDay": rate, "earned": rate >= ZERO_ALERT_USD_PER_DAY or moved_unpriced}
+        total += g_usd
+        fees += g_fee
+    return {"days": days, "usdPerDay": total / days if days > 0 else 0.0, "feesUsdPerDay": fees / days if days > 0 else 0.0,
+            "gauges": per_gauge, "negative": sorted(set(negative)), "partial": partial}
+
+
+def _rates(usd_per_day: float, stake_usd: float, staked_iaero_usd: float, stakers_bps: int, label: str) -> dict:
+    out = {"usdPerDay": usd_per_day}
+    annual = usd_per_day * 365.0
+    for name, v in (("positionAprPct", annual / stake_usd * 100.0 if stake_usd > 0 else None),
+                    ("projectedStakerApyPct", annual * stakers_bps / 10_000 / staked_iaero_usd * 100.0 if staked_iaero_usd > 0 else None)):
+        v = _sane(f"{label}.{name}", v)
+        if v is not None:
+            out[name] = v
+    return out
+
+
 def value_live(chains: List[dict], meta: Dict[int, Dict[str, dict]], prices: Dict[int, Dict[str, float]],
                token_id: int, staked_aero_raw: int, aero_price: float, staked_iaero_usd: float,
-               stakers_bps: int = 8000, now_ts: Optional[int] = None, unmeasured: Optional[List[int]] = None) -> dict:
-    """Pure: price the raw per-chain reads into the `live` block."""
+               stakers_bps: int = 8000, now_ts: Optional[int] = None, unmeasured: Optional[List[int]] = None,
+               prev_history: Optional[List[dict]] = None) -> dict:
+    """Pure: price the raw per-chain reads into the `live` block (plus trailing windows over prev_history)."""
     now_ts = int(now_ts if now_ts is not None else time.time())
     stake = staked_aero_raw / 1e18 if staked_aero_raw else 0.0
     gauges_out, unpriced = [], set()
     accrued_total = usd_day_total = 0.0
     split_total = {"feesUSD": 0.0, "incentivesUSD": 0.0, "claimedUSD": 0.0}
     measured_alloc = 0
+    fees_day_total = 0.0
+    point = {"asOf": now_ts, "chains": sorted(c["chainId"] for c in chains), "accruedUSD": 0.0, "feesCumUSD": 0.0,
+             "gauges": {}}
 
     for ch in chains:
         cid = ch["chainId"]
@@ -275,6 +353,22 @@ def value_live(chains: List[dict], meta: Dict[int, Dict[str, dict]], prices: Dic
                      "claimedUSD": _usd(r["claimed"].items())}
             for k_, v_ in split.items():
                 split_total[k_] += v_
+            # cumulative amounts (claimed + unclaimed) per kind, for feesOnly and the history point
+            dec = lambda t: meta.get(cid, {}).get(t, {}).get("decimals", 18)
+            cum_f: Dict[str, float] = {}
+            cum_i: Dict[str, float] = {}
+            for t, a in list(r["fees"].items()) + list(r.get("claimedFees", {}).items()):
+                cum_f[t] = cum_f.get(t, 0.0) + int(a) / 10 ** dec(t)
+            for t, a in [(x["token"], x["amount"]) for x in r["incentives"]] + list(r.get("claimedIncentives", {}).items()):
+                cum_i[t] = cum_i.get(t, 0.0) + int(a) / 10 ** dec(t)
+            fees_cum_usd = sum(a * float(prices.get(cid, {}).get(t, 0.0) or 0.0) for t, a in cum_f.items())
+            fees_day_total += fees_cum_usd / elapsed_days if elapsed_days > 0 else 0.0
+            point["gauges"][f"{cid}:{r['gauge']}"] = {
+                "usd": _sig(usd),
+                "fees": {t: _sig(a) for t, a in cum_f.items() if a > 0},
+                "incentives": {t: _sig(a) for t, a in cum_i.items() if a > 0}}
+            point["accruedUSD"] += usd
+            point["feesCumUSD"] += fees_cum_usd
             per_day = usd / elapsed_days if elapsed_days > 0 else 0.0
             accrued_total += usd
             usd_day_total += per_day
@@ -331,6 +425,66 @@ def value_live(chains: List[dict], meta: Dict[int, Dict[str, dict]], prices: Dic
         v = _sane(name, v)
         if v is not None:
             out[name] = v
+
+    # ---- trailing 24h / 7d windows from previous published history ----
+    point["accruedUSD"], point["feesCumUSD"] = _sig(point["accruedUSD"]), _sig(point["feesCumUSD"])
+    history = [h for h in (prev_history or []) if isinstance(h, dict) and int(h.get("asOf", 0)) < now_ts]
+    price = lambda cid, t: float(prices.get(cid, {}).get(t, 0.0) or 0.0)
+    trailing, fees_trailing, deltas, alerts = {}, {}, {}, []
+    claims_ok = all(c["claimsScanned"] for c in chains)
+    for w in WINDOWS:
+        snap = pick_snapshot(history, now_ts, w)
+        if not snap:
+            trailing[w] = fees_trailing[w] = None
+            continue
+        d = window_delta(point, snap, price)
+        deltas[w] = d
+        meta_w = {"snapshotAsOf": int(snap["asOf"]), "snapshotAgeHours": round((now_ts - int(snap["asOf"])) / 3600.0, 2),
+                  "claimsComplete": claims_ok, "partial": d["partial"]}
+        trailing[w] = {**meta_w, **_rates(d["usdPerDay"], stake_usd, staked_iaero_usd, stakers_bps, f"trailing.{w}")}
+        fees_trailing[w] = {**meta_w, **_rates(d["feesUsdPerDay"], stake_usd, staked_iaero_usd, stakers_bps, f"feesOnly.{w}")}
+        for key in d["negative"]:
+            alerts.append({"type": "negative_delta", "window": w, "gauge": key,
+                           "message": f"cumulative earnings fell on {key} over {w} (claims not scanned?); delta set to 0"})
+    for g in gauges_out:
+        key = f"{g['chainId']}:{g['gauge']}"
+        for w in WINDOWS:
+            g[f"usdPerDay{w}"] = deltas[w]["gauges"].get(key, {}).get("usdPerDay") if w in deltas else None
+        d24 = deltas.get("24h")
+        if d24 and g["active"] and key in d24["gauges"] and not d24["gauges"][key]["earned"]:
+            alerts.append({"type": "gauge_no_earnings_24h", "chainId": g["chainId"], "gauge": g["gauge"], "label": g["label"],
+                           "usdPerDay24h": d24["gauges"][key]["usdPerDay"],
+                           "message": f"allocated gauge {g['label']} ({key}) earned ${d24['gauges'][key]['usdPerDay']:.2f}/day "
+                                      f"(< ${ZERO_ALERT_USD_PER_DAY:.0f}) over the last 24h"})
+    for label, k in (("total", "usdPerDay"), ("fees", "feesUsdPerDay")):
+        if ("24h" in deltas and "7d" in deltas and not (deltas["24h"]["partial"] or deltas["7d"]["partial"])
+                and deltas["7d"][k] > 0 and deltas["24h"][k] < DROP_ALERT_RATIO * deltas["7d"][k]):
+            drop = 1 - deltas["24h"][k] / deltas["7d"][k]
+            alerts.append({"type": "rate_drop" if label == "total" else "fees_rate_drop",
+                           "usdPerDay24h": deltas["24h"][k], "usdPerDay7d": deltas["7d"][k], "dropPct": drop * 100,
+                           "message": f"24h {label} earnings ${deltas['24h'][k]:.2f}/day are {drop * 100:.0f}% below the "
+                                      f"7d rate ${deltas['7d'][k]:.2f}/day"})
+    for a in alerts:
+        logger.warning(f"[position] ALERT {a['type']}: {a['message']}")
+
+    # keep ~daily points for ~10 days; a run within 12 h of the newest point replaces it
+    if history and now_ts - int(history[-1]["asOf"]) < HISTORY_MIN_SPACING:
+        history = history[:-1]
+    history = [h for h in history + [point] if now_ts - int(h["asOf"]) <= HISTORY_MAX_AGE][-HISTORY_MAX_POINTS:]
+
+    out["trailing"] = trailing
+    out["feesOnly"] = {**_rates(fees_day_total, stake_usd, staked_iaero_usd, stakers_bps, "feesOnly"),
+                       "basis": "since allocation", "trailing": fees_trailing}
+    out["alerts"] = alerts
+    out["history"] = history
+    out["definitions"].update({
+        "trailing": "24h / 7d rates from the change in per-gauge cumulative earnings since the history point closest to "
+                    "24 h (20-36 h old) / 7 d (6-8 d old) before this run, valued at current prices; null until such a point exists",
+        "feesOnly": "same figures counting trading fees only (no incentive programs)",
+        "history": "~daily points (<= 10.5 d): per-gauge cumulative token amounts keyed chainId:gauge, claimed + unclaimed",
+        "alerts": "gauge_no_earnings_24h (allocated gauge < $1/day over 24h), rate_drop / fees_rate_drop "
+                  "(24h < 50% of 7d), negative_delta (cumulative fell: claims not scanned?)",
+    })
     return out
 
 
@@ -340,10 +494,11 @@ def build_live(chain_readers: List[tuple], token_id: int, price_fetchers: Dict[i
                first_allocation: Optional[int] = None) -> dict:
     """chain_readers: [(reader, registry_or_None)]. price_fetchers: {chainId: PriceFetcher for that chain}.
     A chain whose reads fail is reported in unmeasuredChains instead of failing the whole block."""
-    prev_g = {}
+    prev_g, prev_history = {}, []
     if prev_live and int(prev_live.get("stakeId", -1)) == int(token_id):
         for g in prev_live.get("gauges") or []:
             prev_g.setdefault(int(g.get("chainId", 0)), []).append(g["gauge"])
+        prev_history = prev_live.get("history") or []
     chains, meta, prices, unmeasured = [], {}, {}, list(UNMEASURED_CHAINS)
     for reader, registry in chain_readers:
         try:
@@ -363,12 +518,14 @@ def build_live(chain_readers: List[tuple], token_id: int, price_fetchers: Dict[i
         got = pf.fetch_batch(sorted(toks)) if (pf and toks) else {}
         prices[reader.chain_id] = {t: float((got.get(t) or {}).get("priceUsd", 0.0)) for t in toks}
     live = value_live(chains, meta, prices, token_id, staked_aero_raw, aero_price, staked_iaero_usd, stakers_bps, now_ts,
-                      unmeasured=unmeasured)
+                      unmeasured=unmeasured, prev_history=prev_history)
     logger.info(
         f"[position] stake #{token_id}: accrued=${live['accruedUSD']:.2f} over {live['elapsedDays']:.3f}d "
         f"-> ${live['usdPerDay']:.2f}/day, positionApr={live.get('positionAprPct')} "
         f"projectedStakerApy={live.get('projectedStakerApyPct')} measured={live['measuredShareOfAllocation']:.3f} "
-        f"unpriced={len(live['unpricedTokens'])}"
+        f"unpriced={len(live['unpricedTokens'])} feesOnly=${live['feesOnly']['usdPerDay']:.2f}/day "
+        f"trailing24h={(live['trailing']['24h'] or {}).get('usdPerDay')} trailing7d={(live['trailing']['7d'] or {}).get('usdPerDay')} "
+        f"alerts={len(live['alerts'])} history={len(live['history'])}"
     )
     return live
 
