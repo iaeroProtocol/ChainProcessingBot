@@ -19,9 +19,9 @@ from realized_yield import (  # noqa: E402
     WEEK,
     ZERO_ADDRESS,
     WETH_ADDRESS,
-    apy_jump_problem,
     build_estimated_rewards,
     compute_realized,
+    dex_guard_problem,
     dump_yield_history,
     epoch_start,
     is_sane_apy,
@@ -29,6 +29,7 @@ from realized_yield import (  # noqa: E402
     latest_funded_epoch,
     merge_yield_history,
     sanity_problems,
+    reference_apy,
     select_epoch,
 )
 
@@ -110,21 +111,41 @@ class EpochMathTest(unittest.TestCase):
         # an empty stake is not a pricing failure
         self.assertEqual(sanity_problems(compute_realized(EPOCH_22_OCT, funded, 0, 0, 0.6656, 0.802)), [])
 
-    def test_apy_jump_guard(self):
-        p = lambda apy, ep=EPOCH_22_OCT: {"epoch": ep, "apyPct": apy}
-        hist = {"series": [{"epoch": EPOCH_15_OCT, "apyPct": 10.0}, {"epoch": EPOCH_22_OCT, "apyPct": 40.0}]}
-        self.assertIsNone(apy_jump_problem(p(44.0), {"apyPct": 15.0}, None))
-        self.assertIn("3x the previously published apyPct (15.00%)", apy_jump_problem(p(46.0), {"apyPct": 15.0}, None))
-        # the previous epoch's history entry is frozen for the week: raising 3x per run can't ratchet past it
-        self.assertIsNone(apy_jump_problem(p(29.0), {"apyPct": 15.0}, hist))
-        self.assertIn(f"yield_history epoch {EPOCH_15_OCT}", apy_jump_problem(p(31.0), {"apyPct": 15.0}, hist))
-        self.assertIn(f"yield_history epoch {EPOCH_15_OCT}", apy_jump_problem(p(31.0), {"apyPct": 30.0}, hist))
-        # no positive reference: first run, or 0% published while funding was stale
-        self.assertIsNone(apy_jump_problem(p(300.0), {}, {}))
-        self.assertIsNone(apy_jump_problem(p(300.0), {"apyPct": 0.0}, {"series": []}))
-        self.assertIsNotNone(apy_jump_problem(p(31.0), {"apyPct": 0.0}, hist))
-        # disabled
-        self.assertIsNone(apy_jump_problem(p(300.0), {"apyPct": 15.0}, hist, max_rise=0))
+    def test_reference_is_the_median_of_up_to_4_earlier_epochs(self):
+        hist = {"series": [{"epoch": EPOCH_15_OCT - 3 * WEEK, "apyPct": 99.0}, {"epoch": EPOCH_15_OCT - 2 * WEEK, "apyPct": 0.0},
+                           {"epoch": EPOCH_15_OCT - WEEK, "apyPct": 8.0}, {"epoch": EPOCH_15_OCT, "apyPct": 10.0},
+                           {"epoch": EPOCH_22_OCT, "apyPct": 12.0}, {"epoch": EPOCH_22_OCT + WEEK, "apyPct": 1.0}]}
+        # epochs before 29 Oct with apyPct > 0, newest 4: 99, 8, 10, 12 -> median 11 (the 0% entry is skipped)
+        self.assertEqual(reference_apy(hist, EPOCH_22_OCT + WEEK),
+                         (11.0, [EPOCH_15_OCT - 3 * WEEK, EPOCH_15_OCT - WEEK, EPOCH_15_OCT, EPOCH_22_OCT]))
+        self.assertEqual(reference_apy(hist, EPOCH_15_OCT), (53.5, [EPOCH_15_OCT - 3 * WEEK, EPOCH_15_OCT - WEEK]))
+        self.assertIsNone(reference_apy({"series": []}, EPOCH_22_OCT))
+        self.assertIsNone(reference_apy({}, EPOCH_22_OCT))
+
+    def test_dex_guard(self):
+        hist = {"series": [{"epoch": EPOCH_15_OCT, "apyPct": 10.0}, {"epoch": EPOCH_22_OCT, "apyPct": 12.0}]}   # ref 11
+
+        def p(apy, funded=1_000.0, dex=0.0, ep=EPOCH_22_OCT + WEEK):
+            return {"epoch": ep, "apyPct": apy, "fundedUSD_1e18": str(int(funded * E18)),
+                    "dexFundedUSD_1e18": str(int(dex * E18)), "dexPricedTokens": ["0xdex"] if dex else []}
+        self.assertIsNone(dex_guard_problem(p(33.0, dex=400.0), hist))          # within 3x 11 = 33
+        # 40% with 30% of the funding DEX-priced: 28% without it -> the DEX tokens push it over -> blocked
+        self.assertIn("only because of DEX-priced tokens ['0xdex']", dex_guard_problem(p(40.0, dex=300.0), hist))
+        # 60% with 30% DEX-priced: 42% without them is still above 33% -> a real rise, published
+        self.assertIsNone(dex_guard_problem(p(60.0, dex=300.0), hist))
+        self.assertIsNone(dex_guard_problem(p(300.0), hist))                     # any rise without DEX-priced tokens
+        # more than half of the funded value DEX-priced: blocked whatever the level, even with no reference
+        self.assertIn("51% of the funded $1,000.00", dex_guard_problem(p(5.0, dex=510.0), hist))
+        self.assertIsNotNone(dex_guard_problem(p(5.0, dex=510.0), {}))
+        self.assertIsNone(dex_guard_problem(p(5.0, dex=500.0), {}))
+        # no usable reference -> no ratio check
+        self.assertIsNone(dex_guard_problem(p(400.0, dex=400.0), {"series": [{"epoch": EPOCH_15_OCT, "apyPct": 0.0}]}))
+        # a low previous figure or a partial in-progress entry is not a reference: only earlier epochs count
+        self.assertIsNone(dex_guard_problem(p(30.0, dex=400.0), dict(hist, series=hist["series"] + [
+            {"epoch": EPOCH_22_OCT + WEEK, "apyPct": 1.0}])))
+        # override
+        self.assertIsNone(dex_guard_problem(p(40.0, dex=300.0), hist, max_rise=0))
+        self.assertIsNone(dex_guard_problem(p(5.0, dex=900.0), hist, max_rise=0))
 
 
 class ComputeRealizedTest(unittest.TestCase):
@@ -184,6 +205,16 @@ class ComputeRealizedTest(unittest.TestCase):
         p = compute_realized(EPOCH_15_OCT, [], 1_000 * E18, 1_000 * E18, 0.0, 0.8)
         self.assertTrue(p["usedFallbackPrice"])
         self.assertEqual(p["iaeroPrice_1e18"], p["aeroPrice_1e18"])
+
+    def test_dex_priced_funding_is_reported(self):
+        funded = [{"address": USDC, "amount": 3_000 * 10**6, "decimals": 6, "priceUsd": 1.0, "source": "llama"},
+                  {"address": OLD_AERO, "amount": 1_000 * E18, "decimals": 18, "priceUsd": 0.8, "source": "dex"},
+                  {"address": "0x" + "77" * 20, "amount": E18, "decimals": 18, "priceUsd": 0.0, "source": "none"}]
+        p = compute_realized(EPOCH_15_OCT, funded, 4_000_000 * E18, 4_000_000 * E18, 0.7, 0.8)
+        self.assertEqual((p["dexPricedTokens"], p["dexFundedUSD_1e18"]), ([OLD_AERO], str(800 * E18)))
+        self.assertNotIn("staleReason", p)
+        stale = compute_realized(EPOCH_15_OCT, funded, 4_000_000 * E18, 4_000_000 * E18, 0.7, 0.8, stale=True)
+        self.assertIn(str(EPOCH_15_OCT), stale["staleReason"])
 
     def test_no_stake_gives_zero_apy(self):
         funded = [{"address": USDC, "amount": 10**6, "decimals": 6, "priceUsd": 1.0}]
@@ -263,6 +294,12 @@ class BuildEstimatedRewardsTest(unittest.TestCase):
         self.assertEqual(p["fundedUSD_human"], "99999.0000")
         # no cached snapshot -> falls back to totalSupplyAtEpochStart
         self.assertEqual(p["stakedAtEpochStart_1e18"], "1")
+
+    def test_price_source_reaches_the_dex_fields(self):
+        self.pf.fetch_batch = lambda addrs: {a: {"priceUsd": {USDC: 1.0, AERO: 0.81, IAERO: 0.66}.get(a, 0.0),
+                                                 "source": "dex" if a == USDC else "llama"} for a in addrs}
+        p = self.build(EPOCH_22_OCT + 9060)
+        self.assertEqual((p["dexPricedTokens"], p["dexFundedUSD_1e18"]), ([USDC], str(99_999 * E18)))
 
     def test_last_completed_mode_and_snapshot_denominator(self):
         p = self.build(EPOCH_22_OCT + 9060, epoch_mode="last_completed")
@@ -392,12 +429,16 @@ class MainHookTest(unittest.TestCase):
         repo.get_contents.side_effect = get_contents
         return repo
 
-    def _run(self, payload, env=None, epochs_doc=None, history=None, estimated=None):
+    def _run(self, payload, env=None, epochs_doc=None, history=None, estimated=None, now=None, hist_payload=None):
+        """now defaults to a week after payload's epoch, so payload's epoch is the last completed one; build() with an
+        explicit epoch (the completed epoch for yield_history) returns hist_payload."""
         updater = mock.Mock(branch="main")
         envs = {"EPOCH_STAKING_DISTRIBUTOR": DIST, "LIVE_YIELD_ENABLED": "false"}
         envs.update(env or {})
-        with mock.patch.dict(os.environ, envs), \
-             mock.patch.object(realized_yield, "build_estimated_rewards", return_value=payload) as b:
+        now = now if now is not None else int(payload["epoch"]) + WEEK + 9060
+        with mock.patch.dict(os.environ, envs), mock.patch("time.time", return_value=now), \
+             mock.patch.object(realized_yield, "build_estimated_rewards",
+                               side_effect=lambda **kw: hist_payload if kw.get("epoch") is not None else payload) as b:
             changed = self.main._update_realized_yield(
                 self._repo(epochs_doc if epochs_doc is not None else {"epochs": {"1": {"tokens": [USDC]}}}, history,
                            estimated),
@@ -441,20 +482,86 @@ class MainHookTest(unittest.TestCase):
         updater.update_json.assert_not_called()
         updater.update_file.assert_not_called()
 
-    def test_apy_jump_is_not_published(self):
-        prev = {"apyPct": 13.0, "live": {"stakeId": 1584}}
-        changed, updater, _ = self._run(_payload(EPOCH_22_OCT + WEEK, apy=13.0 * 3 + 1), history=_keeper_history(),
-                                        estimated=prev)
+    def _dex_payload(self, apy, dex_share, epoch=EPOCH_22_OCT + WEEK):
+        return dict(_payload(epoch, apy=apy, funded=10_000 * E18), dexPricedTokens=["0xdex"],
+                    dexFundedUSD_1e18=str(int(10_000 * dex_share) * E18), aeroPrice_1e18=str(8 * 10**17),
+                    stakedUSD_1e18=str(3 * 10**24))
+
+    PREV = {"apyPct": 13.0, "epoch": EPOCH_22_OCT, "stakersWeeklyUSD_1e18": "7", "updatedAt": "2026-10-23T02:31:00.000Z",
+            "updateTimestamp": 1792722660, "lastUpdated": "2026-10-23T02:31:00", "stale": False,
+            "live": {"stakeId": 1584, "history": [{"asOf": 1}]}}
+
+    def test_dex_inflated_apy_keeps_previous_figures_flagged_stale(self):
+        # reference = median(10.30, 12.59) = 11.45 -> limit 34.3; 60% falls to 30% without the DEX-priced half
+        payload = self._dex_payload(60.0, 0.5)
+        fresh_live = {"method": "live_position", "stale": False, "stakeId": 1584, "history": [{"asOf": 2}]}
+        with mock.patch.object(self.main, "_build_live_block", return_value=fresh_live) as bl:
+            changed, updater, _ = self._run(payload, env={"LIVE_YIELD_ENABLED": "true"}, history=_keeper_history(),
+                                            estimated=self.PREV)
+        self.assertTrue(changed)
+        updater.update_json.assert_not_called()                       # update_json would refresh the timestamps
+        (path, content), kw = updater.update_file.call_args
+        self.assertEqual(path, "data/estimated_rewards_usd.json")     # yield_history.json not written (same epoch)
+        self.assertEqual(updater.update_file.call_count, 1)
+        written = json.loads(content)
+        self.assertEqual({k: written[k] for k in ("apyPct", "epoch", "stakersWeeklyUSD_1e18", "updatedAt",
+                                                  "updateTimestamp", "lastUpdated")},
+                         {k: self.PREV[k] for k in ("apyPct", "epoch", "stakersWeeklyUSD_1e18", "updatedAt",
+                                                    "updateTimestamp", "lastUpdated")})
+        self.assertTrue(written["stale"])
+        self.assertIn("only because of DEX-priced tokens", written["staleReason"])
+        self.assertEqual(written["live"], fresh_live)                 # live still measured, from the fresh payload
+        self.assertEqual(bl.call_args.args[2], payload)
+        self.assertEqual(bl.call_args.args[3], self.PREV["live"])
+        # the next good run publishes fresh figures and drops the flag
+        good = self._dex_payload(14.0, 0.1)
+        changed, updater, _ = self._run(good, history=_keeper_history(), estimated=written)
+        self.assertEqual(updater.update_json.call_args.args[1], good)
+
+    def test_dex_majority_is_blocked_and_not_written_to_history(self):
+        changed, updater, _ = self._run(self._dex_payload(12.0, 0.6), history=_keeper_history(), estimated=self.PREV)
+        written = json.loads(updater.update_file.call_args.args[1])
+        self.assertIn("60% of the funded", written["staleReason"])
+        self.assertEqual(updater.update_file.call_count, 1)           # no yield_history.json entry for it
+        updater.update_json.assert_not_called()
+
+    def test_blocked_without_previous_figures_writes_nothing(self):
+        changed, updater, _ = self._run(self._dex_payload(12.0, 0.6), env={"YIELD_HISTORY_ENABLED": "false"})
         self.assertFalse(changed)
         updater.update_json.assert_not_called()
         updater.update_file.assert_not_called()
-        with mock.patch.object(self.main, "_build_live_block", return_value={"stale": False}):
-            changed, updater, _ = self._run(_payload(EPOCH_22_OCT + WEEK, apy=36.0), history=_keeper_history(),
-                                            estimated=prev, env={"APY_MAX_RISE": "3"})
-        self.assertTrue(changed)
-        changed, _, _ = self._run(_payload(EPOCH_22_OCT + WEEK, apy=60.0), history=_keeper_history(), estimated=prev,
-                                  env={"APY_MAX_RISE": "0"})                     # owner override
-        self.assertTrue(changed)
+
+    def test_rises_without_dex_prices_are_published_and_override_works(self):
+        for prev in (self.PREV, {"apyPct": 0.0, "stale": True}, {"apyPct": 0.0024}):   # low previous figures
+            changed, updater, _ = self._run(_payload(EPOCH_22_OCT + WEEK, apy=60.0), history=_keeper_history(),
+                                            estimated=prev, env={"YIELD_HISTORY_ENABLED": "false"})
+            updater.update_json.assert_called_once()
+        changed, updater, _ = self._run(self._dex_payload(60.0, 0.6), history=_keeper_history(), estimated=self.PREV,
+                                        env={"APY_MAX_RISE": "0"})                     # owner override
+        updater.update_json.assert_called_once()
+
+    def test_in_progress_epoch_is_never_written_to_yield_history(self):
+        cur = EPOCH_22_OCT + 2 * WEEK                                  # 5 Nov, funding partial so far
+        done = dict(_payload(EPOCH_22_OCT + WEEK, apy=14.2), method="realized")
+        epochs = {"epochs": {str(EPOCH_22_OCT + WEEK): {"tokens": [USDC]}, str(cur): {"tokens": [USDC]}}}
+        changed, updater, b = self._run(_payload(cur, apy=3.0), now=cur + 9060, epochs_doc=epochs,
+                                        history=_keeper_history(), hist_payload=done)
+        self.assertEqual({k: b.call_args_list[-1].kwargs[k] for k in ("epoch", "epoch_mode")},
+                         {"epoch": EPOCH_22_OCT + WEEK, "epoch_mode": "last_completed"})   # completed epoch read again
+        updater.update_json.assert_called_once()                       # 3% published as today's figure
+        series = json.loads(updater.update_file.call_args.args[1])["series"]
+        self.assertEqual([(x["epoch"], x["apyPct"]) for x in series[-2:]], [(EPOCH_22_OCT, 12.589882348027016),
+                                                                            (EPOCH_22_OCT + WEEK, 14.2)])
+        # the completed epoch has no funding in epochs.json -> no extra read, no entry
+        changed, updater, b = self._run(_payload(cur, apy=3.0), now=cur + 9060, history=_keeper_history(),
+                                        epochs_doc={"epochs": {str(cur): {"tokens": [USDC]}}})
+        self.assertEqual(b.call_count, 1)
+        updater.update_file.assert_not_called()
+        # a blocked completed-epoch figure is not written
+        changed, updater, _ = self._run(_payload(cur, apy=3.0), now=cur + 9060, epochs_doc=epochs,
+                                        history=_keeper_history(), hist_payload=self._dex_payload(14.0, 0.6))
+        updater.update_file.assert_not_called()
+        updater.update_json.assert_called_once()
 
     def test_unreadable_previous_file_is_not_overwritten(self):
         err = Exception('503 {"message": "Service Unavailable"}')

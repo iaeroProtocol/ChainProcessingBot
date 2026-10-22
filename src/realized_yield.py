@@ -14,13 +14,16 @@ Epoch E (weeks start Thursday 00:00 UTC, E = ts // WEEK * WEEK) is chosen by mod
 
 Prices are CURRENT prices from PriceFetcher, not prices at funding time.
 Not published (main.py logs and keeps the previous files) when sanity_problems() finds anything (apyPct NaN,
-negative or > 500%; AERO or iAERO unpriced; a zero USD stake) or apy_jump_problem() sees apyPct above 3x its reference.
+negative or > 500%; AERO or iAERO unpriced; a zero USD stake). When dex_guard_problem() finds DEX-priced funded
+tokens inflating apyPct, main.py keeps the previous figures flagged stale (live and yield_history still update).
+yield_history gets an epoch's entry only once that epoch has ended (main.py), so partial weeks never become references.
 Readers of estimated_rewards_usd.json: TwitterBot (apyPct), DefiLlama yield-server iaero-protocol
 (apyPct, tvlUSD_1e18), iaero-frontend (stakersWeeklyUSD_1e18, estimatedWeeklyUSD_1e18).
 All legacy fields are kept with the same names and units; new fields are only added.
 """
 import json
 import math
+import statistics
 import time
 import logging
 from datetime import datetime, timezone
@@ -42,7 +45,9 @@ IAERO_ADDRESS = "0x81034Fb34009115F215f5d5F564AAc9FfA46a1Dc"
 EPOCH_MODES = ("latest_funded", "last_completed")
 STALE_AFTER_SEC = 2 * WEEK      # latest funded epoch older than this -> publish 0, not a stale figure
 MAX_SANE_APY_PCT = 500.0        # above this, don't publish (likely a bad price), log and skip
-MAX_APY_RISE = 3.0              # apyPct above 3x the reference (see apy_jump_problem) -> don't publish, log and skip
+MAX_APY_RISE = 3.0              # apyPct above 3x the reference only because of DEX-priced tokens -> keep the previous figures
+DEX_MAX_FUNDED_SHARE = 0.5      # DEX-priced tokens above half of the funded USD -> keep the previous figures
+REFERENCE_EPOCHS = 4            # reference apyPct = median of the newest <= 4 earlier-epoch yield_history entries
 
 # Split of harvested rewards (RewardsHarvesterV2.processAndDistribute): 80% goes to the
 # EpochStakingDistributor, so the realized funding IS the stakers' share.
@@ -127,35 +132,48 @@ def _positive(x) -> bool:
     return isinstance(x, (int, float)) and math.isfinite(x) and x > 0
 
 
-def apy_jump_problem(payload: dict, prev_doc: Optional[dict], history_doc: Optional[dict],
-                     max_rise: float = MAX_APY_RISE) -> Optional[str]:
+def reference_apy(history_doc: Optional[dict], epoch: int) -> Optional[tuple]:
+    """(median apyPct, [epochs]) of the newest REFERENCE_EPOCHS yield_history entries for epochs before `epoch` with
+    apyPct > 0, or None. yield_history only gets completed epochs, so a partial week is never part of it."""
+    series = history_doc.get("series") if isinstance(history_doc, dict) else None
+    older = sorted((x for x in (series if isinstance(series, list) else [])
+                    if isinstance(x, dict) and _int(x.get("epoch")) < int(epoch) and _positive(x.get("apyPct"))),
+                   key=lambda x: _int(x.get("epoch")))[-REFERENCE_EPOCHS:]
+    if not older:
+        return None
+    return float(statistics.median(float(x["apyPct"]) for x in older)), [_int(x.get("epoch")) for x in older]
+
+
+def dex_guard_problem(payload: dict, history_doc: Optional[dict], max_rise: float = MAX_APY_RISE) -> Optional[str]:
     """
-    Reason not to publish when payload's apyPct is more than `max_rise` x the reference, else None.
-    Reference = the lower of the previously published apyPct (prev_doc) and the newest yield_history entry for
-    an EARLIER epoch than payload's: that entry is frozen for the week, so repeated small raises can't ratchet
-    past the guard. No positive reference (first run, or 0% published while funding was stale) -> no check.
-    max_rise <= 0 disables the check.
+    Reason to keep the previous figures because DEX-priced funded tokens (PriceFetcher's on-chain fallback, the H-1
+    risk) look like they inflate payload's apyPct, else None:
+      - DEX-priced funded value is more than DEX_MAX_FUNDED_SHARE of the funded USD; or
+      - apyPct is above max_rise x the reference (reference_apy) while apyPct without the DEX-priced tokens is not.
+    A rise that is there without the DEX-priced tokens is published; no reference -> no ratio check.
+    max_rise <= 0 disables both checks.
     """
     if not max_rise or max_rise <= 0:
         return None
-    refs = []
-    prev = (prev_doc or {}).get("apyPct") if isinstance(prev_doc, dict) else None
-    if _positive(prev):
-        refs.append((float(prev), "the previously published apyPct"))
-    series = (history_doc or {}).get("series") if isinstance(history_doc, dict) else None
-    ep = _int(payload.get("epoch"))
-    older = [x for x in (series if isinstance(series, list) else [])
-             if isinstance(x, dict) and _int(x.get("epoch")) < ep and _positive(x.get("apyPct"))]
-    if older:
-        last = max(older, key=lambda x: _int(x.get("epoch")))
-        refs.append((float(last["apyPct"]), f"yield_history epoch {_int(last.get('epoch'))}"))
+    funded = _int(payload.get("fundedUSD_1e18")) / E18
+    dex = _int(payload.get("dexFundedUSD_1e18")) / E18
+    tokens = payload.get("dexPricedTokens") or []
+    if funded > 0 and dex > DEX_MAX_FUNDED_SHARE * funded:
+        return (f"DEX-priced tokens {tokens} are {dex / funded:.0%} of the funded ${funded:,.2f} "
+                f"(more than {DEX_MAX_FUNDED_SHARE:.0%})")
+    ref = reference_apy(history_doc, _int(payload.get("epoch")))
     apy = payload.get("apyPct")
-    if not refs or not isinstance(apy, (int, float)):
+    if ref is None or not isinstance(apy, (int, float)):
         return None
-    ref, name = min(refs)
-    if apy > max_rise * ref:
-        return f"apyPct {apy:.2f}% is more than {max_rise:g}x {name} ({ref:.2f}%)"
-    return None
+    limit = max_rise * ref[0]
+    if not apy > limit:
+        return None
+    apy_without_dex = apy * (funded - dex) / funded if funded > 0 else apy
+    if apy_without_dex > limit:
+        return None                     # the rise is there without DEX-priced tokens: not a DEX price artefact
+    return (f"apyPct {apy:.2f}% is above {max_rise:g}x the reference {ref[0]:.2f}% (median of yield_history epochs "
+            f"{ref[1]}) only because of DEX-priced tokens {tokens} (${dex:,.2f}; apyPct without them "
+            f"{apy_without_dex:.2f}%)")
 
 
 def _to_1e18(x: Decimal) -> str:
@@ -195,8 +213,9 @@ def compute_realized(
         iaero_px = aero_px
         used_fallback = True
 
-    funded_usd = Decimal(0)
+    funded_usd = dex_usd = Decimal(0)
     unpriced: List[str] = []
+    dex_priced: List[str] = []
     for f in funded:
         amt = int(f["amount"])
         if amt <= 0:
@@ -205,7 +224,11 @@ def compute_realized(
         if px <= 0:
             unpriced.append(f["address"].lower())
             continue
-        funded_usd += Decimal(amt) / (Decimal(10) ** int(f.get("decimals", 18))) * px
+        usd = Decimal(amt) / (Decimal(10) ** int(f.get("decimals", 18))) * px
+        funded_usd += usd
+        if f.get("source") == "dex":     # priced by PriceFetcher's on-chain fallback (see dex_guard_problem)
+            dex_usd += usd
+            dex_priced.append(f["address"].lower())
 
     staked_at_start = Decimal(int(staked_at_start_raw)) / E18
     staked_usd = staked_at_start * iaero_px
@@ -256,6 +279,9 @@ def compute_realized(
         "stakedUSD_human": _human(staked_usd),
         "fundedTokenCount": sum(1 for f in funded if int(f["amount"]) > 0),
         "unpricedTokens": sorted(unpriced),
+        "dexPricedTokens": sorted(dex_priced),
+        "dexFundedUSD_1e18": _to_1e18(dex_usd),
+        **({"staleReason": f"no funding newer than epoch {int(epoch)} for over 2 weeks"} if stale else {}),
     }
 
 
@@ -311,6 +337,7 @@ def build_estimated_rewards(
     want = sorted({a.lower() for a in price_addr.values()} | {aero, iaero})
     prices = price_fetcher.fetch_batch(want)
     px = lambda a: float((prices.get(a.lower()) or {}).get("priceUsd", 0.0))
+    src = lambda a: (prices.get(a.lower()) or {}).get("source")
 
     erc20s = [t for t in funded_raw if t != ZERO_ADDRESS]
     decs = decimals_fn(erc20s) if erc20s else {}
@@ -319,6 +346,7 @@ def build_estimated_rewards(
         "amount": amt,
         "decimals": 18 if t == ZERO_ADDRESS else int(decs.get(t, 18)),
         "priceUsd": px(price_addr[t]),
+        "source": src(price_addr[t]),
     } for t, amt in sorted(funded_raw.items())]
 
     out = compute_realized(

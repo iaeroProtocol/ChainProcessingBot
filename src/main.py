@@ -326,6 +326,9 @@ def _update_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner, 
     """
     Realized staking APY -> data/estimated_rewards_usd.json (replaces the legacy EnhancedOptimizedVotesKeeper;
     same schema plus new fields) and -> data/yield_history.json (replaces the rewards keeper's weekly snapshot).
+    yield_history only gets the last COMPLETED epoch (an in-progress week is partial). When dex_guard_problem()
+    blocks a figure, estimated_rewards_usd.json keeps the previous figures and timestamps flagged stale (live still
+    updates) and that figure is not written to yield_history.
     """
     er_enabled = os.environ.get("ESTIMATED_REWARDS_ENABLED", "true").lower() == "true"
     yh_enabled = os.environ.get("YIELD_HISTORY_ENABLED", "true").lower() == "true"
@@ -339,17 +342,23 @@ def _update_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner, 
         logger.warning("[realized_yield] epochs.json missing/empty; skipping.")
         return False
 
-    from realized_yield import build_estimated_rewards, sanity_problems, apy_jump_problem, AERO_ADDRESS
-    payload = build_estimated_rewards(
-        w3=scanner.w3,
-        distributor=distributor,
-        epochs_doc=epochs_doc,
-        price_fetcher=price_fetcher,
-        decimals_fn=lambda toks: scanner.decimals_map(toks, chunk_size=int(os.environ.get("DEC_CHUNK_SIZE", "75")), default_decimals=18),
-        aero=os.environ.get("AERO_ADDRESS") or AERO_ADDRESS,
-        iaero=os.environ.get("IAERO_ADDRESS"),
-        epoch_mode=os.environ.get("ESTIMATED_REWARDS_EPOCH", "latest_funded").lower(),
-    )
+    from realized_yield import (build_estimated_rewards, sanity_problems, dex_guard_problem, last_completed_epoch,
+                                AERO_ADDRESS)
+
+    def build(epoch=None):
+        return build_estimated_rewards(
+            w3=scanner.w3,
+            distributor=distributor,
+            epochs_doc=epochs_doc,
+            price_fetcher=price_fetcher,
+            decimals_fn=lambda toks: scanner.decimals_map(toks, chunk_size=int(os.environ.get("DEC_CHUNK_SIZE", "75")), default_decimals=18),
+            aero=os.environ.get("AERO_ADDRESS") or AERO_ADDRESS,
+            iaero=os.environ.get("IAERO_ADDRESS"),
+            epoch_mode=("last_completed" if epoch is not None
+                        else os.environ.get("ESTIMATED_REWARDS_EPOCH", "latest_funded").lower()),
+            epoch=epoch,
+        )
+    payload = build()
     problems = sanity_problems(payload)
     if problems:
         logger.error(
@@ -364,30 +373,55 @@ def _update_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner, 
     try:
         prev_doc = _load_json_strict(repo, updater.branch, path)
     except Exception as e:
-        # publishing now could drop the live block (and its history) and skips the jump guard below
+        # publishing now could drop the live block (and its history) and skips the DEX guard below
         logger.error(f"[realized_yield] could not read {path} ({str(e)[:160]}); NOT publishing this run.")
         _log_status({"event": "realized_yield_blocked", "reasons": [f"{path} unreadable"]})
         return False
     history_doc = _load_json(repo, updater.branch, os.environ.get("YIELD_HISTORY_JSON_PATH", "data/yield_history.json"))
-    jump = apy_jump_problem(payload, prev_doc, history_doc, float(os.environ.get("APY_MAX_RISE", "3")))
-    if jump:
+    max_rise = float(os.environ.get("APY_MAX_RISE", "3"))
+    blocked = dex_guard_problem(payload, history_doc, max_rise)
+    if blocked:
         logger.error(
-            f"[realized_yield] epoch {payload.get('epoch')}: {jump} (funded ${payload.get('fundedUSD_human')}, "
-            f"staked ${payload.get('stakedUSD_human')}, unpriced {payload.get('unpricedTokens')}); likely a bad price. "
-            f"NOT publishing; the previous files stay. Set APY_MAX_RISE to override after checking."
+            f"[realized_yield] epoch {payload.get('epoch')}: {blocked} (funded ${payload.get('fundedUSD_human')}, "
+            f"staked ${payload.get('stakedUSD_human')}); likely a bad DEX price. Keeping the previous figures, flagged "
+            f"stale. Set APY_MAX_RISE=0 to override after checking."
         )
-        _log_status({"event": "realized_yield_blocked", "reasons": [jump]})
-        return False
+        _log_status({"event": "realized_yield_blocked", "reasons": [blocked]})
 
     changed = False
     if yh_enabled:
-        changed = _update_yield_history(repo, updater, payload) or changed
+        # only a completed epoch: during the week funding is partial and would seed a low guard reference
+        hist_epoch = last_completed_epoch(int(time.time()))
+        hist_payload, hist_blocked = None, None
+        if int(payload["epoch"]) == hist_epoch:
+            hist_payload, hist_blocked = payload, blocked
+        elif ((epochs_doc.get("epochs") or {}).get(str(hist_epoch)) or {}).get("tokens"):
+            try:
+                hist_payload = build(epoch=hist_epoch)
+                hist_blocked = ("; ".join(sanity_problems(hist_payload))
+                                or dex_guard_problem(hist_payload, history_doc, max_rise))
+            except Exception as e:
+                logger.exception(f"[yield_history] epoch {hist_epoch} read failed; no entry this run: {e}")
+        else:
+            logger.info(f"[yield_history] completed epoch {hist_epoch} has no funding; no entry")
+        if hist_blocked:
+            logger.error(f"[yield_history] epoch {hist_epoch}: {hist_blocked}; not writing its entry.")
+        elif hist_payload is not None:
+            changed = _update_yield_history(repo, updater, hist_payload) or changed
     if er_enabled:
+        fresh, keep_timestamps = payload, False
+        if blocked:
+            if not isinstance(prev_doc.get("apyPct"), (int, float)):
+                logger.error(f"[realized_yield] {path} has no previous figures to keep; not writing it.")
+                return changed
+            # previous figures and timestamps (updatedAt / updateTimestamp / lastUpdated), so readers age them out
+            payload, keep_timestamps = dict(prev_doc, stale=True, staleReason=blocked), True
         if os.environ.get("LIVE_YIELD_ENABLED", "true").lower() == "true":
-            # additional real-time block; apyPct and every legacy field are untouched
+            # additional real-time block; apyPct and every legacy field are untouched. Built from the fresh payload
+            # even when blocked: its AERO / iAERO prices and stake passed sanity_problems()
             prev_live = prev_doc.get("live")
             try:
-                live = _build_live_block(scanner, price_fetcher, payload, prev_live)
+                live = _build_live_block(scanner, price_fetcher, fresh, prev_live)
             except Exception as e:
                 # keep the previous block (its history and gauge list) rather than publishing without it
                 live = dict(prev_live, stale=True) if isinstance(prev_live, dict) else None
@@ -395,7 +429,7 @@ def _update_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner, 
                                  f"{'keeping the previous block, flagged stale' if live else 'publishing without it'}: {e}")
             if live is not None:
                 payload = dict(payload, live=live)
-        changed = _push_if_changed(repo, updater, path, payload) or changed
+        changed = _push_if_changed(repo, updater, path, payload, keep_timestamps=keep_timestamps) or changed
     return changed
 
 def _build_live_block(scanner: ChainScanner, price_fetcher: PriceFetcher, payload: dict, prev_live) -> dict:
@@ -461,9 +495,10 @@ def _strip_volatile(d: dict) -> dict:
         x["liqState"].pop("last_update", None)
     return x
 
-def _push_if_changed(repo, updater: GitHubUpdater, path: str, payload: dict) -> bool:
+def _push_if_changed(repo, updater: GitHubUpdater, path: str, payload: dict, keep_timestamps: bool = False) -> bool:
     """
     Compare normalized (non-volatile) content; only push if meaningfully different.
+    keep_timestamps: write payload's own lastUpdated / updateTimestamp instead of fresh ones (update_json's format).
     Returns True if a commit was made, False otherwise.
     """
     import json, base64, hashlib
@@ -488,6 +523,9 @@ def _push_if_changed(repo, updater: GitHubUpdater, path: str, payload: dict) -> 
         # file may not exist yet -> proceed to create
         pass
 
+    if keep_timestamps:
+        updater.update_file(path, json.dumps(payload, indent=2, sort_keys=True), commit_message=f"Update {path} (stale)")
+        return True
     # Write: your updater will add lastUpdated/updateTimestamp; that's fine.
     updater.update_json(path, payload)
     return True
