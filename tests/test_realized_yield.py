@@ -125,9 +125,10 @@ class EpochMathTest(unittest.TestCase):
     def test_dex_guard(self):
         hist = {"series": [{"epoch": EPOCH_15_OCT, "apyPct": 10.0}, {"epoch": EPOCH_22_OCT, "apyPct": 12.0}]}   # ref 11
 
-        def p(apy, funded=1_000.0, dex=0.0, ep=EPOCH_22_OCT + WEEK):
+        def p(apy, funded=1_000.0, dex=0.0, ep=EPOCH_22_OCT + WEEK):      # dex: untrusted DEX-priced funded USD
             return {"epoch": ep, "apyPct": apy, "fundedUSD_1e18": str(int(funded * E18)),
-                    "dexFundedUSD_1e18": str(int(dex * E18)), "dexPricedTokens": ["0xdex"] if dex else []}
+                    "untrustedDexFundedUSD_1e18": str(int(dex * E18)), "dexTrustedDepthUsd": 1e6,
+                    "dexPricedTokens": [{"address": "0xdex", "trusted": False}] if dex else []}
         self.assertIsNone(dex_guard_problem(p(33.0, dex=400.0), hist))          # within 3x 11 = 33
         # 40% with 30% of the funding DEX-priced: 28% without it -> the DEX tokens push it over -> blocked
         self.assertIn("only because of DEX-priced tokens ['0xdex']", dex_guard_problem(p(40.0, dex=300.0), hist))
@@ -135,7 +136,8 @@ class EpochMathTest(unittest.TestCase):
         self.assertIsNone(dex_guard_problem(p(60.0, dex=300.0), hist))
         self.assertIsNone(dex_guard_problem(p(300.0), hist))                     # any rise without DEX-priced tokens
         # more than half of the funded value DEX-priced: blocked whatever the level, even with no reference
-        self.assertIn("51% of the funded $1,000.00", dex_guard_problem(p(5.0, dex=510.0), hist))
+        self.assertIn("['0xdex'] (pools under $1,000,000) are 51% of the funded $1,000.00",
+                      dex_guard_problem(p(5.0, dex=510.0), hist))
         self.assertIsNotNone(dex_guard_problem(p(5.0, dex=510.0), {}))
         self.assertIsNone(dex_guard_problem(p(5.0, dex=500.0), {}))
         # no usable reference -> no ratio check
@@ -207,11 +209,25 @@ class ComputeRealizedTest(unittest.TestCase):
         self.assertEqual(p["iaeroPrice_1e18"], p["aeroPrice_1e18"])
 
     def test_dex_priced_funding_is_reported(self):
+        THIN = "0x" + "66" * 20
         funded = [{"address": USDC, "amount": 3_000 * 10**6, "decimals": 6, "priceUsd": 1.0, "source": "llama"},
-                  {"address": OLD_AERO, "amount": 1_000 * E18, "decimals": 18, "priceUsd": 0.8, "source": "dex"},
+                  {"address": OLD_AERO, "amount": 1_000 * E18, "decimals": 18, "priceUsd": 0.8, "source": "dex",
+                   "dexDepthUsd": 6_000_000.0},
+                  {"address": THIN, "amount": 100 * E18, "decimals": 18, "priceUsd": 2.0, "source": "dex",
+                   "dexDepthUsd": 30_000.0},
                   {"address": "0x" + "77" * 20, "amount": E18, "decimals": 18, "priceUsd": 0.0, "source": "none"}]
         p = compute_realized(EPOCH_15_OCT, funded, 4_000_000 * E18, 4_000_000 * E18, 0.7, 0.8)
-        self.assertEqual((p["dexPricedTokens"], p["dexFundedUSD_1e18"]), ([OLD_AERO], str(800 * E18)))
+        self.assertEqual(p["dexPricedTokens"], [
+            {"address": THIN, "fundedUSD": 200.0, "poolDepthUsd": 30_000.0, "trusted": False},
+            {"address": OLD_AERO, "fundedUSD": 800.0, "poolDepthUsd": 6_000_000.0, "trusted": True}])
+        self.assertEqual((p["untrustedDexFundedUSD_1e18"], p["dexTrustedDepthUsd"]), (str(200 * E18), 1_000_000.0))
+        # threshold from the env; a DEX price with no recorded depth (old cache entry) is untrusted
+        with mock.patch.dict(os.environ, {"DEX_TRUSTED_DEPTH_USD": "10000000"}):
+            p = compute_realized(EPOCH_15_OCT, funded, 4_000_000 * E18, 4_000_000 * E18, 0.7, 0.8)
+        self.assertEqual(p["untrustedDexFundedUSD_1e18"], str(1_000 * E18))
+        funded[1].pop("dexDepthUsd")
+        p = compute_realized(EPOCH_15_OCT, funded, 4_000_000 * E18, 4_000_000 * E18, 0.7, 0.8)
+        self.assertEqual(p["untrustedDexFundedUSD_1e18"], str(1_000 * E18))
         self.assertNotIn("staleReason", p)
         stale = compute_realized(EPOCH_15_OCT, funded, 4_000_000 * E18, 4_000_000 * E18, 0.7, 0.8, stale=True)
         self.assertIn(str(EPOCH_15_OCT), stale["staleReason"])
@@ -297,9 +313,12 @@ class BuildEstimatedRewardsTest(unittest.TestCase):
 
     def test_price_source_reaches_the_dex_fields(self):
         self.pf.fetch_batch = lambda addrs: {a: {"priceUsd": {USDC: 1.0, AERO: 0.81, IAERO: 0.66}.get(a, 0.0),
-                                                 "source": "dex" if a == USDC else "llama"} for a in addrs}
+                                                 "source": "dex" if a == USDC else "llama", "dexDepthUsd": 40_000.0}
+                                             for a in addrs}
         p = self.build(EPOCH_22_OCT + 9060)
-        self.assertEqual((p["dexPricedTokens"], p["dexFundedUSD_1e18"]), ([USDC], str(99_999 * E18)))
+        self.assertEqual(p["dexPricedTokens"], [{"address": USDC, "fundedUSD": 99_999.0, "poolDepthUsd": 40_000.0,
+                                                 "trusted": False}])
+        self.assertEqual(p["untrustedDexFundedUSD_1e18"], str(99_999 * E18))
 
     def test_last_completed_mode_and_snapshot_denominator(self):
         p = self.build(EPOCH_22_OCT + 9060, epoch_mode="last_completed")
@@ -483,8 +502,8 @@ class MainHookTest(unittest.TestCase):
         updater.update_file.assert_not_called()
 
     def _dex_payload(self, apy, dex_share, epoch=EPOCH_22_OCT + WEEK):
-        return dict(_payload(epoch, apy=apy, funded=10_000 * E18), dexPricedTokens=["0xdex"],
-                    dexFundedUSD_1e18=str(int(10_000 * dex_share) * E18), aeroPrice_1e18=str(8 * 10**17),
+        return dict(_payload(epoch, apy=apy, funded=10_000 * E18), dexPricedTokens=[{"address": "0xdex", "trusted": False}],
+                    untrustedDexFundedUSD_1e18=str(int(10_000 * dex_share) * E18), aeroPrice_1e18=str(8 * 10**17),
                     stakedUSD_1e18=str(3 * 10**24))
 
     PREV = {"apyPct": 13.0, "epoch": EPOCH_22_OCT, "stakersWeeklyUSD_1e18": "7", "updatedAt": "2026-10-23T02:31:00.000Z",

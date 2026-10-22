@@ -303,11 +303,16 @@ class PriceFetcher:
         return self._weth_usd_px or None
 
     def _dex_price_one(self, addr: str) -> Optional[float]:
+        """USD price of one token from the DEX fallback (see _dex_quote), or None if not quotable."""
+        q = self._dex_quote(addr)
+        return q[0] if q else None
+
+    def _dex_quote(self, addr: str) -> Optional[Tuple[float, float, str]]:
         """
-        USD price of one token from the deepest token/USDC or token/WETH pool on Aero or legacy Aerodrome,
-        measured by quote-side reserve in USD (WETH valued at its own deepest WETH/USDC pool).
+        (USD price, quote-side USD depth, pool) of one token from the deepest token/USDC or token/WETH pool on Aero
+        or legacy Aerodrome, measured by quote-side reserve in USD (WETH valued at its own deepest WETH/USDC pool).
         The pool must hold at least dex_min_quote_usd on its quote side; the price comes from a ~$10 swap.
-        Returns float price or None if not quotable.
+        Returns None if not quotable.
         """
         if not (self.w3 and self.usdc and self.weth):
             return None
@@ -331,7 +336,7 @@ class PriceFetcher:
                         f"(< ${self.dex_min_quote_usd:,.0f}); not priced")
             return None
         price = self._quote_usd(pool, token, r_tok, r_quote, tok_dec, quote_dec, quote_usd)
-        return price if price and price > 0 and math.isfinite(price) else None
+        return (price, depth, pool) if price and price > 0 and math.isfinite(price) else None
 
     def _fetch_dex(self, addrs: List[str]) -> Dict[str, dict]:
         out: Dict[str, dict] = {}
@@ -339,10 +344,13 @@ class PriceFetcher:
         self._weth_usd_px = None
         for a in addrs:
             try:
-                p = self._dex_price_one(a)
+                q = self._dex_quote(a)
+                p = q[0] if q else None
                 if p is None or p <= 0 or p > self.max_price_usd or not math.isfinite(p):
                     continue
-                entry = {"priceUsd": float(p), "updatedAt": now, "source": "dex"}
+                # the pool's quote-side depth lets realized_yield tell deep (trusted) pools from thin ones
+                entry = {"priceUsd": float(p), "updatedAt": now, "source": "dex",
+                         "dexDepthUsd": round(float(q[1]), 2), "dexPool": q[2]}
                 self.mem[self._key(a)] = entry
                 out[a] = entry
             except Exception as e:

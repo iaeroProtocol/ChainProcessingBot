@@ -157,6 +157,8 @@ class PriceFetcherDexTest(unittest.TestCase):
         e = self.price(self.make_pf(), AERO)
         self.assertEqual(e["source"], "dex")
         self.assertAlmostEqual(e["priceUsd"], 0.81, places=4)
+        self.assertEqual(e["dexDepthUsd"], 5_265_000.0)                 # quote-side depth of the pool used
+        self.assertEqual(e["dexPool"], self.chain.aero[AERO_VOLATILE_FACTORY][frozenset((AERO, USDC))])
 
     def test_aero_weth_hop_and_stable_factory(self):
         # LIQ only paired with WETH, on the Aero stable factory -> LIQ->WETH x WETH->USDC
@@ -186,6 +188,7 @@ class PriceFetcherDexTest(unittest.TestCase):
         self.chain.add_aerodrome_pool(False, LIQ, 20_000_000 * 10**18, WETH, 100 * 10**18)
         e = self.price(self.make_pf(), LIQ)
         self.assertAlmostEqual(e["priceUsd"], 0.02, places=4)
+        self.assertAlmostEqual(e["dexDepthUsd"], 400_000.0, delta=10)     # 100 WETH at ~$4,000
 
     def test_high_price_token_quoted_with_small_notional(self):
         # a whole BTC swapped into a $128k pool would read ~$50k; a ~$10 swap reads the pool price

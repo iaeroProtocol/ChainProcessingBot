@@ -2,12 +2,13 @@
 # Second independent review of PR #5 at 37ae513: M-A, the 3x guard locked onto the first low value and froze the feed.
 # The review's RA_* tests, run end to end through main._update_realized_yield (in-memory repo, no network) so they
 # don't depend on the guard's signature; each asserts the SAFE behaviour and failed on 37ae513. Adaptations are noted
-# per test. The review's other tests (Lows) are not here.
+# per test. The review's other tests (Lows) are not here. RD_* covers the follow-up: trusted (deep-pool) DEX prices.
 # Run: python -m pytest -p no:pytest_ethereum -q tests/test_review2_findings.py
 import base64
 import json
 import os
 import sys
+import tempfile
 import unittest
 from unittest import mock
 
@@ -16,9 +17,12 @@ sys.path.insert(0, os.path.join(HERE, "..", "src"))
 sys.path.insert(0, HERE)
 
 import main  # noqa: E402
+import price_fetcher  # noqa: E402
 import realized_yield  # noqa: E402
 from realized_yield import WEEK  # noqa: E402
 from test_realized_yield import FakeDistributorWeb3, FakePriceFetcher, _keeper_history  # noqa: E402
+from test_price_fetcher import FakeChain, fake_web3_cls, AERO_VOLATILE_FACTORY  # noqa: E402
+from test_price_fetcher import USDC as USDC_CS, WETH as WETH_CS, AERO as AERO_CS  # noqa: E402
 
 E18 = 10 ** 18
 DAY = 86400
@@ -72,22 +76,23 @@ class FakeUpdater:
         self.update_file(path, json.dumps(dict(data, lastUpdated="X", updateTimestamp=0), indent=2, sort_keys=True))
 
 
-def _run_bot(repo, updater, funded_prices, rewards, now, env=None):
-    """One daily run of _update_realized_yield (adapted: the stake snapshot exists for every epoch used)."""
+def _run_bot(repo, updater, funded_prices, rewards, now, env=None, pf=None):
+    """One daily run of _update_realized_yield (adapted: the stake snapshot exists for every epoch used; pf replaces
+    the fixed-price fetcher)."""
     w3 = FakeDistributorWeb3(rewards=rewards, snapshot={e: STAKED_RAW for e in (E_22_OCT, E_29_OCT, E_05_NOV)},
                              supply_at_start={}, total_staked=STAKED_RAW)
     scanner = mock.Mock(w3=w3)
     scanner.decimals_map.side_effect = lambda toks, **k: {USDC: 6, WETH: 18}
-    prices = dict(funded_prices, **{realized_yield.AERO_ADDRESS.lower(): 0.81, IAERO: IAERO_PX})
+    prices = dict(funded_prices or {}, **{realized_yield.AERO_ADDRESS.lower(): 0.81, IAERO: IAERO_PX})
     e = {"EPOCH_STAKING_DISTRIBUTOR": DIST, "LIVE_YIELD_ENABLED": "false", "YIELD_HISTORY_ENABLED": "true"}
     e.update(env or {})
     with mock.patch.dict(os.environ, e), mock.patch("time.time", return_value=now):
-        main._update_realized_yield(repo, updater, scanner, FakePriceFetcher(prices))
+        main._update_realized_yield(repo, updater, scanner, pf or FakePriceFetcher(prices))
     return json.loads(repo.files["data/estimated_rewards_usd.json"])
 
 
-def _files(prev_estimated):
-    epochs = {"epochs": {str(E_22_OCT): {"tokens": [USDC]}, str(E_29_OCT): {"tokens": [USDC, WETH]},
+def _files(prev_estimated, tokens_29_oct=(USDC, WETH)):
+    epochs = {"epochs": {str(E_22_OCT): {"tokens": [USDC]}, str(E_29_OCT): {"tokens": list(tokens_29_oct)},
                          str(E_05_NOV): {"tokens": [USDC]}}}
     return {"data/epochs.json": json.dumps(epochs),
             "data/yield_history.json": json.dumps(_keeper_history(), indent=2),
@@ -151,6 +156,47 @@ class RA_GuardLocksAndFreezesSilently(unittest.TestCase):
         d = _run_bot(repo, FakeUpdater(repo), {USDC: 1.0}, {(USDC, E_29_OCT): usdc_for(15.1)}, E_29_OCT + 9060)
         self.assertAlmostEqual(d["apyPct"], 15.1, places=3,
                                msg="the bot can never replace the keeper's figure again")
+
+
+
+class RD_TrustedDexPrice(unittest.TestCase):
+    """The new AERO has no DefiLlama price and is ~60-70% of the daily harvester's funding by value. A DEX price from a
+    pool at least DEX_TRUSTED_DEPTH_USD ($1M) deep on its quote side counts like DefiLlama's; thinner ones stay guarded."""
+    AERO = realized_yield.AERO_ADDRESS.lower()
+    PREV = {"apyPct": 15.1, "epoch": E_22_OCT, "updatedAt": "2026-10-28T02:31:00.000Z", "stale": False}
+
+    def _pf(self, usdc_depth):
+        ch = FakeChain()
+        ch.add_aero_pool(AERO_VOLATILE_FACTORY, AERO_CS, int(usdc_depth / 0.81 * E18), USDC_CS, int(usdc_depth * 10**6))
+        with mock.patch.object(price_fetcher, "Web3", fake_web3_cls(ch)):
+            pf = price_fetcher.PriceFetcher(cache_file=os.path.join(tempfile.mkdtemp(), "c.json"), rpc_url="http://fake",
+                                            usdc=USDC_CS, weth=WETH_CS)
+        agg = {USDC: 1.0, IAERO: IAERO_PX}            # DefiLlama prices USDC and iAERO, not the new AERO
+        pf._fetch_llama = lambda addrs: {a: {"priceUsd": agg[a], "updatedAt": 0, "source": "llama"}
+                                         for a in addrs if a in agg}
+        pf._fetch_coingecko = lambda addrs: {}
+        return pf
+
+    def _run(self, usdc_depth, env=None):
+        repo = FakeRepo(_files(self.PREV, tokens_29_oct=(USDC, self.AERO)))
+        # $3,000 of USDC + $7,000 of new AERO (70% of the funded value) -> 16.6%
+        rewards = {(USDC, E_29_OCT): 3_000 * 10**6, (self.AERO, E_29_OCT): int(7_000 / 0.81 * E18)}
+        return _run_bot(repo, FakeUpdater(repo), None, rewards, E_29_OCT + 9060, env=env, pf=self._pf(usdc_depth))
+
+    def test_aero_from_a_6m_pool_is_published(self):
+        d = self._run(6_000_000)
+        self.assertFalse(d.get("stale"), f"blocked: {d.get('staleReason')}")
+        self.assertAlmostEqual(d["apyPct"], 10_000 / STAKED_USD * 52 * 100, places=2)
+        (tok,) = d["dexPricedTokens"]
+        self.assertEqual((tok["address"], tok["trusted"], tok["poolDepthUsd"]), (self.AERO, True, 6_000_000.0))
+
+    def test_aero_from_a_30k_pool_is_blocked_and_flagged(self):
+        d = self._run(30_000)
+        self.assertEqual((d["apyPct"], d["updatedAt"], d["stale"]), (15.1, self.PREV["updatedAt"], True))
+        self.assertIn("70% of the funded", d["staleReason"])
+        # the threshold is env-overridable: the $6M pool is untrusted under a $10M threshold
+        d = self._run(6_000_000, env={"DEX_TRUSTED_DEPTH_USD": "10000000"})
+        self.assertTrue(d["stale"])
 
 
 if __name__ == "__main__":

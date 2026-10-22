@@ -15,7 +15,8 @@ Epoch E (weeks start Thursday 00:00 UTC, E = ts // WEEK * WEEK) is chosen by mod
 Prices are CURRENT prices from PriceFetcher, not prices at funding time.
 Not published (main.py logs and keeps the previous files) when sanity_problems() finds anything (apyPct NaN,
 negative or > 500%; AERO or iAERO unpriced; a zero USD stake). When dex_guard_problem() finds DEX-priced funded
-tokens inflating apyPct, main.py keeps the previous figures flagged stale (live and yield_history still update).
+tokens (priced from pools thinner than DEX_TRUSTED_DEPTH_USD) inflating apyPct, main.py keeps the previous figures
+flagged stale (live and yield_history still update).
 yield_history gets an epoch's entry only once that epoch has ended (main.py), so partial weeks never become references.
 Readers of estimated_rewards_usd.json: TwitterBot (apyPct), DefiLlama yield-server iaero-protocol
 (apyPct, tvlUSD_1e18), iaero-frontend (stakersWeeklyUSD_1e18, estimatedWeeklyUSD_1e18).
@@ -23,6 +24,7 @@ All legacy fields are kept with the same names and units; new fields are only ad
 """
 import json
 import math
+import os
 import statistics
 import time
 import logging
@@ -46,7 +48,9 @@ EPOCH_MODES = ("latest_funded", "last_completed")
 STALE_AFTER_SEC = 2 * WEEK      # latest funded epoch older than this -> publish 0, not a stale figure
 MAX_SANE_APY_PCT = 500.0        # above this, don't publish (likely a bad price), log and skip
 MAX_APY_RISE = 3.0              # apyPct above 3x the reference only because of DEX-priced tokens -> keep the previous figures
-DEX_MAX_FUNDED_SHARE = 0.5      # DEX-priced tokens above half of the funded USD -> keep the previous figures
+DEX_MAX_FUNDED_SHARE = 0.5      # untrusted DEX-priced tokens above half of the funded USD -> keep the previous figures
+DEX_TRUSTED_DEPTH_USD = 1_000_000.0   # a DEX price from a pool this deep on its quote side counts like DefiLlama's
+                                      # (env DEX_TRUSTED_DEPTH_USD); thinner pools are "untrusted" for the guard
 REFERENCE_EPOCHS = 4            # reference apyPct = median of the newest <= 4 earlier-epoch yield_history entries
 
 # Split of harvested rewards (RewardsHarvesterV2.processAndDistribute): 80% goes to the
@@ -146,20 +150,21 @@ def reference_apy(history_doc: Optional[dict], epoch: int) -> Optional[tuple]:
 
 def dex_guard_problem(payload: dict, history_doc: Optional[dict], max_rise: float = MAX_APY_RISE) -> Optional[str]:
     """
-    Reason to keep the previous figures because DEX-priced funded tokens (PriceFetcher's on-chain fallback, the H-1
-    risk) look like they inflate payload's apyPct, else None:
-      - DEX-priced funded value is more than DEX_MAX_FUNDED_SHARE of the funded USD; or
-      - apyPct is above max_rise x the reference (reference_apy) while apyPct without the DEX-priced tokens is not.
-    A rise that is there without the DEX-priced tokens is published; no reference -> no ratio check.
-    max_rise <= 0 disables both checks.
+    Reason to keep the previous figures because untrusted DEX-priced funded tokens (PriceFetcher's on-chain fallback
+    from a pool thinner than DEX_TRUSTED_DEPTH_USD: the H-1 risk) look like they inflate payload's apyPct, else None:
+      - their funded value is more than DEX_MAX_FUNDED_SHARE of the funded USD; or
+      - apyPct is above max_rise x the reference (reference_apy) while apyPct without them is not.
+    A rise that is there without them is published; no reference -> no ratio check. Trusted DEX prices count like
+    DefiLlama's. max_rise <= 0 disables both checks.
     """
     if not max_rise or max_rise <= 0:
         return None
     funded = _int(payload.get("fundedUSD_1e18")) / E18
-    dex = _int(payload.get("dexFundedUSD_1e18")) / E18
-    tokens = payload.get("dexPricedTokens") or []
+    dex = _int(payload.get("untrustedDexFundedUSD_1e18")) / E18
+    tokens = [t.get("address") for t in payload.get("dexPricedTokens") or [] if isinstance(t, dict) and not t.get("trusted")]
+    pools = f"pools under ${float(payload.get('dexTrustedDepthUsd') or DEX_TRUSTED_DEPTH_USD):,.0f}"
     if funded > 0 and dex > DEX_MAX_FUNDED_SHARE * funded:
-        return (f"DEX-priced tokens {tokens} are {dex / funded:.0%} of the funded ${funded:,.2f} "
+        return (f"DEX-priced tokens {tokens} ({pools}) are {dex / funded:.0%} of the funded ${funded:,.2f} "
                 f"(more than {DEX_MAX_FUNDED_SHARE:.0%})")
     ref = reference_apy(history_doc, _int(payload.get("epoch")))
     apy = payload.get("apyPct")
@@ -172,7 +177,7 @@ def dex_guard_problem(payload: dict, history_doc: Optional[dict], max_rise: floa
     if apy_without_dex > limit:
         return None                     # the rise is there without DEX-priced tokens: not a DEX price artefact
     return (f"apyPct {apy:.2f}% is above {max_rise:g}x the reference {ref[0]:.2f}% (median of yield_history epochs "
-            f"{ref[1]}) only because of DEX-priced tokens {tokens} (${dex:,.2f}; apyPct without them "
+            f"{ref[1]}) only because of DEX-priced tokens {tokens} ({pools}; ${dex:,.2f}; apyPct without them "
             f"{apy_without_dex:.2f}%)")
 
 
@@ -195,12 +200,16 @@ def compute_realized(
     now_ts: Optional[int] = None,
     epoch_mode: str = "latest_funded",
     stale: bool = False,
+    dex_trusted_depth_usd: Optional[float] = None,
 ) -> dict:
     """
     Pure computation of the estimated_rewards_usd.json payload.
-    funded: [{"address", "amount" (raw int), "decimals", "priceUsd"}] for epoch `epoch`.
+    funded: [{"address", "amount" (raw int), "decimals", "priceUsd", optional "source" and "dexDepthUsd"}] for `epoch`.
     stale=True publishes 0 for `epoch` (its funding is too old to be a current yield).
+    dex_trusted_depth_usd: default env DEX_TRUSTED_DEPTH_USD, else DEX_TRUSTED_DEPTH_USD.
     """
+    if dex_trusted_depth_usd is None:
+        dex_trusted_depth_usd = float(os.environ.get("DEX_TRUSTED_DEPTH_USD") or DEX_TRUSTED_DEPTH_USD)
     if stale:
         funded = []
     now_ts = int(now_ts if now_ts is not None else time.time())
@@ -213,9 +222,9 @@ def compute_realized(
         iaero_px = aero_px
         used_fallback = True
 
-    funded_usd = dex_usd = Decimal(0)
+    funded_usd = untrusted_usd = Decimal(0)
     unpriced: List[str] = []
-    dex_priced: List[str] = []
+    dex_priced: List[dict] = []
     for f in funded:
         amt = int(f["amount"])
         if amt <= 0:
@@ -227,8 +236,12 @@ def compute_realized(
         usd = Decimal(amt) / (Decimal(10) ** int(f.get("decimals", 18))) * px
         funded_usd += usd
         if f.get("source") == "dex":     # priced by PriceFetcher's on-chain fallback (see dex_guard_problem)
-            dex_usd += usd
-            dex_priced.append(f["address"].lower())
+            depth = f.get("dexDepthUsd")
+            trusted = isinstance(depth, (int, float)) and depth >= dex_trusted_depth_usd
+            dex_priced.append({"address": f["address"].lower(), "fundedUSD": round(float(usd), 4),
+                               "poolDepthUsd": depth, "trusted": trusted})
+            if not trusted:
+                untrusted_usd += usd
 
     staked_at_start = Decimal(int(staked_at_start_raw)) / E18
     staked_usd = staked_at_start * iaero_px
@@ -279,8 +292,9 @@ def compute_realized(
         "stakedUSD_human": _human(staked_usd),
         "fundedTokenCount": sum(1 for f in funded if int(f["amount"]) > 0),
         "unpricedTokens": sorted(unpriced),
-        "dexPricedTokens": sorted(dex_priced),
-        "dexFundedUSD_1e18": _to_1e18(dex_usd),
+        "dexPricedTokens": sorted(dex_priced, key=lambda x: x["address"]),
+        "dexTrustedDepthUsd": float(dex_trusted_depth_usd),
+        "untrustedDexFundedUSD_1e18": _to_1e18(untrusted_usd),
         **({"staleReason": f"no funding newer than epoch {int(epoch)} for over 2 weeks"} if stale else {}),
     }
 
@@ -338,6 +352,7 @@ def build_estimated_rewards(
     prices = price_fetcher.fetch_batch(want)
     px = lambda a: float((prices.get(a.lower()) or {}).get("priceUsd", 0.0))
     src = lambda a: (prices.get(a.lower()) or {}).get("source")
+    depth = lambda a: (prices.get(a.lower()) or {}).get("dexDepthUsd")
 
     erc20s = [t for t in funded_raw if t != ZERO_ADDRESS]
     decs = decimals_fn(erc20s) if erc20s else {}
@@ -347,6 +362,7 @@ def build_estimated_rewards(
         "decimals": 18 if t == ZERO_ADDRESS else int(decs.get(t, 18)),
         "priceUsd": px(price_addr[t]),
         "source": src(price_addr[t]),
+        "dexDepthUsd": depth(price_addr[t]),
     } for t, amt in sorted(funded_raw.items())]
 
     out = compute_realized(
