@@ -16,17 +16,31 @@ CG_SIMPLE_URL = (
     "https://pro-api.coingecko.com/api/v3/simple/token_price/base"
 )  # ?contract_addresses=&vs_currencies=usd
 AERODROME_FACTORY="0x420DD381b31aEf6683db6B902084cB0FFECe40Da"
+# Aero (post-migration, 2026-10-22) v2 pool factories: one factory per pool type.
+AERO_VOLATILE_FACTORY="0x8E6a9FCd1d638CC760Ffba397605Fe3355dE76D2"
+AERO_STABLE_FACTORY="0x78589E876edcEbdce72ee3436ab3c9AD3a7cEF2D"
 WETH_ADDRESS="0x4200000000000000000000000000000000000006"
 USDC_ADDRESS="0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
+ZERO_ADDRESS="0x0000000000000000000000000000000000000000"
 
 
 # --- Aerodrome / Velodrome-style ABIs ---
+# Aerodrome PoolFactory: getPool(a,b,stable). It has no getPair (calls revert).
 FACTORY_ABI = [
     {"inputs":[
         {"internalType":"address","name":"tokenA","type":"address"},
         {"internalType":"address","name":"tokenB","type":"address"},
         {"internalType":"bool","name":"stable","type":"bool"}],
-     "name":"getPair","outputs":[{"internalType":"address","name":"","type":"address"}],
+     "name":"getPool","outputs":[{"internalType":"address","name":"","type":"address"}],
+     "stateMutability":"view","type":"function"}
+]
+
+# Aero v2 factories: getPool(a,b) with NO stable flag (the factory decides the pool type).
+AERO_FACTORY_ABI = [
+    {"inputs":[
+        {"internalType":"address","name":"tokenA","type":"address"},
+        {"internalType":"address","name":"tokenB","type":"address"}],
+     "name":"getPool","outputs":[{"internalType":"address","name":"","type":"address"}],
      "stateMutability":"view","type":"function"}
 ]
 
@@ -60,7 +74,7 @@ class PriceFetcher:
     Price cache with:
       1) DefiLlama (primary)
       2) CoinGecko (fallback)
-      3) Aerodrome on-chain quoter (final fallback) -> never returns null
+      3) On-chain quoter (final fallback): Aero pools first, then legacy Aerodrome pools -> never returns null
     Cache key: "{chain}:{addrLower}"
     """
 
@@ -75,6 +89,8 @@ class PriceFetcher:
         usdc: Optional[str] = None,
         weth: Optional[str] = None,
         max_price_usd: float = 50000.0,
+        aero_volatile_factory: Optional[str] = None,
+        aero_stable_factory: Optional[str] = None,
     ):
         self.chain = chain_slug
         self.cache_file = cache_file
@@ -85,12 +101,20 @@ class PriceFetcher:
 
         # web3 for quoter
         self.w3: Optional[Web3] = None
-        self.factory = None
+        self.factory = None          # Aerodrome (legacy) PoolFactory
+        self.aero_factories = []     # Aero v2 factories, in lookup order: volatile, stable
         self.usdc = None
         self.weth = None
 
-        if rpc_url and aerodrome_factory and usdc and weth:
+        if rpc_url and usdc and weth:
             self.w3 = Web3(Web3.HTTPProvider(rpc_url, request_kwargs={"timeout": 20}))
+            aero_volatile_factory = aero_volatile_factory or os.environ.get("AERO_VOLATILE_FACTORY") or AERO_VOLATILE_FACTORY
+            aero_stable_factory = aero_stable_factory or os.environ.get("AERO_STABLE_FACTORY") or AERO_STABLE_FACTORY
+            self.aero_factories = [
+                self.w3.eth.contract(self.w3.to_checksum_address(f), abi=AERO_FACTORY_ABI)
+                for f in (aero_volatile_factory, aero_stable_factory)
+            ]
+            aerodrome_factory = aerodrome_factory or AERODROME_FACTORY
             self.factory = self.w3.eth.contract(self.w3.to_checksum_address(aerodrome_factory), abi=FACTORY_ABI)
             self.usdc = self.w3.to_checksum_address(usdc)
             self.weth = self.w3.to_checksum_address(weth)
@@ -193,7 +217,7 @@ class PriceFetcher:
                 logger.warning(f"CG fetch error: {e}")
         return out
 
-    # ---------- Aerodrome quoter (final fallback) ----------
+    # ---------- Aero / Aerodrome quoter (final fallback) ----------
     def _decimals(self, addr: str) -> int:
         try:
             c = self.w3.eth.contract(self.w3.to_checksum_address(addr), abi=ERC20_DEC_ABI)
@@ -204,21 +228,38 @@ class PriceFetcher:
 
     def _pair(self, a: str, b: str, stable: bool) -> Optional[str]:
         try:
-            p = self.factory.functions.getPair(
+            p = self.factory.functions.getPool(
                 self.w3.to_checksum_address(a), self.w3.to_checksum_address(b), stable
             ).call()
-            if p and p != "0x0000000000000000000000000000000000000000":
+            if p and p != ZERO_ADDRESS:
                 return self.w3.to_checksum_address(p)
         except Exception:
             pass
         return None
 
-    def _quote_direct(self, token_in: str, token_out: str, amount_in: int) -> Optional[int]:
+    def _aero_pool(self, factory, a: str, b: str) -> Optional[str]:
+        try:
+            p = factory.functions.getPool(
+                self.w3.to_checksum_address(a), self.w3.to_checksum_address(b)
+            ).call()
+            if p and p != ZERO_ADDRESS:
+                return self.w3.to_checksum_address(p)
+        except Exception:
+            pass
+        return None
+
+    def _pools(self, a: str, b: str, aero: bool) -> List[str]:
+        if aero:
+            pools = [self._aero_pool(f, a, b) for f in self.aero_factories]  # volatile, then stable
+        elif self.factory:
+            pools = [self._pair(a, b, stable) for stable in (False, True)]
+        else:
+            pools = []
+        return [p for p in pools if p]
+
+    def _quote_direct(self, token_in: str, token_out: str, amount_in: int, aero: bool = False) -> Optional[int]:
         best = 0
-        for stable in (False, True):
-            pair = self._pair(token_in, token_out, stable)
-            if not pair:
-                continue
+        for pair in self._pools(token_in, token_out, aero):
             try:
                 pairc = self.w3.eth.contract(pair, abi=PAIR_ABI)
                 out = pairc.functions.getAmountOut(amount_in, self.w3.to_checksum_address(token_in)).call()
@@ -230,30 +271,29 @@ class PriceFetcher:
 
     def _dex_price_one(self, addr: str) -> Optional[float]:
         """
-        Try to compute 1 token -> USDC price via Aerodrome pools (direct, then two-hop via WETH).
+        Try to compute 1 token -> USDC price via Aero pools, then legacy Aerodrome pools
+        (on each DEX: direct, then two-hop via WETH).
         Returns float price or None if not quotable.
         """
-        if not (self.w3 and self.factory and self.usdc and self.weth):
+        if not (self.w3 and self.usdc and self.weth):
             return None
         token = self.w3.to_checksum_address(addr)
         # 1 token in raw units
         dec = self._decimals(token)
         amt_in = 10 ** dec
 
-        # direct: token->USDC
-        out = self._quote_direct(token, self.usdc, amt_in)
-        if out:
-            # out is USDC raw units; assume USDC has 6 decimals on Base
-            price = out / (10 ** 6)
-            return price if price > 0 and math.isfinite(price) else None
-
-        # two-hop: token->WETH->USDC
-        mid = self._quote_direct(token, self.weth, amt_in)
-        if mid:
-            out2 = self._quote_direct(self.weth, self.usdc, mid)
-            if out2:
-                price = out2 / (10 ** 6)
-                return price if price > 0 and math.isfinite(price) else None
+        for aero in (True, False):
+            # direct: token->USDC
+            out = self._quote_direct(token, self.usdc, amt_in, aero)
+            if not out:
+                # two-hop: token->WETH->USDC
+                mid = self._quote_direct(token, self.weth, amt_in, aero)
+                out = self._quote_direct(self.weth, self.usdc, mid, aero) if mid else None
+            if out:
+                # out is USDC raw units; assume USDC has 6 decimals on Base
+                price = out / (10 ** 6)
+                if price > 0 and math.isfinite(price):
+                    return price
 
         return None
 
