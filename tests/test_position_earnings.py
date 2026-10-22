@@ -204,7 +204,8 @@ class ValueLiveTest(unittest.TestCase):
         self.assertAlmostEqual(live["positionAprPct"], 340.0 * 365 / (100_000 * 0.8) * 100)       # 155.1%
         self.assertAlmostEqual(live["projectedStakerApyPct"], 340.0 * 365 * 0.8 / 60_000.0 * 100)  # 165.5%
         self.assertAlmostEqual(live["measuredShareOfAllocation"], 0.95)
-        self.assertEqual(live["unmeasuredChains"], [4663])
+        self.assertEqual(live["unmeasuredChains"], [])          # Robinhood is measured now (its own RPC)
+        self.assertTrue(live["readComplete"])
         self.assertEqual(b["label"], "WETH/USDC CL100")
         self.assertAlmostEqual(b["allocationShare"], 0.85)
         self.assertEqual(live["method"], "live_position")
@@ -329,13 +330,36 @@ class TrailingTest(unittest.TestCase):
         self.assertEqual(live["alerts"], [])
 
     def test_history_cadence_and_cap(self):
+        # rewritten (measured headline): points stay >= 12 h apart whatever the run cadence; the newest is replaced
+        # while it is under 12 h newer than the point before it (not while it is under 12 h old: hourly runs would
+        # then keep replacing it and never build a 7-day window)
         hist = [self.point(d * DAY, d, 0) for d in range(14, 0, -1)] + [self.point(3 * 3600, 0.5, 0)]
         live = _live([_g2(G_CL, fees={USDC: 1 * 10**6})], self.NOW, hist)
         ages = [self.NOW - h["asOf"] for h in live["history"]]
         self.assertEqual(ages[-1], 0)                                   # current run appended
-        self.assertNotIn(3 * 3600, ages)                                # a point < 12 h old is replaced
+        self.assertIn(3 * 3600, ages)                                   # 21 h after its predecessor: kept
         self.assertTrue(all(a <= 10.5 * DAY for a in ages))
         self.assertLessEqual(len(ages), pe.HISTORY_MAX_POINTS)
+        # hourly runs: the newest point moves until it is 12 h past the one before it, then a new one starts
+        hist = [self.point(DAY, 1, 0)]
+        asofs = []
+        for h in range(0, 30):
+            now = self.NOW + h * 3600
+            live = pe.value_live([_chain(8453, T0, now, 1, [_g2(G_CL, fees={USDC: 10**6})])], META, PRICES, 1584,
+                                 E18, 0.8, 600_000.0, now_ts=now, prev_history=hist)
+            hist = live["history"]
+        asofs = [h["asOf"] - self.NOW for h in hist]
+        self.assertEqual(asofs, [-DAY, 0, 12 * 3600, 24 * 3600, 29 * 3600])
+        self.assertTrue(all(b - a >= 12 * 3600 for a, b in zip(asofs[:-2], asofs[1:-1])))
+
+    def test_first_point_of_an_epoch_is_kept(self):
+        e = (self.NOW // pe.EPOCH_SEC + 1) * pe.EPOCH_SEC                # the next Thursday 00:00 UTC
+        hist = [self.point(self.NOW - (e - 8 * 3600), 1, 0), self.point(self.NOW - (e - 4 * 3600), 1, 0)]
+        for now in (e + 600, e + 3600, e + 7200):                       # hourly runs across the boundary
+            live = pe.value_live([_chain(8453, T0, now, 1, [_g2(G_CL, fees={USDC: 10**6})])], META, PRICES, 1584,
+                                 E18, 0.8, 600_000.0, now_ts=now, prev_history=hist)
+            hist = live["history"]
+        self.assertEqual([h["asOf"] - e for h in hist], [-8 * 3600, e + 600 - e, 7200])   # the 20:00 point gave way
 
     def test_partial_chain_coverage_is_excluded_and_flagged(self):
         eth = _chain(1, T0, self.NOW, 1, [_g2("0x" + "dd" * 20, fees={USDC: 10 * 10**6})])
@@ -433,7 +457,8 @@ class BuildLiveTest(unittest.TestCase):
             live = pe.build_live([(good, pe.FACTORY_REGISTRY_BASE), (bad, None)], 1584, {8453: pf}, 1000 * E18, 0.8, 600.0,
                                  prev_live={"stakeId": 1584, "gauges": [{"chainId": 8453, "gauge": G_OLD}]}, now_ts=NOW)
             self.assertEqual(rcp.call_args_list[0].kwargs["extra_gauges"], (G_OLD,))
-        self.assertEqual(live["unmeasuredChains"], [1, 4663])
+        self.assertEqual(live["unmeasuredChains"], [1])
+        self.assertFalse(live["readComplete"])
         self.assertEqual(len(live["history"]), 1)
         self.assertEqual([c["chainId"] for c in live["chains"]], [8453])
         self.assertGreater(live["accruedUSD"], 0)
@@ -503,6 +528,225 @@ class ChainReaderTest(unittest.TestCase):
             out = pe.ChainReader(w3, 8453, block=1).many([(VRM_CL, "incentiveCount()", [], ["uint256"])])
         self.assertEqual(out, [7])
         self.assertEqual(sl.call_count, 2)
+
+
+
+class BlockLogsReader(FakeReader):
+    """FakeReader whose claim logs carry block numbers: logs() returns those in [from_block, its pinned block]."""
+
+    def __init__(self, answers, block_logs, block=1000, since_block=10):
+        super().__init__(answers, logs=[], block=block)
+        self.block_logs, self.since_block = block_logs, since_block
+        self.fail = False
+
+    def block_at(self, ts):
+        return self.since_block
+
+    def logs(self, addresses, topics, from_block, step=10_000):
+        self.log_calls.append((sorted(a.lower() for a in addresses), topics, from_block))
+        if self.fail:
+            return None
+        want = {a.lower() for a in addresses}
+        return [lg for b, lg in self.block_logs if from_block <= b <= self.block and lg["address"].lower() in want]
+
+
+FEE_USDC = lambda amt: _log(VRM_V2, pe.CLAIM_FEES_TOPIC, bytes(12) + bytes.fromhex(USDC[2:]), amt)
+INC_AERO = lambda amt: _log(VRM_V2, pe.CLAIM_INCENTIVES_TOPIC, (1).to_bytes(32, "big"), amt)
+
+
+class IncrementalClaimsTest(unittest.TestCase):
+    """Claims are scanned from the last scanned block on (claimsState per chain, data/live_state.json)."""
+
+    def read(self, reader, state):
+        return pe.read_chain_position(reader, 1584, registry=pe.FACTORY_REGISTRY_BASE, claims_state=state)
+
+    def test_first_run_scans_from_the_allocation_and_records_every_vrm(self):
+        r = BlockLogsReader(base_answers(), [(500, FEE_USDC(2 * 10**6)), (600, INC_AERO(4 * E18))])
+        ch = self.read(r, None)
+        self.assertEqual(r.log_calls[0][0], sorted([VRM_CL, VRM_V2]))
+        self.assertEqual(r.log_calls[0][2], 10)                        # block_at(since)
+        self.assertEqual(ch["claimsState"], {"since": T0, "block": 1000, "blockTimestamp": NOW, "vrms": {
+            VRM_V2: {"fees": {USDC: 2 * 10**6}, "incentives": {AERO: 4 * E18}},
+            VRM_CL: {"fees": {}, "incentives": {}}}})                   # scanned, no claims: not rescanned later
+        self.assertEqual(ch["gauges"][1]["claimed"], {USDC: 2 * 10**6, AERO: 4 * E18})
+
+    def test_resume_scans_only_new_blocks_and_adds_to_the_totals(self):
+        state = {"since": T0, "block": 900, "blockTimestamp": NOW - 3600, "vrms": {
+            VRM_V2: {"fees": {USDC: 2 * 10**6}, "incentives": {AERO: 4 * E18}}, VRM_CL: {"fees": {}, "incentives": {}}}}
+        r = BlockLogsReader(base_answers(), [(500, FEE_USDC(2 * 10**6)), (600, INC_AERO(4 * E18)),
+                                            (950, FEE_USDC(1 * 10**6))])
+        ch = self.read(r, state)
+        self.assertEqual([(c[0], c[2]) for c in r.log_calls], [(sorted([VRM_CL, VRM_V2]), 901)])
+        self.assertEqual(ch["gauges"][1]["claimedFees"], {USDC: 3 * 10**6})       # 2 before + 1 new, not 2 + 2 + 1
+        self.assertEqual(ch["claimsState"]["vrms"][VRM_V2]["fees"], {USDC: 3 * 10**6})
+        self.assertEqual(ch["claimsState"]["block"], 1000)
+        self.assertEqual(state["block"], 900)                                    # the input is not mutated
+        # same block again: nothing to scan, nothing added
+        r2 = BlockLogsReader(base_answers(), [(950, FEE_USDC(1 * 10**6))])
+        ch2 = self.read(r2, ch["claimsState"])
+        self.assertEqual((r2.log_calls, ch2["claimsScanned"], ch2["gauges"][1]["claimedFees"]), ([], True, {USDC: 3 * 10**6}))
+
+    def test_failed_scan_keeps_the_state_for_the_next_run(self):
+        state = {"since": T0, "block": 900, "blockTimestamp": NOW, "vrms": {
+            VRM_V2: {"fees": {USDC: 2 * 10**6}, "incentives": {}}, VRM_CL: {"fees": {}, "incentives": {}}}}
+        r = BlockLogsReader(base_answers(), [(950, FEE_USDC(1 * 10**6))])
+        r.fail = True
+        ch = self.read(r, state)
+        self.assertFalse(ch["claimsScanned"])
+        self.assertEqual(ch["claimsState"], state)                     # retried from block 901 next run
+        r.fail = False
+        ch = self.read(r, ch["claimsState"])
+        self.assertEqual((r.log_calls[-1][2], ch["claimsScanned"]), (901, True))
+        self.assertEqual(ch["claimsState"]["vrms"][VRM_V2]["fees"], {USDC: 3 * 10**6})
+
+    def test_restart_without_state_or_with_another_since_rescans_everything(self):
+        logs = [(500, FEE_USDC(2 * 10**6)), (950, FEE_USDC(1 * 10**6))]
+        for state in (None, {}, {"since": T0 - 1, "block": 900, "vrms": {VRM_V2: {"fees": {USDC: 99}, "incentives": {}}}},
+                      {"since": T0, "block": "900", "vrms": {}}):
+            r = BlockLogsReader(base_answers(), logs)
+            ch = self.read(r, state)
+            self.assertEqual([c[2] for c in r.log_calls], [10], state)
+            self.assertEqual(ch["claimsState"]["vrms"][VRM_V2]["fees"], {USDC: 3 * 10**6})
+
+    def test_a_new_vrm_is_scanned_from_the_allocation(self):
+        state = {"since": T0, "block": 900, "vrms": {VRM_V2: {"fees": {USDC: 2 * 10**6}, "incentives": {}}}}
+        cl_fee = _log(VRM_CL, pe.CLAIM_FEES_TOPIC, bytes(12) + bytes.fromhex(USDC[2:]), 5 * 10**6)
+        r = BlockLogsReader(base_answers(), [(500, FEE_USDC(2 * 10**6)), (300, cl_fee)])
+        ch = self.read(r, state)
+        self.assertEqual([(c[0], c[2]) for c in r.log_calls], [([VRM_V2], 901), ([VRM_CL], 10)])
+        self.assertEqual(ch["gauges"][0]["claimedFees"], {USDC: 5 * 10**6})
+        self.assertEqual(ch["gauges"][1]["claimedFees"], {USDC: 2 * 10**6})
+
+    def test_rpc_behind_the_state_means_claims_unknown(self):
+        state = {"since": T0, "block": 2000, "vrms": {VRM_V2: {"fees": {USDC: 2 * 10**6}, "incentives": {}}}}
+        r = BlockLogsReader(base_answers(), [], block=1000)
+        ch = self.read(r, state)
+        self.assertEqual((ch["claimsScanned"], ch["claimsState"], r.log_calls), (False, state, []))
+
+    def test_unresolved_incentive_claim_is_retried_not_lost(self):
+        a = base_answers()
+        unknown = _log(VRM_V2, pe.CLAIM_INCENTIVES_TOPIC, (9).to_bytes(32, "big"), 4 * E18)   # program 9: unreadable
+        r = BlockLogsReader(a, [(500, FEE_USDC(2 * 10**6)), (600, unknown)])
+        ch = self.read(r, None)
+        self.assertFalse(ch["claimsScanned"])
+        self.assertIsNone(ch["claimsState"])
+        self.assertEqual(ch["gauges"][1]["claimed"], {})
+
+
+class BlockAtTest(unittest.TestCase):
+    """ChainReader.block_at: block times are never assumed (Robinhood: 0.1 s blocks; Base 2 s; Ethereum 12 s)."""
+
+    def reader(self, block_time, head):
+        genesis = 1_700_000_000
+        ts_of = lambda n: genesis + int(n * block_time)
+        w3 = mock.Mock(to_checksum_address=Web3.to_checksum_address)
+        w3.eth.get_block.side_effect = lambda n: {"timestamp": ts_of(int(n))}
+        r = pe.ChainReader(w3, 4663, block=head)
+        return r, ts_of, w3
+
+    def test_last_block_at_or_before(self):
+        for bt, head in ((0.1, 60_000_000), (2.0, 37_000_000), (12.0, 23_000_000)):
+            r, ts_of, w3 = self.reader(bt, head)
+            for back in (0, 1, 3600, 86_400 + 7, 9 * 86_400 + 1):
+                ts = r.block_ts - back
+                w3.eth.get_block.reset_mock()
+                b = r.block_at(ts)
+                self.assertLessEqual(ts_of(b), ts, (bt, back))
+                if back:
+                    self.assertGreater(ts_of(b + 1), ts, (bt, back))      # the LAST block at or before ts
+                else:
+                    self.assertEqual(b, head)                             # never past the pinned block
+                self.assertLess(w3.eth.get_block.call_count, 120)          # galloping + bisection, not a walk
+            self.assertEqual(r.block_at(r.block_ts + 100), head)            # the future: the pinned block
+            self.assertEqual(r.block_at(0), 0)
+
+
+class LogsTest(unittest.TestCase):
+    """ChainReader.logs: the range per call halves on errors (public RPCs cap it, e.g. 1000 blocks) and the whole
+    range is covered exactly once; a range refused at min_step means claims unknown (None)."""
+
+    def reader(self, cap):
+        w3 = mock.Mock(to_checksum_address=Web3.to_checksum_address)
+        w3.eth.get_block.return_value = {"timestamp": NOW}
+        calls = []
+
+        def get_logs(f):
+            calls.append((f["fromBlock"], f["toBlock"]))
+            if cap is None or f["toBlock"] - f["fromBlock"] + 1 > cap:
+                raise ValueError("block range is too large")
+            return [{"blockNumber": n} for n in range(f["fromBlock"], f["toBlock"] + 1) if n % 997 == 0]
+        w3.eth.get_logs.side_effect = get_logs
+        return pe.ChainReader(w3, 8453, block=100_000), calls
+
+    def test_capped_rpc_is_covered_without_gaps(self):
+        r, calls = self.reader(1000)
+        out = r.logs([VRM_CL], [], 20_000)
+        self.assertEqual([x["blockNumber"] for x in out], [n for n in range(20_000, 100_001) if n % 997 == 0])
+        ok = sorted((a, b) for a, b in calls if b - a + 1 <= 1000)
+        self.assertEqual(ok[0][0], 20_000)
+        self.assertEqual(ok[-1][1], 100_000)
+        self.assertTrue(all(b + 1 == c for (_, b), (c, _) in zip(ok, ok[1:])))
+
+    def test_refused_at_min_step_is_none(self):
+        r, _ = self.reader(None)
+        self.assertIsNone(r.logs([VRM_CL], [], 20_000))
+
+
+def _pt(asof, usdc, chains=(8453,), complete=True, unread=(), last_alloc=T0):
+    return {"asOf": asof, "chains": list(chains), "complete": complete, "unread": list(unread),
+            "lastAllocated": {str(c): last_alloc for c in chains},
+            "gauges": {f"{c}:{G_CL}": {"fees": {USDC: usdc}, "incentives": {}} for c in chains}}
+
+
+class EpochRateTest(unittest.TestCase):
+    """yield_history: measured earnings between complete points within a few hours of an epoch's start and end."""
+    E = 1792627200 + 7 * DAY
+    price = staticmethod(lambda cid, t: 1.0 if t == USDC else 0.0)
+
+    def test_points_near_both_ends(self):
+        h = [_pt(self.E - 10 * 3600, 50), _pt(self.E + 2 * 3600, 100), _pt(self.E + 3 * DAY, 400),
+             _pt(self.E + 7 * DAY + 2 * 3600, 800)]
+        r = pe.epoch_rate(h, self.E, self.E + 7 * DAY, self.price)
+        self.assertEqual((r["from"], r["to"], r["days"]), (self.E + 2 * 3600, self.E + 7 * DAY + 2 * 3600, 7.0))
+        self.assertAlmostEqual(r["usdPerDay"], 100.0)
+
+    def test_none_without_complete_points_near_the_boundaries(self):
+        far = [_pt(self.E + 7 * 3600, 100), _pt(self.E + 7 * DAY + 2 * 3600, 800)]        # 7 h after the start
+        self.assertIsNone(pe.epoch_rate(far, self.E, self.E + 7 * DAY, self.price))
+        inc = [_pt(self.E + 3600, 100, complete=False), _pt(self.E + 7 * DAY + 3600, 800)]
+        self.assertIsNone(pe.epoch_rate(inc, self.E, self.E + 7 * DAY, self.price))
+        unread = [_pt(self.E + 3600, 100), _pt(self.E + 7 * DAY + 3600, 800, unread=["8453:x"])]
+        self.assertIsNone(pe.epoch_rate(unread, self.E, self.E + 7 * DAY, self.price))
+        # a chain measured at only one end: partial -> no entry
+        part = [_pt(self.E + 3600, 100), _pt(self.E + 7 * DAY + 3600, 800, chains=(8453, 4663))]
+        self.assertIsNone(pe.epoch_rate(part, self.E, self.E + 7 * DAY, self.price))
+        self.assertIsNone(pe.epoch_rate([], self.E, self.E + 7 * DAY, self.price))
+
+
+class BuildLiveChainsTest(unittest.TestCase):
+    def test_unreachable_chain_is_unmeasured_and_prices_and_state_are_returned(self):
+        pf = mock.Mock()
+        pf.fetch_batch.side_effect = lambda toks: {t: {"priceUsd": PRICES[8453].get(t, 0.0)} for t in toks}
+        with mock.patch.object(pe, "token_meta", return_value=META[8453]):
+            live = pe.build_live([(BlockLogsReader(base_answers(), []), pe.FACTORY_REGISTRY_BASE)], 1584, {8453: pf},
+                                 1000 * E18, 0.8, 600.0, now_ts=NOW, unreachable=[4663],
+                                 claims_state={"stakeId": 1584, "chains": {"1": {"keep": True}}})
+        self.assertEqual(live["unmeasuredChains"], [4663])
+        self.assertFalse(live["readComplete"])
+        self.assertEqual(live["_prices"][8453][USDC], 1.0)
+        cs = live["_claimsState"]
+        self.assertEqual((cs["stakeId"], sorted(cs["chains"])), (1584, ["1", "8453"]))    # other chains' state kept
+        self.assertEqual(cs["chains"]["8453"]["block"], 1000)
+
+    def test_claims_state_of_another_stake_is_ignored(self):
+        pf = mock.Mock()
+        pf.fetch_batch.side_effect = lambda toks: {t: {"priceUsd": PRICES[8453].get(t, 0.0)} for t in toks}
+        r = BlockLogsReader(base_answers(), [])
+        with mock.patch.object(pe, "token_meta", return_value=META[8453]):
+            pe.build_live([(r, pe.FACTORY_REGISTRY_BASE)], 1584, {8453: pf}, 1000 * E18, 0.8, 600.0, now_ts=NOW,
+                          claims_state={"stakeId": 77, "chains": {"8453": {"since": T0, "block": 999, "vrms": {
+                              VRM_CL: {"fees": {}, "incentives": {}}, VRM_V2: {"fees": {}, "incentives": {}}}}}})
+        self.assertEqual([c[2] for c in r.log_calls], [10])                 # full scan, not from 1000
 
 
 if __name__ == "__main__":

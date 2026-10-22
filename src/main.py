@@ -322,17 +322,6 @@ def _update_staker_rewards(repo, updater: GitHubUpdater) -> bool:
     # push only if changed
     return _push_if_changed(repo, updater, out_path, payload)
 
-def _rolling_cutoff_ts() -> int:
-    """First Aero-era block time: env ROLLING_CUTOFF_TS, else realized_yield.ROLLING_CUTOFF_TS."""
-    from realized_yield import ROLLING_CUTOFF_TS
-    raw = (os.environ.get("ROLLING_CUTOFF_TS") or "").strip()
-    if raw:
-        try:
-            return int(float(raw))
-        except (ValueError, OverflowError):
-            logger.error(f"[realized_yield] ROLLING_CUTOFF_TS={raw!r} is not unix seconds; using {ROLLING_CUTOFF_TS}")
-    return ROLLING_CUTOFF_TS
-
 def _stake_accrual_start():
     """When the protocol's Aero stake started earning: env PROTOCOL_AERO_STAKE_SINCE, else its first allocation
     (position_earnings.FIRST_ALLOCATION). None if unknown."""
@@ -348,14 +337,33 @@ def _stake_accrual_start():
     except ValueError:
         return None
 
+LIVE_STATE_REWRITE_SEC = 3600   # the claims state is rewritten when its claims change, or when this much newer
+
+def _claims_state_due(old: dict, new: dict) -> bool:
+    """Write the claims state when anything but the scanned-to block changed, or a chain's block moved >= 1 h on."""
+    if not isinstance(new, dict) or not new.get("chains"):
+        return False
+    if not isinstance(old, dict) or old.get("stakeId") != new.get("stakeId"):
+        return True
+    oc, nc = old.get("chains") or {}, new.get("chains") or {}
+    if set(oc) != set(nc):
+        return True
+    for cid, n in nc.items():
+        o = oc.get(cid) or {}
+        if o.get("since") != n.get("since") or o.get("vrms") != n.get("vrms"):
+            return True
+        if int(n.get("blockTimestamp") or 0) - int(o.get("blockTimestamp") or 0) >= LIVE_STATE_REWRITE_SEC:
+            return True
+    return False
+
 def _update_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner, price_fetcher: PriceFetcher) -> bool:
     """
-    Realized staking APY -> data/estimated_rewards_usd.json (replaces the legacy EnhancedOptimizedVotesKeeper;
-    same schema plus new fields) and -> data/yield_history.json (replaces the rewards keeper's weekly snapshot).
-    Headline: the rolling rate once any Aero-era funding exists (rolling_plan), else the per-epoch figure.
-    yield_history only gets the last COMPLETED epoch (see realized_yield's docstring). data/realized_yield_state.json
-    keeps the first two Aero-era funding times. A failed RewardFunded scan or look-back publishes nothing, unless
-    nothing shows Aero-era funding yet (then the last epoch that ended before the Aero era).
+    Staking APY -> data/estimated_rewards_usd.json (replaces the legacy EnhancedOptimizedVotesKeeper; same schema plus
+    new fields) and -> data/yield_history.json (replaces the rewards keeper's weekly snapshot).
+    Headline: the measured earnings of the protocol's Aero stake (realized_yield.measured_headline: trailing 7 days
+    if complete, else since its first allocation, else the previous headline kept with a staleReason). The
+    distributor fundings of the last completed epoch go under fundedRealized only. data/live_state.json keeps the
+    claims scan state per chain (incremental scans).
     """
     er_enabled = os.environ.get("ESTIMATED_REWARDS_ENABLED", "true").lower() == "true"
     yh_enabled = os.environ.get("YIELD_HISTORY_ENABLED", "true").lower() == "true"
@@ -363,220 +371,146 @@ def _update_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner, 
     if not (er_enabled or yh_enabled) or not distributor:
         return False
 
-    epochs_doc = _load_json(repo, updater.branch, os.environ.get("EPOCHS_JSON_PATH", "data/epochs.json"))
-    if not epochs_doc.get("epochs"):
-        # never publish a 0% APY because epochs.json failed to load
-        logger.warning("[realized_yield] epochs.json missing/empty; skipping.")
-        return False
-
-    from realized_yield import (build_estimated_rewards, build_window_rewards, sanity_problems, epoch_start,
-                                last_completed_epoch, rolling_plan, aero_era_raw, AERO_ADDRESS, WEEK,
-                                ACCRUAL_PHASE_DAYS)
+    from realized_yield import (build_estimated_rewards, stake_payload, apply_measured, measured_headline,
+                                measured_unavailable_reason, kept_headline, funded_realized, sanity_problems,
+                                epoch_start, last_completed_epoch, AERO_ADDRESS, WEEK)
+    from position_earnings import epoch_rate
     dec_chunk = int(os.environ.get("DEC_CHUNK_SIZE", "75"))
     decimals_fn = lambda toks: scanner.decimals_map(toks, chunk_size=dec_chunk, default_decimals=18)
     aero = os.environ.get("AERO_ADDRESS") or AERO_ADDRESS
     iaero = os.environ.get("IAERO_ADDRESS")
 
-    def build(epoch=None, aero_era=None):
-        return build_estimated_rewards(
-            w3=scanner.w3,
-            distributor=distributor,
-            epochs_doc=epochs_doc,
-            price_fetcher=price_fetcher,
-            decimals_fn=decimals_fn,
-            aero=aero,
-            iaero=iaero,
-            epoch_mode=("last_completed" if epoch is not None
-                        else os.environ.get("ESTIMATED_REWARDS_EPOCH", "latest_funded").lower()),
-            epoch=epoch,
-            aero_era=aero_era,
-        )
-
-    def build_window(plan, stake_epoch, label):
-        return build_window_rewards(w3=scanner.w3, distributor=distributor, events=events, after=plan[0],
-                                    until=plan[1], price_fetcher=price_fetcher, decimals_fn=decimals_fn,
-                                    stake_epoch=stake_epoch, aero=aero, iaero=iaero, label=label)
-
     path = os.environ.get("ESTIMATED_REWARDS_JSON_PATH", "data/estimated_rewards_usd.json")
     try:
         prev_doc = _load_json_strict(repo, updater.branch, path)
     except Exception as e:
-        # publishing now could drop the live block (and its history)
+        # publishing now could drop the live block (and its history) and the headline to keep
         logger.error(f"[realized_yield] could not read {path} ({str(e)[:160]}); NOT publishing this run.")
         _log_status({"event": "realized_yield_blocked", "reasons": [f"{path} unreadable"]})
         return False
+    for name in ("ROLLING_SINCE_TS", "ROLLING_CUTOFF_TS", "LIVE_YIELD_ENABLED"):
+        if (os.environ.get(name) or "").strip():
+            logger.info(f"[realized_yield] {name} is no longer used (the headline is the measured rate); ignored")
 
-    if (os.environ.get("ROLLING_SINCE_TS") or "").strip():
-        logger.info("[realized_yield] ROLLING_SINCE_TS is no longer used (the rolling rate starts with the first "
-                    "Aero-era funding); ignored")
     now = int(time.time())
     hist_epoch = last_completed_epoch(now)
-    cutoff = _rolling_cutoff_ts()
-    accrual_start = _stake_accrual_start()
-    phase = ACCRUAL_PHASE_DAYS * 24 * 3600
-    # the first two Aero-era funding times, and how far every funding before that is known (the start look-back below
-    # is then never repeated), kept in a state file written whatever happens to the headline
-    state_path = os.environ.get("REALIZED_STATE_JSON_PATH", "data/realized_yield_state.json")
-    state = _load_json(repo, updater.branch, state_path)
-    known = sorted({int(t) for t in (state.get("aeroFundings") or []) if isinstance(t, int) and t >= cutoff})[:2]
-    until = state.get("scannedUntil") if isinstance(state.get("scannedUntil"), int) else None
-    # <= 3 weeks: the rolling window, the completed epoch, and the 7 days before it (P is the latest funding at or
-    # before now - 7 d, or at or before the completed epoch's start)
-    scan_from = max(cutoff, hist_epoch - WEEK)
-    try:
-        events = [e for e in scanner.reward_funded_events(distributor, scan_from, now) if int(e["timestamp"]) >= cutoff]
-        times = [int(e["timestamp"]) for e in events]
-        older = []
-        if len(known) < 2:
-            # the start of the Aero era may predate the scan: look back once (then it is in the state file)
-            lb_from = max(cutoff, until + 1) if until is not None else cutoff
-            if lb_from < scan_from:
-                older = [int(e["timestamp"]) for e in scanner.reward_funded_events(distributor, lb_from, scan_from - 1)
-                         if int(e["timestamp"]) >= cutoff]
-        start_times = sorted(set(known) | set(older) | set(times))[:2]
-        first = start_times[0] if start_times else None
-        second = start_times[1] if len(start_times) > 1 else None
-        if (second is not None and now >= second + phase and first < scan_from
-                and not any(t <= hist_epoch for t in times)):
-            # after the accrual phase P (the latest funding at or before the completed epoch's start / now - 7 d) may
-            # predate the scan when a whole epoch went unfunded: look it up, as P only (its funding is not counted)
-            back = older or [int(e["timestamp"]) for e in
-                             scanner.reward_funded_events(distributor, max(cutoff, first), scan_from - 1)
-                             if int(e["timestamp"]) >= cutoff]
-            if back:
-                times = times + [max(back)]
-    except Exception as e:
-        aero_epochs = [k for k, v in (epochs_doc.get("epochs") or {}).items()
-                       if str(k).isdigit() and int(k) > epoch_start(cutoff) and (v or {}).get("tokens")]
-        if known or aero_epochs:
-            # Aero-era funding exists (or may): the per-epoch figure could be a running or catch-up epoch
-            logger.error(f"[realized_yield] RewardFunded scan failed ({str(e)[:160]}); NOT publishing this run.")
-            _log_status({"event": "realized_yield_blocked", "reasons": ["RewardFunded scan failed"]})
-            return False
-        # no Aero-era funding on record: the last epoch that ended before the Aero era (the transition epoch may hold
-        # Aero-era funding on top of its Aerodrome week)
-        logger.warning(f"[realized_yield] RewardFunded scan failed ({str(e)[:160]}); no Aero-era funding on record, "
-                       f"publishing the last Aerodrome-only epoch")
-        payload = build(epoch=epoch_start(cutoff) - WEEK)
-        payload["rollingFallback"] = "RewardFunded scan failed; the last Aerodrome-only epoch"
-        events, times, first, second, yh_enabled = None, [], None, None, False
-    else:
-        # rewritten when the fundings change, or (fewer than two so far) when the scanned-until point is about to fall
-        # behind the scan start (the start look-back would otherwise repeat): not on every run
-        if len(start_times) >= 2:
-            new_state = {"aeroFundings": start_times}
-        elif start_times != known or until is None or until + 1 < scan_from + 2 * 24 * 3600:
-            new_state = {"aeroFundings": start_times, "scannedUntil": now}
-        else:
-            new_state = state
-        if new_state != state:
-            try:
-                updater.update_file(state_path, json.dumps(new_state, indent=2), commit_message="Realized yield state")
-            except Exception as e:
-                logger.warning(f"[realized_yield] could not write {state_path}: {e}")
-    if first is not None and accrual_start is None:
-        logger.warning("[realized_yield] the stake's accrual start is unknown (PROTOCOL_AERO_STAKE_SINCE); "
-                       "using the first Aero-era funding")
-    start = accrual_start if accrual_start is not None else first
 
-    keep_headline = False
-    if events is None:
-        pass                                            # the scan failed: payload set above
-    elif first is not None:
-        plan = rolling_plan(times, now, start, second)
-        if plan:
-            payload = build_window(plan, epoch_start(now), "rolling_7d")
-        else:
-            # one funding time so far, under a day of funding since the accrual start, or no funding at or before
-            # now - 7 d: the last completed epoch; if it also holds an Aerodrome-era week, that week without its (at
-            # most one, maybe partial) Aero-era funding (never a rolling 0, never both)
-            aero_part = aero_era_raw(events, hist_epoch, cutoff)
-            logger.info(f"[realized_yield] no rolling figure yet (first Aero-era fundings {start_times}); publishing "
-                        f"the last completed epoch {hist_epoch}")
-            payload = build(epoch=hist_epoch, aero_era=aero_part or None)
-            payload["rollingFallback"] = "one funding time so far, under a day of funding, or none in 7 days"
-            if not payload.get("fundedTokenCount"):
-                logger.warning(f"[realized_yield] epoch {hist_epoch} has no funding either; keeping the previous "
-                               f"headline figures")
-                keep_headline = True
+    # 1. stake and prices at the current epoch's start (the distributor's payout denominator)
+    try:
+        base = stake_payload(scanner.w3, distributor, epoch_start(now), price_fetcher, decimals_fn, aero, iaero, now)
+    except Exception as e:
+        base = None
+        logger.exception(f"[realized_yield] stake / price read failed: {e}")
+
+    # 2. the live measurement of the stake's earnings (claims scanned from data/live_state.json on)
+    state_path = os.environ.get("LIVE_STATE_JSON_PATH", "data/live_state.json")
+    claims_state = _load_json(repo, updater.branch, state_path)
+    prev_live = prev_doc.get("live")
+    live = live_prices = new_claims_state = None
+    if base is not None:
+        try:
+            live = _build_live_block(scanner, price_fetcher, base, prev_live, claims_state)
+            new_claims_state = live.pop("_claimsState", None)
+            live_prices = live.pop("_prices", None)
+        except Exception as e:
+            logger.exception(f"[position] live block failed: {e}")
+    if live is None and isinstance(prev_live, dict):
+        live = dict(prev_live, stale=True)              # keep its history and gauge list
+    if _claims_state_due(claims_state, new_claims_state):
+        try:
+            updater.update_file(state_path, json.dumps(new_claims_state, indent=2), commit_message="Live claims state")
+        except Exception as e:
+            logger.warning(f"[position] could not write {state_path}: {e}")
+
+    # 3. the headline: measured, or the previous one kept
+    payload, stale_reason = None, None
+    m = measured_headline(live) if base is not None else None
+    if m:
+        payload = apply_measured(base, *m, now_ts=now)
+        problems = sanity_problems(payload)
+        if problems:
+            stale_reason = f"the measured figure fails the sanity guard ({'; '.join(problems)}; apyPct={payload['apyPct']})"
+            payload = None
     else:
-        payload = build()
-    problems = sanity_problems(payload)
-    if problems:
-        logger.error(
-            f"[realized_yield] epoch {payload.get('epoch')} fails the sanity guard ({'; '.join(problems)}; apyPct="
-            f"{payload.get('apyPct')}, funded ${payload.get('fundedUSD_human')}, staked ${payload.get('stakedUSD_human')}); "
-            f"NOT publishing."
-        )
-        _log_status({"event": "realized_yield_blocked", "reasons": problems})
-        return False
-    if payload.get("excludedTokens"):
-        logger.warning(f"[realized_yield] left out (untrusted DEX price): {payload['excludedTokens']}")
+        stale_reason = "stake / price read failed" if base is None else measured_unavailable_reason(live)
+    if payload is None:
+        payload = kept_headline(prev_doc, stale_reason)
+        logger.error(f"[realized_yield] no measured headline this run ({stale_reason}); "
+                     f"{'keeping the previous headline figures' if payload else 'no previous headline: NOT publishing'}")
+        _log_status({"event": "realized_yield_kept", "reasons": [stale_reason]})
+    else:
+        logger.info(f"[realized_yield] headline {payload['apySource']}: ${payload['measuredUsdPerDay']:.2f}/day -> "
+                    f"apy={payload['apyPct']:.2f}% stakersWeekly=${payload['stakersWeeklyUSD_human']} "
+                    f"staked=${payload['stakedUSD_human']} window={payload['apyWindow']}")
+
+    # 4. secondary: the distributor fundings booked to the last completed epoch
+    if payload is not None and er_enabled:
+        epochs_doc = _load_json(repo, updater.branch, os.environ.get("EPOCHS_JSON_PATH", "data/epochs.json"))
+        if epochs_doc.get("epochs"):
+            try:
+                fr = build_estimated_rewards(w3=scanner.w3, distributor=distributor, epochs_doc=epochs_doc,
+                                             price_fetcher=price_fetcher, decimals_fn=decimals_fn, aero=aero,
+                                             iaero=iaero, epoch=hist_epoch, epoch_mode="last_completed", now_ts=now)
+                payload["fundedRealized"] = funded_realized(fr)
+            except Exception as e:
+                logger.warning(f"[realized_yield] fundedRealized for epoch {hist_epoch} failed: {e}")
 
     changed = False
-    if yh_enabled:
-        # only a completed epoch: a running epoch holds a partial week of funding
-        hist_payload = None
-        try:
-            if first is None:
-                if int(payload["epoch"]) == hist_epoch and not payload.get("apyWindow"):
-                    hist_payload = payload
-                elif ((epochs_doc.get("epochs") or {}).get(str(hist_epoch)) or {}).get("tokens"):
-                    hist_payload = build(epoch=hist_epoch)
-                else:
-                    logger.info(f"[yield_history] completed epoch {hist_epoch} has no funding; no entry")
-            else:
-                # the rolling rule at the epoch's end
-                plan = rolling_plan(times, hist_epoch + WEEK, start, second)
-                if plan:
-                    hist_payload = build_window(plan, hist_epoch, "epoch_window")
-                else:
-                    logger.info(f"[yield_history] epoch {hist_epoch}: no rolling figure at its end; no entry")
-        except Exception as e:
-            logger.exception(f"[yield_history] epoch {hist_epoch} read failed; no entry this run: {e}")
-        if hist_payload is not None:
-            hist_problems = sanity_problems(hist_payload)
-            if hist_problems:
-                logger.error(f"[yield_history] epoch {hist_epoch}: {'; '.join(hist_problems)}; not writing its entry.")
-            else:
-                changed = _update_yield_history(repo, updater, hist_payload) or changed
-    if er_enabled and keep_headline:
-        er_enabled = False
-    if er_enabled:
-        if os.environ.get("LIVE_YIELD_ENABLED", "true").lower() == "true":
-            # additional real-time block; apyPct and every legacy field are untouched
-            prev_live = prev_doc.get("live")
+    # 5. yield_history: the completed epoch's measured earnings (complete points near both of its ends)
+    if yh_enabled and isinstance(live, dict) and not live.get("stale") and live_prices is not None:
+        price = lambda cid, t: float((live_prices.get(cid) or {}).get(t, 0.0) or 0.0)
+        er = epoch_rate(live.get("history") or [], hist_epoch, hist_epoch + WEEK, price)
+        if er is None:
+            logger.info(f"[yield_history] epoch {hist_epoch}: no complete history points near both of its ends "
+                        f"(or something left out between them); no entry")
+        else:
             try:
-                live = _build_live_block(scanner, price_fetcher, payload, prev_live)
+                hb = stake_payload(scanner.w3, distributor, hist_epoch, price_fetcher, decimals_fn, aero, iaero, now)
+                hp = apply_measured(hb, er["usdPerDay"], "measured-epoch",
+                                    {"from": er["from"], "to": er["to"], "days": round(er["days"], 6)}, now_ts=now)
+                hist_problems = sanity_problems(hp)
+                if hist_problems:
+                    logger.error(f"[yield_history] epoch {hist_epoch}: {'; '.join(hist_problems)}; not writing its entry.")
+                else:
+                    changed = _update_yield_history(repo, updater, hp) or changed
             except Exception as e:
-                # keep the previous block (its history and gauge list) rather than publishing without it
-                live = dict(prev_live, stale=True) if isinstance(prev_live, dict) else None
-                logger.exception(f"[position] live block failed; "
-                                 f"{'keeping the previous block, flagged stale' if live else 'publishing without it'}: {e}")
-            if live is not None:
-                payload = dict(payload, live=live)
+                logger.exception(f"[yield_history] epoch {hist_epoch} read failed; no entry this run: {e}")
+
+    # 6. publish
+    if er_enabled and payload is not None:
+        if live is not None:
+            payload["live"] = live
         changed = _push_if_changed(repo, updater, path, payload) or changed
     return changed
 
-def _build_live_block(scanner: ChainScanner, price_fetcher: PriceFetcher, payload: dict, prev_live) -> dict:
-    """Real-time earnings of the protocol's Aero stake (Base + Ethereum) -> estimated_rewards_usd.json `live`."""
+def _build_live_block(scanner: ChainScanner, price_fetcher: PriceFetcher, payload: dict, prev_live,
+                      claims_state=None) -> dict:
+    """Real-time earnings of the protocol's Aero stake (Base, Ethereum, Robinhood) -> estimated_rewards_usd.json
+    `live`, plus "_claimsState" and "_prices" for the caller. A chain whose RPC can't be reached is unmeasured."""
     from web3 import Web3
-    from position_earnings import (ChainReader, build_live, staked_aero, DEFAULT_STAKE_ID, FIRST_ALLOCATION,
-                                   FACTORY_REGISTRY_BASE, VOTING_ESCROW)
+    from position_earnings import (ChainReader, build_live, staked_aero, DEFAULT_STAKE_ID, FACTORY_REGISTRY_BASE,
+                                   VOTING_ESCROW, ROBINHOOD_CHAIN_ID, ROBINHOOD_RPC, ROBINHOOD_PRICE_MAP)
+    from price_fetcher import MappedPriceFetcher
     token_id = int(os.environ.get("PROTOCOL_AERO_STAKE_ID") or DEFAULT_STAKE_ID)
-    since_env = os.environ.get("PROTOCOL_AERO_STAKE_SINCE")
-    first_allocation = int(since_env) if since_env else FIRST_ALLOCATION.get(token_id)
 
     base = ChainReader(scanner.w3, 8453)
     readers = [(base, os.environ.get("AERO_FACTORY_REGISTRY") or FACTORY_REGISTRY_BASE)]
     price_fetchers = {8453: price_fetcher}
-    try:
-        eth_w3 = Web3(Web3.HTTPProvider(os.environ.get("ETH_RPC_URL") or "https://ethereum-rpc.publicnode.com",
-                                        request_kwargs={"timeout": 20}))
-        readers.append((ChainReader(eth_w3, 1, block=max(0, int(eth_w3.eth.block_number) - 3)), None))
-        price_fetchers[1] = PriceFetcher(chain_slug="ethereum", cache_file="price_cache_ethereum.json", ttl_sec=300)
-    except Exception as e:
-        logger.warning(f"[position] Ethereum RPC unavailable ({e}); measuring Base only")
+    unreachable = []
+    for cid, url, lag, pf in (
+        (1, os.environ.get("ETH_RPC_URL") or "https://ethereum-rpc.publicnode.com", 3,
+         lambda: PriceFetcher(chain_slug="ethereum", cache_file="price_cache_ethereum.json", ttl_sec=300)),
+        (ROBINHOOD_CHAIN_ID, os.environ.get("ROBINHOOD_RPC_URL") or ROBINHOOD_RPC, 20,
+         lambda: MappedPriceFetcher(PriceFetcher(chain_slug="robinhood", cache_file="price_cache_robinhood.json",
+                                                 ttl_sec=300), ROBINHOOD_PRICE_MAP)),
+    ):
+        try:
+            w3 = Web3(Web3.HTTPProvider(url, request_kwargs={"timeout": 20}))
+            readers.append((ChainReader(w3, cid, block=max(0, int(w3.eth.block_number) - lag)), None))
+            price_fetchers[cid] = pf()
+        except Exception as e:
+            logger.warning(f"[position] chain {cid} RPC unavailable ({str(e)[:120]}); unmeasured this run")
+            unreachable.append(cid)
 
     return build_live(
         readers, token_id, price_fetchers,
@@ -585,7 +519,9 @@ def _build_live_block(scanner: ChainScanner, price_fetcher: PriceFetcher, payloa
         staked_iaero_usd=int(payload["stakedUSD_1e18"]) / 1e18,      # same denominator as apyPct
         stakers_bps=int((payload.get("splitBps") or {}).get("stakers", 8000)),
         prev_live=prev_live,
-        first_allocation=first_allocation,
+        first_allocation=_stake_accrual_start(),
+        claims_state=claims_state,
+        unreachable=unreachable,
     )
 
 def _update_yield_history(repo, updater: GitHubUpdater, payload: dict) -> bool:

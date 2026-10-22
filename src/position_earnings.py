@@ -1,20 +1,24 @@
 # position_earnings.py
 """
 Real-time earnings of the protocol's Aero stake (veNFT, e.g. #1584): the `live` block of
-data/estimated_rewards_usd.json. Read-only.
+data/estimated_rewards_usd.json, and the measured rate the headline apyPct comes from. Read-only.
 
-Per chain (Base + Ethereum; chain 4663 has no RPC and is reported as unmeasured):
+Per chain (Base, Ethereum, Robinhood 4663; a chain whose reads fail is reported unmeasured):
   gauges   = LeafVoter.allocatedGauges(tokenId)  (+ gauges in the previous live block, so a re-vote
              doesn't drop earnings still sitting on a gauge the stake left)
   VRM      = FactoryRegistry.gaugeToRewards(gauge) on Base, else gauge.votingRewardsManager()
   earned   = VRM.earnedFees(tokenId, maxCk)              (token0/token1; includes uncredited fees)
            + VRM.earnedIncentives(tokenId, programId, maxCk) for programId 1..incentiveCount()
-           + claimed so far (ClaimFees / ClaimIncentives logs for tokenId), so the total is cumulative
+           + claimed so far (ClaimFees / ClaimIncentives logs for tokenId), so the total is cumulative. The claims
+             are scanned incrementally: per chain the last scanned block and the cumulative claimed amounts per VRM
+             and token are kept (claimsState, data/live_state.json); a failed scan leaves them for the next run
   since    = LeafVoter.tokenStates(tokenId).lastAllocated, but never later than the stake's first
              allocation when known (lastAllocated moves on every re-vote while earnings stay on the VRM)
 Valuation uses CURRENT prices. usdPerDay = accruedUSD / elapsed days (since allocation).
   positionAprPct        = usdPerDay*365 / (staked AERO * AERO price)            (the position's own yield)
   projectedStakerApyPct = usdPerDay*365 * stakers share / staked iAERO USD      (same denominator as apyPct)
+readComplete: every chain read (claims scanned, gauge list and every gauge read) and every earned token priced; a
+trailing window is complete when the read is, both points cover the same chains in full and nothing is left out.
 """
 import math
 import time
@@ -28,11 +32,18 @@ logger = logging.getLogger(__name__)
 LEAF_VOTER = "0x382409fad8503FbCdbB27A4211551fa03e884078"         # same address on every Aero chain
 FACTORY_REGISTRY_BASE = "0x7b2A2c12dC5Ea2a31455952a05031C3E4BB28F3E"
 VOTING_ESCROW = "0xBF7977E1521e9a3032bf7243Ee4712f311f13915"      # Base
-MULTICALL3 = "0xcA11bde05977b3631167028862bE2a173976CA11"         # same address on Base and Ethereum
+MULTICALL3 = "0xcA11bde05977b3631167028862bE2a173976CA11"         # same address on Base, Ethereum and Robinhood
 DEFAULT_STAKE_ID = 1584
 FIRST_ALLOCATION = {1584: 1792635063}                              # #1584 first allocated 2026-10-22 02:11:03 UTC
-UNMEASURED_CHAINS = [4663]                                         # no RPC; its allocation earns but isn't measured
-BLOCK_TIME = {8453: 2, 1: 12}
+UNMEASURED_CHAINS: List[int] = []                                  # every chain #1584 votes on has an RPC
+ROBINHOOD_CHAIN_ID = 4663
+ROBINHOOD_RPC = "https://rpc.mainnet.chain.robinhood.com"          # env ROBINHOOD_RPC_URL
+# Robinhood tokens DefiLlama may not price under robinhood:<address>: the DefiLlama key priced instead. Never guessed:
+# a token neither priced nor mapped stays unpriced and the read is incomplete.
+ROBINHOOD_PRICE_MAP = {
+    "0x0bd7d308f8e1639fab988df18a8011f41eacad73": "ethereum:0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",  # WETH
+    "0x5fc5360d0400a0fd4f2af552add042d716f1d168": "coingecko:global-dollar",                              # USDG
+}
 MAX_CHECKPOINTS = 10_000
 MAX_SANE_PCT = 500.0
 
@@ -88,23 +99,47 @@ class ChainReader:
                         pass
         return out
 
-    def block_at(self, ts: int) -> int:
-        bt = BLOCK_TIME.get(self.chain_id, 2)
-        return max(0, self.block - max(0, self.block_ts - int(ts)) // bt - 600)  # 600-block margin
+    def _ts(self, block: int) -> int:
+        return int(self._retry(lambda: self.w3.eth.get_block(int(block)))["timestamp"])
 
-    def logs(self, addresses: List[str], topics: list, from_block: int, step: int = 10_000) -> Optional[list]:
-        """All logs, or None if the RPC refuses (claims then count as unknown)."""
+    def block_at(self, ts: int) -> int:
+        """The last block with timestamp <= ts (0 if none): a galloping search back from the pinned block, then a
+        bisection, on block timestamps only (no block-time assumption: Robinhood makes 10 blocks a second)."""
+        if int(ts) >= self.block_ts:
+            return self.block
+        hi, step = self.block, 1
+        lo = max(0, hi - step)
+        while lo > 0 and self._ts(lo) > int(ts):
+            hi, step = lo, step * 2
+            lo = max(0, hi - step)
+        if lo == 0 and self._ts(0) > int(ts):
+            return 0
+        while hi - lo > 1:
+            mid = (lo + hi) // 2
+            if self._ts(mid) <= int(ts):
+                lo = mid
+            else:
+                hi = mid
+        return lo
+
+    def logs(self, addresses: List[str], topics: list, from_block: int, to_block: Optional[int] = None,
+             step: int = 10_000, min_step: int = 500, max_step: int = 1_000_000) -> Optional[list]:
+        """All logs in [from_block, to_block (default: the pinned block)], or None if the RPC refuses a range of
+        min_step blocks (the caller then counts the claims as unknown). The range per call halves on errors (public
+        RPCs cap it, e.g. 1000 blocks) and doubles after successes."""
         out, fb = [], int(from_block)
+        tb_max = self.block if to_block is None else min(int(to_block), self.block)
         addrs = [self.w3.to_checksum_address(a) for a in addresses]
-        while fb <= self.block:
-            tb = min(self.block, fb + step - 1)
+        while fb <= tb_max:
+            tb = min(tb_max, fb + step - 1)
             try:
                 out.extend(self._retry(lambda: self.w3.eth.get_logs(
                     {"address": addrs, "fromBlock": fb, "toBlock": tb, "topics": topics}), tries=3))
                 fb = tb + 1
+                step = min(max_step, step * 2)
             except Exception as e:
-                if step > 1_000:
-                    step //= 2
+                if step > min_step:
+                    step = max(min_step, step // 2)
                     continue
                 logger.warning(f"[position] chain {self.chain_id}: eth_getLogs refused ({str(e)[:120]}); claims unknown")
                 return None
@@ -117,8 +152,12 @@ def _topic_int(t) -> int:
 
 def read_chain_position(reader, token_id: int, leaf_voter: str = LEAF_VOTER, registry: Optional[str] = None,
                         extra_gauges: tuple = (), max_checkpoints: int = MAX_CHECKPOINTS,
-                        first_allocation: Optional[int] = None) -> dict:
-    """Raw on-chain earnings of `token_id` on one chain (no prices)."""
+                        first_allocation: Optional[int] = None, claims_state: Optional[dict] = None) -> dict:
+    """Raw on-chain earnings of `token_id` on one chain (no prices).
+    claims_state: this chain's {"since", "block", "blockTimestamp", "vrms": {vrm: {"fees": {token: raw},
+    "incentives": {token: raw}}}}
+    from the previous run: claims are scanned only after its block (a VRM new to it: from `since`). The result's
+    claimsState is the updated one, or the given one unchanged if a scan failed (claimsScanned False)."""
     gauges, state = reader.many([
         (leaf_voter, "allocatedGauges(uint256)", [token_id], ["address[]"]),
         (leaf_voter, "tokenStates(uint256)", [token_id], ["address", "uint48", "bool", "uint128"]),
@@ -187,22 +226,34 @@ def read_chain_position(reader, token_id: int, leaf_voter: str = LEAF_VOTER, reg
         r["incentives"].append({"programId": pid, "token": inc[0].lower(), "amount": int(amount or 0),
                                 "start": int(inc[3]), "end": int(inc[4])})
 
-    # claims so far (cumulative = claimed + unclaimed)
+    # claims so far (cumulative = claimed + unclaimed), scanned incrementally
     first = first_allocation if first_allocation is not None else FIRST_ALLOCATION.get(token_id)
     last_alloc = int(state[1]) if state else 0
     since = min(x for x in (last_alloc, first) if x) if (last_alloc or first) else reader.block_ts
-    claims = []                                      # no VRM -> nothing to scan
-    if rows:
-        tid_topic = "0x" + int(token_id).to_bytes(32, "big").hex()
-        claims = reader.logs([r["vrm"] for r in rows], [[CLAIM_FEES_TOPIC, CLAIM_INCENTIVES_TOPIC], tid_topic],
-                             reader.block_at(since))
+    prev = claims_state if (isinstance(claims_state, dict) and claims_state.get("since") == int(since)
+                            and isinstance(claims_state.get("block"), int)) else None
+    cum = {v: {"fees": dict((d or {}).get("fees") or {}), "incentives": dict((d or {}).get("incentives") or {})}
+           for v, d in ((prev or {}).get("vrms") or {}).items()}
+    known = sorted(cum)
+    new = sorted({r["vrm"] for r in rows} - set(known))
+    tid_topic = "0x" + int(token_id).to_bytes(32, "big").hex()
+    topics = [[CLAIM_FEES_TOPIC, CLAIM_INCENTIVES_TOPIC], tid_topic]
+    claims: Optional[list] = []
+    if prev and prev["block"] > reader.block:
+        # this RPC is behind the last run: claims after its block would count twice (claimed + unclaimed)
+        logger.warning(f"[position] chain {reader.chain_id}: block {reader.block} is behind the claims state "
+                       f"({prev['block']}); claims unknown this run")
+        claims = None
+    elif known and prev["block"] < reader.block:
+        got = reader.logs(known, topics, prev["block"] + 1)
+        claims = None if got is None else claims + got
+    if new and claims is not None:
+        got = reader.logs(new, topics, reader.block_at(since))
+        claims = None if got is None else claims + got
     by_vrm = {r["vrm"]: r for r in rows}
-    for r in rows:
-        r["claimed"], r["claimedFees"], r["claimedIncentives"] = {}, {}, {}
+    parsed = []
     for lg in claims or []:
-        r = by_vrm.get(str(lg["address"]).lower())
-        if not r:
-            continue
+        vrm = str(lg["address"]).lower()
         topic0 = "0x" + (lg["topics"][0].hex() if hasattr(lg["topics"][0], "hex") else lg["topics"][0]).removeprefix("0x")
         amount = _topic_int(lg["data"]) if lg["data"] not in (b"", "0x") else 0
         is_fee = topic0 == CLAIM_FEES_TOPIC
@@ -210,20 +261,43 @@ def read_chain_position(reader, token_id: int, leaf_voter: str = LEAF_VOTER, reg
             token = "0x" + format(_topic_int(lg["topics"][3]), "040x")
         else:
             pid = _topic_int(lg["topics"][3])
-            token = next((x["token"] for x in r["incentives"] if x["programId"] == pid), None)
+            r = by_vrm.get(vrm)
+            token = next((x["token"] for x in (r or {}).get("incentives", []) if x["programId"] == pid), None)
             if token is None:
-                inc = reader.many([(r["vrm"], "incentive(uint256)", [pid],
+                inc = reader.many([(vrm, "incentive(uint256)", [pid],
                                     ["address", "uint256", "uint256", "uint48", "uint48", "address"])])[0]
                 token = inc[0].lower() if inc else None
-        if token:
-            r["claimed"][token] = r["claimed"].get(token, 0) + amount
-            kind = r["claimedFees"] if is_fee else r["claimedIncentives"]
-            kind[token] = kind.get(token, 0) + amount
+        if not token:
+            # an incentive claim whose token can't be read: rescanned next run rather than lost for good
+            logger.warning(f"[position] chain {reader.chain_id}: claim of program {pid} on {vrm} unresolved; "
+                           f"claims unknown this run")
+            claims, parsed = None, []
+            break
+        parsed.append((vrm, is_fee, token, amount))
+    for vrm, is_fee, token, amount in parsed:
+        kind = cum.setdefault(vrm, {"fees": {}, "incentives": {}})["fees" if is_fee else "incentives"]
+        kind[token] = int(kind.get(token, 0)) + amount
+    for r in rows:
+        c = cum.get(r["vrm"]) or {"fees": {}, "incentives": {}}
+        r["claimedFees"] = {t: int(a) for t, a in c["fees"].items()}
+        r["claimedIncentives"] = {t: int(a) for t, a in c["incentives"].items()}
+        r["claimed"] = {}
+        for t, a in list(r["claimedFees"].items()) + list(r["claimedIncentives"].items()):
+            r["claimed"][t] = r["claimed"].get(t, 0) + a
+    if claims is not None:
+        for v in new:                                   # scanned: recorded even without claims (not rescanned)
+            cum.setdefault(v, {"fees": {}, "incentives": {}})
+        new_state = {"since": int(since), "block": int(reader.block), "blockTimestamp": int(reader.block_ts),
+                     "vrms": {v: {"fees": {t: int(a) for t, a in d["fees"].items()},
+                                  "incentives": {t: int(a) for t, a in d["incentives"].items()}} for v, d in cum.items()}}
+    else:
+        new_state = prev
 
     return {"chainId": reader.chain_id, "block": reader.block, "blockTimestamp": reader.block_ts,
             "lastAllocated": last_alloc, "since": int(since), "chainAllocation": int(state[3]) if state else 0,
             "claimsScanned": claims is not None, "gaugeListRead": gauges is not None,
-            "unreadGauges": unread + [r["gauge"] for r in rows if not r["readOk"]], "gauges": rows}
+            "unreadGauges": unread + [r["gauge"] for r in rows if not r["readOk"]], "gauges": rows,
+            "claimsState": new_state}
 
 
 def token_meta(reader, tokens: List[str]) -> Dict[str, dict]:
@@ -252,11 +326,12 @@ def _sane(name: str, v: Optional[float]) -> Optional[float]:
 # not recorded. So an end of a window never lacks claims, and a gauge missing from the older point counts from zero
 # only if the stake re-allocated on that chain after that point (otherwise it is left out and the window is partial).
 DAY_SEC = 86400
+EPOCH_SEC = 7 * DAY_SEC                 # epochs: weeks from Thursday 00:00 UTC (unix time 0 was a Thursday)
 WINDOWS = {"24h": (20 * 3600, 36 * 3600, 24 * 3600),          # (min age, max age, target age) of the snapshot used
            "7d": (6 * DAY_SEC, 8 * DAY_SEC, 7 * DAY_SEC)}
 HISTORY_MAX_AGE = int(10.5 * 86400)
-HISTORY_MAX_POINTS = 12
-HISTORY_MIN_SPACING = 12 * 3600         # one point per ~day; a newer run within 12 h replaces the newest point
+HISTORY_MAX_POINTS = 24
+HISTORY_MIN_SPACING = 12 * 3600         # points >= 12 h apart: the newest is replaced while it is closer to the one before
 DROP_ALERT_RATIO = 0.5                  # 24h rate below 50% of the 7d rate -> alert
 ZERO_ALERT_USD_PER_DAY = 1.0            # an allocated gauge under $1/day over 24h counts as earning nothing
 
@@ -335,8 +410,9 @@ def _rates(usd_per_day: float, stake_usd: float, staked_iaero_usd: float, staker
 def value_live(chains: List[dict], meta: Dict[int, Dict[str, dict]], prices: Dict[int, Dict[str, float]],
                token_id: int, staked_aero_raw: int, aero_price: float, staked_iaero_usd: float,
                stakers_bps: int = 8000, now_ts: Optional[int] = None, unmeasured: Optional[List[int]] = None,
-               prev_history: Optional[List[dict]] = None) -> dict:
-    """Pure: price the raw per-chain reads into the `live` block (plus trailing windows over prev_history)."""
+               prev_history: Optional[List[dict]] = None, excluded: Optional[Dict[int, List[str]]] = None) -> dict:
+    """Pure: price the raw per-chain reads into the `live` block (plus trailing windows over prev_history).
+    excluded {chainId: [token]}: tokens valued at 0 on purpose (an untrusted DEX price), listed, not unpriced."""
     now_ts = int(now_ts if now_ts is not None else time.time())
     stake = staked_aero_raw / 1e18 if staked_aero_raw else 0.0
     gauges_out, unpriced = [], set()
@@ -366,7 +442,7 @@ def value_live(chains: List[dict], meta: Dict[int, Dict[str, dict]], prices: Dic
                 m = meta.get(cid, {}).get(t, {"symbol": t[:6], "decimals": 18})
                 px = float(prices.get(cid, {}).get(t, 0.0) or 0.0)
                 amt = a / 10 ** m["decimals"]
-                if px <= 0:
+                if px <= 0 and t not in (excluded or {}).get(cid, []):
                     unpriced.add(f"{cid}:{t}")
                 tokens_out.append({"token": t, "symbol": m["symbol"], "amount": amt, "usd": amt * px})
                 usd += amt * px
@@ -418,6 +494,11 @@ def value_live(chains: List[dict], meta: Dict[int, Dict[str, dict]], prices: Dic
     pos_apr = (annual / stake_usd * 100.0) if stake_usd > 0 else None
     proj = (annual * stakers_bps / 10_000 / staked_iaero_usd * 100.0) if staked_iaero_usd > 0 else None
     since = min((c["since"] for c in chains), default=now_ts)
+    unmeasured_chains = sorted(set(UNMEASURED_CHAINS if unmeasured is None else unmeasured))
+    read_complete = bool(chains) and not unmeasured_chains and not unpriced and all(
+        c["claimsScanned"] and c.get("gaugeListRead", True) and not c.get("unreadGauges") for c in chains)
+    point["complete"] = read_complete
+    point["lastAllocated"] = {str(c["chainId"]): int(c.get("lastAllocated") or 0) for c in chains}
     out = {
         "method": "live_position",
         "stale": False,
@@ -435,7 +516,8 @@ def value_live(chains: List[dict], meta: Dict[int, Dict[str, dict]], prices: Dic
         "usdPerDay": usd_day_total,
         "annualUSD": annual,
         "measuredShareOfAllocation": (measured_alloc / 1e18 / stake) if stake else 0.0,
-        "unmeasuredChains": sorted(set(UNMEASURED_CHAINS if unmeasured is None else unmeasured)),
+        "unmeasuredChains": unmeasured_chains,
+        "readComplete": read_complete,
         "chains": [{"chainId": c["chainId"], "block": c["block"], "blockTimestamp": c["blockTimestamp"],
                     "since": c["since"], "lastAllocated": c["lastAllocated"],
                     "allocationAero": c["chainAllocation"] / 1e18, "claimsScanned": c["claimsScanned"],
@@ -443,6 +525,7 @@ def value_live(chains: List[dict], meta: Dict[int, Dict[str, dict]], prices: Dic
                    for c in chains],
         "gauges": gauges_out,
         "unpricedTokens": sorted(unpriced),
+        "excludedTokens": sorted(f"{cid}:{t}" for cid, toks in (excluded or {}).items() for t in toks),
         "priceBasis": "current",
         "definitions": {
             "accruedUSD": "fees + incentives earned by the stake since allocation (claimed + unclaimed), current prices; "
@@ -473,7 +556,11 @@ def value_live(chains: List[dict], meta: Dict[int, Dict[str, dict]], prices: Dic
             continue
         deltas[w] = d
         meta_w = {"snapshotAsOf": int(snap["asOf"]), "snapshotAgeHours": round((now_ts - int(snap["asOf"])) / 3600.0, 2),
-                  "claimsComplete": claims_ok, "partial": d["partial"]}
+                  "claimsComplete": claims_ok, "partial": d["partial"],
+                  # both ends in full: this read complete, the snapshot too, nothing left out between them, and no
+                  # cumulative amount that fell (a claim not seen)
+                  "complete": bool(read_complete and snap.get("complete") and not snap.get("unread")
+                                   and not d["partial"] and not d["negative"])}
         trailing[w] = {**meta_w, **_rates(d["usdPerDay"], stake_usd, staked_iaero_usd, stakers_bps, f"trailing.{w}")}
         fees_trailing[w] = {**meta_w, **_rates(d["feesUsdPerDay"], stake_usd, staked_iaero_usd, stakers_bps, f"feesOnly.{w}")}
         for key in d["negative"]:
@@ -500,10 +587,13 @@ def value_live(chains: List[dict], meta: Dict[int, Dict[str, dict]], prices: Dic
     for a in alerts:
         logger.warning(f"[position] ALERT {a['type']}: {a['message']}")
 
-    # keep ~daily points for ~10 days; a run within 12 h of the newest point replaces it. A run with no chain
-    # fully measured (claims refused) records nothing and keeps the newest point.
+    # points >= 12 h apart for ~10 days, whatever the run cadence: the newest point is provisional (the next run
+    # replaces it) while it is under 12 h newer than the point before it, except the first point of an epoch
+    # (Thursday 00:00 UTC), kept for yield_history (epoch_rate). A run with no chain fully measured (claims refused)
+    # records nothing and keeps the newest point.
     if point["chains"]:
-        if history and now_ts - int(history[-1]["asOf"]) < HISTORY_MIN_SPACING:
+        if (len(history) >= 2 and int(history[-1]["asOf"]) - int(history[-2]["asOf"]) < HISTORY_MIN_SPACING
+                and int(history[-1]["asOf"]) // EPOCH_SEC == int(history[-2]["asOf"]) // EPOCH_SEC):
             history = history[:-1]
         history = history + [point]
     history = [h for h in history if now_ts - int(h["asOf"]) <= HISTORY_MAX_AGE][-HISTORY_MAX_POINTS:]
@@ -518,8 +608,11 @@ def value_live(chains: List[dict], meta: Dict[int, Dict[str, dict]], prices: Dic
                     "24 h (20-36 h old) / 7 d (6-8 d old) before this run, valued at current prices; null until such a point "
                     "exists or when the two points share no fully measured chain; partial when a chain or gauge is left out",
         "feesOnly": "same figures counting trading fees only (no incentive programs)",
-        "history": "~daily points (<= 10.5 d): per-gauge cumulative token amounts keyed chainId:gauge, claimed + unclaimed; "
-                   "only chains whose claims were scanned, only gauges read in full (failed reads listed in unread)",
+        "history": "points >= 12 h apart (<= 10.5 d; plus the first of each epoch): per-gauge cumulative token amounts "
+                   "keyed chainId:gauge, claimed + unclaimed; "
+                   "only chains whose claims were scanned, only gauges read in full (failed reads listed in unread); "
+                   "complete when that run's read was",
+        "readComplete": "every chain read (claims scanned, gauge list and every gauge read) and every earned token priced",
         "stale": "true when this block could not be rebuilt and the previous one was kept as is",
         "alerts": "gauge_no_earnings_24h (allocated gauge < $1/day over 24h), rate_drop / fees_rate_drop "
                   "(24h < 50% of 7d), negative_delta (cumulative fell: claims not scanned?)",
@@ -530,43 +623,92 @@ def value_live(chains: List[dict], meta: Dict[int, Dict[str, dict]], prices: Dic
 def build_live(chain_readers: List[tuple], token_id: int, price_fetchers: Dict[int, object], staked_aero_raw: int,
                aero_price: float, staked_iaero_usd: float, stakers_bps: int = 8000,
                prev_live: Optional[dict] = None, now_ts: Optional[int] = None,
-               first_allocation: Optional[int] = None) -> dict:
+               first_allocation: Optional[int] = None, claims_state: Optional[dict] = None,
+               unreachable: Optional[List[int]] = None) -> dict:
     """chain_readers: [(reader, registry_or_None)]. price_fetchers: {chainId: PriceFetcher for that chain}.
-    A chain whose reads fail is reported in unmeasuredChains instead of failing the whole block."""
+    A chain whose reads fail, or listed in `unreachable` (no reader could be made), is reported in unmeasuredChains
+    instead of failing the whole block (the read is then incomplete).
+    The prices used are returned under "_prices" ({chainId: {token: usd}}; the caller drops the key).
+    claims_state: {"stakeId", "chains": {"<chainId>": per-chain claims state}} from the previous run; the updated one
+    is returned under the live block's "_claimsState" key (the caller stores it and drops the key).
+    A DEX price counts only under realized_yield's trusted-DEX rule; other DEX-priced tokens are excluded (valued 0)."""
+    from realized_yield import trusted_dex_tokens, DEX_TRUSTED_DEPTH_USD
+    import os
+    trusted = trusted_dex_tokens()
+    depth_min = float(os.environ.get("DEX_TRUSTED_DEPTH_USD") or DEX_TRUSTED_DEPTH_USD)
+    cs_chains = {}
+    if isinstance(claims_state, dict) and int(claims_state.get("stakeId", -1)) == int(token_id):
+        cs_chains = dict(claims_state.get("chains") or {})
     prev_g, prev_history = {}, []
     if prev_live and int(prev_live.get("stakeId", -1)) == int(token_id):
         for g in prev_live.get("gauges") or []:
             prev_g.setdefault(int(g.get("chainId", 0)), []).append(g["gauge"])
         prev_history = prev_live.get("history") or []
-    chains, meta, prices, unmeasured = [], {}, {}, list(UNMEASURED_CHAINS)
+    chains, meta, prices, excluded = [], {}, {}, {}
+    unmeasured = list(UNMEASURED_CHAINS) + [int(c) for c in (unreachable or [])]
     for reader, registry in chain_readers:
         try:
             ch = read_chain_position(reader, token_id, registry=registry, first_allocation=first_allocation,
-                                     extra_gauges=tuple(prev_g.get(reader.chain_id, [])))
+                                     extra_gauges=tuple(prev_g.get(reader.chain_id, [])),
+                                     claims_state=cs_chains.get(str(reader.chain_id)))
+            toks = set()
+            for r in ch["gauges"]:
+                toks |= set(r["fees"]) | {x["token"] for x in r["incentives"]} | set(r["claimed"]) | {r["token0"], r["token1"]}
+            toks.discard("")
+            meta[reader.chain_id] = token_meta(reader, sorted(toks))
+            pf = price_fetchers.get(reader.chain_id)
+            got = pf.fetch_batch(sorted(toks)) if (pf and toks) else {}
         except Exception as e:
             logger.warning(f"[position] chain {reader.chain_id} read failed ({str(e)[:160]}); reported as unmeasured")
             unmeasured.append(reader.chain_id)
             continue
+        if ch.get("claimsState") is not None:
+            cs_chains[str(reader.chain_id)] = ch["claimsState"]
         chains.append(ch)
-        toks = set()
-        for r in ch["gauges"]:
-            toks |= set(r["fees"]) | {x["token"] for x in r["incentives"]} | set(r["claimed"]) | {r["token0"], r["token1"]}
-        toks.discard("")
-        meta[reader.chain_id] = token_meta(reader, sorted(toks))
-        pf = price_fetchers.get(reader.chain_id)
-        got = pf.fetch_batch(sorted(toks)) if (pf and toks) else {}
-        prices[reader.chain_id] = {t: float((got.get(t) or {}).get("priceUsd", 0.0)) for t in toks}
+        prices[reader.chain_id] = {}
+        for t in toks:
+            e = got.get(t) or {}
+            px = float(e.get("priceUsd", 0.0) or 0.0)
+            if e.get("source") == "dex" and not (t in trusted and isinstance(e.get("dexDepthUsd"), (int, float))
+                                                  and e["dexDepthUsd"] >= depth_min):
+                excluded.setdefault(reader.chain_id, []).append(t)          # untrusted DEX price: left out
+                px = 0.0
+            prices[reader.chain_id][t] = px
     live = value_live(chains, meta, prices, token_id, staked_aero_raw, aero_price, staked_iaero_usd, stakers_bps, now_ts,
-                      unmeasured=unmeasured, prev_history=prev_history)
+                      unmeasured=unmeasured, prev_history=prev_history, excluded=excluded)
+    live["_claimsState"] = {"stakeId": int(token_id), "chains": cs_chains}
+    live["_prices"] = prices
     logger.info(
         f"[position] stake #{token_id}: accrued=${live['accruedUSD']:.2f} over {live['elapsedDays']:.3f}d "
         f"-> ${live['usdPerDay']:.2f}/day, positionApr={live.get('positionAprPct')} "
         f"projectedStakerApy={live.get('projectedStakerApyPct')} measured={live['measuredShareOfAllocation']:.3f} "
         f"unpriced={len(live['unpricedTokens'])} feesOnly=${live['feesOnly']['usdPerDay']:.2f}/day "
         f"trailing24h={(live['trailing']['24h'] or {}).get('usdPerDay')} trailing7d={(live['trailing']['7d'] or {}).get('usdPerDay')} "
-        f"alerts={len(live['alerts'])} history={len(live['history'])}"
+        f"alerts={len(live['alerts'])} history={len(live['history'])} readComplete={live['readComplete']} "
+        f"unmeasured={live['unmeasuredChains']}"
     )
     return live
+
+
+EPOCH_POINT_TOLERANCE = 6 * 3600        # a history point this close to an epoch boundary stands for it
+
+
+def epoch_rate(history: List[dict], start: int, end: int, price: Callable[[int, str], float],
+               tolerance: int = EPOCH_POINT_TOLERANCE) -> Optional[dict]:
+    """Measured earnings between the epoch boundaries `start` and `end`: the complete history points closest to each
+    (within `tolerance`), their per-gauge cumulative delta valued at `price`. None unless both exist and nothing is
+    left out between them ({"usdPerDay", "from", "to", "days"} otherwise)."""
+    def near(ts):
+        c = [h for h in history or [] if isinstance(h, dict) and h.get("complete") and not h.get("unread")
+             and abs(int(h.get("asOf", 0)) - int(ts)) <= tolerance]
+        return min(c, key=lambda h: abs(int(h["asOf"]) - int(ts))) if c else None
+    a, b = near(start), near(end)
+    if not a or not b or int(b["asOf"]) <= int(a["asOf"]):
+        return None
+    d = window_delta(b, a, price, {int(k): int(v) for k, v in (b.get("lastAllocated") or {}).items()})
+    if not d or d["partial"]:
+        return None
+    return {"usdPerDay": d["usdPerDay"], "from": int(a["asOf"]), "to": int(b["asOf"]), "days": d["days"]}
 
 
 def staked_aero(reader, token_id: int, voting_escrow: str = VOTING_ESCROW) -> int:

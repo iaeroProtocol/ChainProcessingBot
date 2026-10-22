@@ -3,39 +3,29 @@
 Realized staking yield for data/estimated_rewards_usd.json and data/yield_history.json
 (replaces the legacy EnhancedOptimizedVotesKeeper estimate and the rewards keeper's yield snapshot).
 
-Funding: the EpochStakingDistributor receives the stakers' 80% of each harvest and books it to an epoch (weeks start
-Thursday 00:00 UTC, E = ts // WEEK * WEEK), emitting RewardFunded(token, epochId, amount). Until 22 Oct 2026 the
-rewards keeper funded once a week (Thursday 00:01, into the new epoch). The Aero-era harvester funds every day (06:00
-UTC) into the RUNNING epoch, so a running epoch only holds part of a week.
-
-Headline figures (estimated_rewards_usd.json):
-  rolling        automatic once any Aero-era funding exists (RewardFunded at or after ROLLING_CUTOFF_TS, just after the
-                 last Aerodrome-era funding). Each funding pays for #1584's accrual since the previous one, so
-                 rate = fundings in (P, T_last] / (T_last - P), T_last = the latest funding (rolling_plan):
-                 P = #1584's accrual start (position_earnings.FIRST_ALLOCATION / PROTOCOL_AERO_STAKE_SINCE) until 14
-                 days after the SECOND Aero-era funding time (a split, test or smoke-test first funding is then all
-                 counted, however early), then the latest funding at or before now - 7 d (looked up before the scan
-                 when a whole epoch went unfunded). Used once there are two funding times and T_last - P >= 1 day;
-                 otherwise the per-epoch figure of the last COMPLETED epoch, its
-                 Aero-era fundings left out when it also holds an Aerodrome-era week (then at most one, maybe partial,
-                 Aero-era funding: the complete week is published, not both); never a rolling 0.
-                 stakersWeeklyUSD = fundedUSD * 7 / spanDays; apyWindow = {from: P, to: T_last, spanDays}
-  per-epoch      (no Aero-era funding yet) epoch E chosen by ESTIMATED_REWARDS_EPOCH:
-                 latest_funded  (default) newest epoch with funding in epochs.json; older than 2 weeks -> 0 (stale)
-                 last_completed the most recent epoch whose week has ended
-                 fundedUSD = stakersWeeklyUSD = sum over tokens of rewardsForEpoch(token, E) * current USD price
-  stakedUSD      = staked iAERO at the epoch's start (the distributor's payout denominator) * iAERO price
-  weeklyYieldPct = stakersWeeklyUSD / stakedUSD * 100
-  apyPct         = weeklyYieldPct * 52            (simple annualisation, no compounding)
+Headline figures (estimated_rewards_usd.json) come from the MEASURED earnings of the protocol's Aero stake (#1584,
+position_earnings: fees + incentives accrued on every chain it votes on, claimed + unclaimed), not from distributor
+fundings: payouts don't carry the period they pay for, and partial payouts are normal (measured_headline):
+  measured-7d               the live block's trailing 7-day rate, when that window is complete (both ends read in
+                            full on every chain, claims scanned, every earned token priced, nothing left out)
+  measured-since-allocation otherwise the average since the stake's first allocation (live usdPerDay), if >= 1 day
+                            and the current read is complete
+  kept                      otherwise the previous headline figures stay (staleReason; never a 0 from missing data)
+  apyPct           = usdPerDay * 365 * stakers share (8000 bps) / stakedUSD * 100
+  stakersWeeklyUSD = usdPerDay * 7 * stakers share; estimatedWeeklyUSD = usdPerDay * 7 (the gross; legacy fields)
+  stakedUSD        = staked iAERO at the current epoch's start (the distributor's payout denominator) * iAERO price
+fundedRealized (secondary, not the headline): the distributor fundings booked to the last completed epoch (epochs
+are weeks from Thursday 00:00 UTC; rewardsForEpoch), as the realized per-epoch figure.
 
 Prices are CURRENT prices from PriceFetcher, not prices at funding time. A token priced by PriceFetcher's on-chain DEX
 fallback counts only when trusted: listed in TRUSTED_DEX_TOKENS (env, comma-separated; default the Aero AERO) and
 priced from a pool holding >= DEX_TRUSTED_DEPTH_USD on its quote side. Other DEX-priced tokens are left out of the
 figures and listed in excludedTokens. Not published (main.py logs and keeps the previous file) when sanity_problems()
-finds anything (apyPct NaN, negative or > 500%; AERO or iAERO unpriced; a zero USD stake).
+finds anything (apyPct NaN, negative or > 500%; AERO or iAERO unpriced; a zero USD stake): then also kept.
 
-yield_history.json: one entry per COMPLETED epoch E with the same rules (rolling: rolling_plan at the epoch's end,
-now = E + 7 d; no entry when it gives none). Keeper-written entries are never touched.
+yield_history.json: one entry per COMPLETED epoch E: the measured earnings between the complete live history points
+within a few hours of E's start and end (position_earnings.epoch_rate), x stakers share, annualised; no entry
+otherwise. Keeper-written entries are never touched.
 Readers of estimated_rewards_usd.json: TwitterBot (apyPct), DefiLlama yield-server iaero-protocol
 (apyPct, tvlUSD_1e18), iaero-frontend (stakersWeeklyUSD_1e18, estimatedWeeklyUSD_1e18).
 All legacy fields are kept with the same names and units; new fields are only added.
@@ -67,12 +57,7 @@ STALE_AFTER_SEC = 2 * WEEK      # latest funded epoch older than this -> publish
 MAX_SANE_APY_PCT = 500.0        # above this, don't publish (likely a bad price), log and skip
 TRUSTED_DEX_TOKENS = (AERO_ADDRESS.lower(),)   # DEX prices that may count (env TRUSTED_DEX_TOKENS, comma-separated)
 DEX_TRUSTED_DEPTH_USD = 1_000_000.0            # ... when their pool's quote side is this deep (env DEX_TRUSTED_DEPTH_USD)
-MIN_WINDOW_DAYS = 1.0           # a funding window shorter than this is not annualised
-# The rewards keeper's last (Aerodrome-era) weekly funding: one RewardFunded batch of 36 tokens into epoch 1792627200,
-# block 52918979 at 1792627305 (22 Oct 2026 00:01:45 UTC; checked on chain). Fundings after it are Aero-era.
-AERODROME_LAST_FUNDING_TS = 1792627305
-ROLLING_CUTOFF_TS = AERODROME_LAST_FUNDING_TS + 1   # first Aero-era block time (env ROLLING_CUTOFF_TS)
-ACCRUAL_PHASE_DAYS = 14         # rate since the stake's accrual start until this long after the 2nd Aero-era funding
+MIN_WINDOW_DAYS = 1.0           # a since-allocation average over less than this is not used
 
 # Split of harvested rewards (RewardsHarvesterV2.processAndDistribute): 80% goes to the
 # EpochStakingDistributor, so the realized funding IS the stakers' share.
@@ -159,41 +144,122 @@ def trusted_dex_tokens() -> set:
     return toks or set(TRUSTED_DEX_TOKENS)
 
 
-def rolling_plan(times: Iterable[int], now: int, accrual_start: int, second_funding: Optional[int]) -> Optional[tuple]:
-    """
-    (P, T_last) for the rolling rate at `now`: fundings with block time in (P, T_last], over T_last - P.
-    times: Aero-era RewardFunded block times in view (plus, when it predates the view, the latest one before it);
-    second_funding: the second distinct Aero-era funding time ever (None: fewer so far).
-    Each funding pays for the stake's accrual since the previous one. Until ACCRUAL_PHASE_DAYS after the second funding
-    time, P = accrual_start (everything funded so far, however split, paid for accrual since then; one funding time
-    alone may be only part of the catch-up). Afterwards P = the latest funding at or before now - 7 d.
-    None (fall back) with fewer than two funding times by `now`, no funding at or before now - 7 d after the phase, or
-    T_last - P < 1 day.
-    """
-    ts = sorted({int(t) for t in times if int(t) < int(now)})
-    if not ts or second_funding is None or int(second_funding) >= int(now):
+def measured_headline(live: Optional[dict]) -> Optional[tuple]:
+    """(usdPerDay, apySource, apyWindow) from a freshly built live block, or None (keep the previous headline):
+    the trailing 7-day window if complete, else the since-allocation average if the read is complete and >= 1 day."""
+    if not isinstance(live, dict) or live.get("stale"):
         return None
-    if int(now) < int(second_funding) + ACCRUAL_PHASE_DAYS * DAY:
-        p = int(accrual_start)
-    else:
-        before = [t for t in ts if t <= int(now) - WEEK]
-        if not before:
-            return None
-        p = before[-1]
-    later = [t for t in ts if t > p]
-    if not later or later[-1] - p < MIN_WINDOW_DAYS * DAY:
-        return None
-    return p, later[-1]
+    t7 = (live.get("trailing") or {}).get("7d")
+    if isinstance(t7, dict) and t7.get("complete") and isinstance(t7.get("usdPerDay"), (int, float)) \
+            and math.isfinite(t7["usdPerDay"]):
+        frm, to = int(t7["snapshotAsOf"]), int(live["asOf"])
+        return float(t7["usdPerDay"]), "measured-7d", {"from": frm, "to": to, "days": round((to - frm) / DAY, 6)}
+    days = live.get("elapsedDays")
+    if live.get("readComplete") and isinstance(days, (int, float)) and days >= MIN_WINDOW_DAYS \
+            and isinstance(live.get("usdPerDay"), (int, float)) and math.isfinite(live["usdPerDay"]):
+        return (float(live["usdPerDay"]), "measured-since-allocation",
+                {"from": int(live["since"]), "to": int(live["asOf"]), "days": round(float(days), 6)})
+    return None
 
 
-def aero_era_raw(events: Iterable[dict], epoch: int, cutoff: int = ROLLING_CUTOFF_TS) -> Dict[str, int]:
-    """{token: raw} of the Aero-era fundings (block time >= cutoff) booked to `epoch`."""
-    out: Dict[str, int] = {}
-    for e in events or []:
-        if int(e["timestamp"]) >= int(cutoff) and int(e["epoch"]) == int(epoch):
-            t = str(e["token"]).lower()
-            out[t] = out.get(t, 0) + int(e["amount"])
+def apply_measured(base: dict, usd_per_day: float, source: str, window: dict, stakers_bps: int = SPLIT_BPS["stakers"],
+                   now_ts: Optional[int] = None) -> dict:
+    """The headline payload: `base` (compute_realized's stake / prices / TVL for the current epoch) with every earnings
+    field from the measured rate usdPerDay (the stake's gross earnings a day, current prices)."""
+    out = {k: v for k, v in base.items() if k not in _FUNDING_ONLY_FIELDS}
+    rate = Decimal(str(usd_per_day))
+    share = Decimal(int(stakers_bps)) / SPLIT_DENOM
+    gross = rate * 7                                   # the stake's earnings a week (legacy "estimated*": the gross)
+    stakers = gross * share
+    staked_usd = Decimal(int(base["stakedUSD_1e18"])) / E18
+    # no stake: no APY (NaN fails sanity_problems: the headline is kept, never a 0 from a missing denominator)
+    apy = float(rate * 365 * share / staked_usd * 100) if staked_usd > 0 else float("nan")
+    now_ts = int(now_ts if now_ts is not None else time.time())
+    out.update({
+        "protocolWeeklyUSD_1e18": _to_1e18(gross * SPLIT_BPS["protocol"] / SPLIT_DENOM),
+        "pegWeeklyUSD_1e18": _to_1e18(gross * SPLIT_BPS["peg"] / SPLIT_DENOM),
+        "estimatedWeeklyUSD_1e18": _to_1e18(gross),
+        "estimatedWeeklyUSD_human": _human(gross),
+        "stakersWeeklyUSD_1e18": _to_1e18(stakers),
+        "stakersWeeklyUSD_human": _human(stakers),
+        "estimatedAnnualUSD_1e18": _to_1e18(gross * WEEKS_PER_YEAR),
+        "estimatedAnnualUSD_human": _human(gross * WEEKS_PER_YEAR),
+        "apyPct": apy,
+        "updatedAt": datetime.fromtimestamp(now_ts, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z"),
+        "method": "measured",
+        "apySource": source,
+        "apyWindow": dict(window),
+        "measuredUsdPerDay": float(rate),
+        "weeklyYieldPct": float(stakers / staked_usd * 100) if staked_usd > 0 else float("nan"),
+        "annualisation": "usdPerDay_x365",
+        "stale": False,
+    })
     return out
+
+
+# compute_realized's funding-specific fields: not part of a measured headline (they live under fundedRealized)
+_FUNDING_ONLY_FIELDS = ("fundedUSD_1e18", "fundedUSD_human", "fundedTokenCount", "unpricedTokens", "dexPricedTokens",
+                        "excludedTokens", "epochSelection", "staleReason")
+
+
+def measured_unavailable_reason(live: Optional[dict]) -> str:
+    """Why measured_headline gave None (for staleReason and the error log)."""
+    if not isinstance(live, dict):
+        return "no live measurement this run"
+    if live.get("stale"):
+        return "the live measurement failed this run (previous block kept)"
+    why = []
+    t7 = (live.get("trailing") or {}).get("7d")
+    if not isinstance(t7, dict):
+        why.append("no 7-day window yet (no complete history point 6-8 days old)")
+    else:
+        why.append("7-day window incomplete" + (" (partial)" if t7.get("partial") else ""))
+    days = live.get("elapsedDays")
+    if not live.get("readComplete"):
+        bad = []
+        if live.get("unmeasuredChains"):
+            bad.append(f"chains not read {live['unmeasuredChains']}")
+        for c in live.get("chains") or []:
+            if not c.get("claimsScanned"):
+                bad.append(f"claims not scanned on {c.get('chainId')}")
+            if not c.get("gaugeListRead", True) or c.get("unreadGauges"):
+                bad.append(f"gauges not read on {c.get('chainId')}")
+        if live.get("unpricedTokens"):
+            bad.append(f"unpriced {live['unpricedTokens']}")
+        why.append("current read incomplete" + (f": {'; '.join(bad)}" if bad else ""))
+    elif not (isinstance(days, (int, float)) and days >= MIN_WINDOW_DAYS):
+        why.append(f"under {MIN_WINDOW_DAYS:g} day since the first allocation "
+                   f"({days:.3f} d)" if isinstance(days, (int, float)) else "elapsed time unknown")
+    return "; ".join(why)
+
+
+def kept_headline(prev_doc: dict, reason: str) -> Optional[dict]:
+    """The previous headline, unchanged, flagged (apySource "kept", staleReason). None if there is none to keep
+    (then nothing is published: never a 0 from missing data)."""
+    apy = (prev_doc or {}).get("apyPct")
+    if not (isinstance(apy, (int, float)) and math.isfinite(apy)):
+        return None
+    out = {k: v for k, v in prev_doc.items() if k not in ("live", "fundedRealized", "lastUpdated", "updateTimestamp")}
+    out.update({"apySource": "kept", "stale": True, "staleReason": reason})
+    return out
+
+
+def stake_payload(w3, distributor: str, epoch: int, price_fetcher, decimals_fn, aero: str = AERO_ADDRESS,
+                  iaero: Optional[str] = None, now_ts: Optional[int] = None) -> dict:
+    """compute_realized's stake / price / TVL fields for `epoch` (stake at its start), with no funding: the base the
+    measured headline (apply_measured) is laid on."""
+    now_ts = int(now_ts if now_ts is not None else time.time())
+    return _price_and_compute(w3, distributor, {}, int(epoch), price_fetcher, decimals_fn, aero, iaero, now_ts,
+                              "measured", False, 7.0)
+
+
+def funded_realized(payload: dict) -> dict:
+    """The secondary fundedRealized sub-object from a per-epoch funding payload (build_estimated_rewards)."""
+    keep = ("epoch", "epochEnd", "apyPct", "weeklyYieldPct", "fundedUSD_1e18", "fundedUSD_human", "stakedUSD_1e18",
+            "fundedTokenCount", "unpricedTokens", "excludedTokens", "dexPricedTokens")
+    return {**{k: payload.get(k) for k in keep},
+            "basis": "distributor fundings booked to the last completed epoch, at current prices; payouts don't carry the "
+                     "period they pay for (catch-ups, partial or test payouts), so this is NOT the headline apyPct"}
 
 
 def _to_1e18(x: Decimal) -> str:
@@ -395,13 +461,11 @@ def build_estimated_rewards(
     aero: str = AERO_ADDRESS,
     iaero: Optional[str] = None,
     epoch_mode: str = "latest_funded",
-    aero_era: Optional[Dict[str, int]] = None,
 ) -> dict:
     """
-    Per-epoch mode: read funding for the selected epoch (see select_epoch) from the EpochStakingDistributor and price it.
-    Token list per epoch comes from epochs.json (RewardFunded scan); amounts from rewardsForEpoch(). aero_era {token:
-    raw}: the epoch's Aero-era fundings (rolling fallback); when the epoch also holds Aerodrome-era funding they are
-    left out (that week is published, not both); a purely Aero-era epoch is used as is.
+    Read the funding booked to the selected epoch (see select_epoch) from the EpochStakingDistributor and price it
+    (main.py: the fundedRealized sub-object and the base payload the measured headline is applied to).
+    Token list per epoch comes from epochs.json (RewardFunded scan); amounts from rewardsForEpoch().
     """
     now_ts = int(now_ts if now_ts is not None else time.time())
     if epoch_mode not in EPOCH_MODES:
@@ -421,48 +485,10 @@ def build_estimated_rewards(
         amt = int(dist.functions.rewardsForEpoch(cs(t), epoch).call())
         if amt > 0:
             funded_raw[t] = amt
-    if aero_era:
-        aero_part = {k.lower(): int(v) for k, v in aero_era.items()}
-        older = {t: a - aero_part.get(t, 0) for t, a in funded_raw.items() if a - aero_part.get(t, 0) > 0}
-        if older:                                      # mixed epoch: the Aerodrome-era week only
-            funded_raw = older
 
     out = _price_and_compute(w3, distributor, funded_raw, epoch, price_fetcher, decimals_fn, aero, iaero, now_ts,
                              epoch_mode, stale, 7.0)
     _log_payload(out, f"epoch={epoch} ({epoch_mode}{', STALE' if stale else ''})")
-    return out
-
-
-def build_window_rewards(
-    w3,
-    distributor: str,
-    events: Iterable[dict],
-    after: int,
-    until: int,
-    price_fetcher,
-    decimals_fn: Callable[[List[str]], Dict[str, int]],
-    stake_epoch: int,
-    now_ts: Optional[int] = None,
-    aero: str = AERO_ADDRESS,
-    iaero: Optional[str] = None,
-    label: str = "rolling_7d",
-) -> dict:
-    """
-    Fundings with block time in (after, until] (RewardFunded events {token, amount, timestamp}, whatever epoch they were
-    booked to), annualised over until - after (stakersWeeklyUSD = funded * 7 / spanDays; see rolling_plan). The stake
-    denominator is the one at `stake_epoch`'s start. Adds apyWindow {from: after, to: until, spanDays}.
-    """
-    now_ts = int(now_ts if now_ts is not None else time.time())
-    span_days = (int(until) - int(after)) / DAY
-    funded_raw: Dict[str, int] = {}
-    for e in events or []:
-        if int(after) < int(e["timestamp"]) <= int(until) and int(e["amount"]) > 0:
-            t = str(e["token"]).lower()
-            funded_raw[t] = funded_raw.get(t, 0) + int(e["amount"])
-    out = _price_and_compute(w3, distributor, funded_raw, int(stake_epoch), price_fetcher, decimals_fn, aero, iaero,
-                             now_ts, label, False, span_days)
-    out["apyWindow"] = {"from": int(after), "to": int(until), "spanDays": round(span_days, 6)}
-    _log_payload(out, f"fundings in ({int(after)}, {int(until)}] ({span_days:.3f} d, {label})")
     return out
 
 
@@ -471,8 +497,9 @@ def build_window_rewards(
 #   {updatedAt, latest: {epoch, apyPct, tvlUSD_1e18, stakersWeeklyUSD_1e18},
 #    series: [{epoch, timestamp, apyPct, tvlUSD_1e18, stakersWeeklyUSD_1e18}] sorted by epoch}
 # Entry for epoch E = rewards funded INTO E (the keeper wrote it at E + ~1 min, right after funding); ours are written
-# once E has ended (main.py), from rewardsForEpoch or, in rolling mode, from the RewardFunded events inside E.
-# Our entries carry "method": "realized"; entries without it were published by the keeper and are never touched.
+# once E has ended (main.py), from the stake's measured earnings over E ("method": "measured"; "realized" entries came
+# from fundings). Entries without "method" were published by the keeper and are never touched.
+OUR_METHODS = ("realized", "measured")
 
 def yield_history_entry(payload: dict, now_ts: int) -> dict:
     return {
@@ -480,39 +507,41 @@ def yield_history_entry(payload: dict, now_ts: int) -> dict:
         "timestamp": int(now_ts),
         "apyPct": payload["apyPct"],
         "tvlUSD_1e18": payload["stakedUSD_1e18"],             # staked iAERO at epoch start x iAERO price
-        # realized funding to stakers for the epoch (per week: rolling mode may cover part of the epoch)
-        "stakersWeeklyUSD_1e18": payload.get("stakersWeeklyUSD_1e18", payload["fundedUSD_1e18"]),
-        "method": "realized",
+        "stakersWeeklyUSD_1e18": payload.get("stakersWeeklyUSD_1e18", payload.get("fundedUSD_1e18")),
+        "method": payload.get("method") if payload.get("method") in OUR_METHODS else "realized",
     }
 
 
 def merge_yield_history(cur_doc: dict, payload: dict, now_ts: int) -> tuple:
     """
     Append or update ONLY the entry for payload["epoch"]. Returns (new_doc, reason); new_doc is None to skip.
-    Never modifies any other entry, and never replaces an entry the keeper published (no "method").
+    Never modifies any other entry, and never replaces an entry the keeper published (no "method"). A measured entry
+    is written once (its two history points are fixed; later runs would only re-price it).
     """
     series = cur_doc.get("series") if isinstance(cur_doc, dict) else None
     if not isinstance(series, list) or not series:
         return None, "existing yield_history.json missing/unreadable; refusing to start a new series"
-    if payload.get("stale") or not payload.get("fundedTokenCount"):
+    if payload.get("method") != "measured" and (payload.get("stale") or not payload.get("fundedTokenCount")):
         return None, f"epoch {payload.get('epoch')} has no current funding; no entry"
     entry = yield_history_entry(payload, now_ts)
     ep = entry["epoch"]
     idx = [i for i, x in enumerate(series) if int((x or {}).get("epoch", -1)) == ep]
     if idx:
         old = series[idx[0]]
-        if old.get("method") != "realized":
+        if old.get("method") not in OUR_METHODS:
             return None, f"epoch {ep} entry was published by the rewards keeper; not rewriting it"
+        if old.get("method") == "measured":
+            return None, f"epoch {ep} measured entry already written"
         if all(old.get(k) == entry[k] for k in ("apyPct", "tvlUSD_1e18", "stakersWeeklyUSD_1e18")):
             return None, f"epoch {ep} entry unchanged"
         new_series = list(series)
         new_series[idx[0]] = entry
-        reason = f"updated realized entry for epoch {ep}"
+        reason = f"updated {entry['method']} entry for epoch {ep}"
     else:
         if ep < max(int((x or {}).get("epoch", 0)) for x in series):
             return None, f"epoch {ep} is older than the newest entry; not inserting into history"
         new_series = sorted(list(series) + [entry], key=lambda x: int(x["epoch"]))
-        reason = f"appended realized entry for epoch {ep}"
+        reason = f"appended {entry['method']} entry for epoch {ep}"
     latest = {k: entry[k] for k in ("epoch", "apyPct", "tvlUSD_1e18", "stakersWeeklyUSD_1e18", "method")}
     doc = {
         "updatedAt": datetime.fromtimestamp(int(now_ts), tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z"),

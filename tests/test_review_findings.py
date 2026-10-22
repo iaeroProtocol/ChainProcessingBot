@@ -1,6 +1,7 @@
 # test_review_findings.py
 # Independent review of PR #5: H-1 (F1), M-1 (F2), M-2 (F3), M-3 (F4). Each test asserts the SAFE behaviour and
-# failed on a1503e9. The two F3 tests are adapted (see their comments); the review's Low-finding tests are not here.
+# failed on a1503e9. The two F3 tests are adapted (see their comments), and F2's / F4's main tests run on the
+# measured-headline harness; the review's Low-finding tests are not here.
 # No network. Run: python -m pytest -p no:pytest_ethereum tests/test_review_findings.py -v
 import base64
 import json
@@ -85,28 +86,18 @@ class F2_ZeroPrices(unittest.TestCase):
         self.assertFalse(is_sane_apy(p), "apyPct 0 / tvlUSD_1e18 '0' from failed prices would be published")
 
     def test_main_publishes_zero_apy_and_tvl_when_prices_fail(self):
-        import main
-        from test_realized_yield import FakeDistributorWeb3, FakePriceFetcher
-        w3 = FakeDistributorWeb3(rewards={(USDC.lower(), EPOCH_22_OCT): 8_300 * 10**6},
-                                 snapshot={EPOCH_22_OCT: 4_710_927 * E18}, supply_at_start={}, total_staked=4_710_930 * E18)
-        scanner = mock.Mock(w3=w3)
-        scanner.reward_funded_events.return_value = []       # adapted (round 6): no Aero-era funding, per-epoch path
-        scanner.decimals_map.side_effect = lambda toks, **k: {USDC.lower(): 6}
-        epochs = {"epochs": {str(EPOCH_22_OCT): {"tokens": [USDC.lower()]}}}
-        repo = mock.Mock()
-
-        def gc(path, ref=None):
-            if path == "data/epochs.json":
-                return mock.Mock(content=base64.b64encode(json.dumps(epochs).encode()).decode())
-            raise FileNotFoundError(path)
-        repo.get_contents.side_effect = gc
-        updater = mock.Mock(branch="main")
-        with mock.patch.dict(os.environ, {"EPOCH_STAKING_DISTRIBUTOR": DIST, "LIVE_YIELD_ENABLED": "false",
-                                          "YIELD_HISTORY_ENABLED": "false"}), \
-             mock.patch("time.time", return_value=EPOCH_22_OCT + 9060):
-            main._update_realized_yield(repo, updater, scanner, FakePriceFetcher({}))   # every price 0
-        self.assertFalse(updater.update_json.called,
-                         f"published {updater.update_json.call_args and {k: updater.update_json.call_args.args[1][k] for k in ('apyPct', 'tvlUSD_1e18', 'stakersWeeklyUSD_1e18')}}")
+        # adapted (measured headline): main runs on test_measured_headline's simulated chains; every price fails
+        from test_measured_headline import World, FakePF, RUN0, DAY as D, EST, previous_headline
+        w = World(prev=False, base_pf=FakePF({}), chain_prices={1: FakePF({}), 4663: FakePF({})})
+        for d in range(3):
+            w.run(RUN0 + d * D)
+        self.assertNotIn(EST, w.repo.files, "published apyPct / tvlUSD from failed prices")
+        # with a previous headline: kept as it was, never replaced by 0
+        w = World(base_pf=FakePF({}), chain_prices={1: FakePF({}), 4663: FakePF({})})
+        for d in range(3):
+            doc = w.run(RUN0 + d * D)
+        prev = previous_headline()
+        self.assertEqual((doc["apyPct"], doc["tvlUSD_1e18"], doc["apySource"]), (prev["apyPct"], prev["tvlUSD_1e18"], "kept"))
 
     def test_cached_zero_price_is_reused_without_retry(self):
         cache = os.path.join(tempfile.mkdtemp(), "price_cache.json")
@@ -153,28 +144,14 @@ class F4_LiveHistoryLoss(unittest.TestCase):
     """F4: any live-block failure publishes the file WITHOUT `live`, wiping live.history and the re-vote gauge list."""
 
     def test_live_failure_keeps_previous_live_block(self):
-        import main
-        from test_realized_yield import _payload, _keeper_history
-        prev = {"live": {"stakeId": 1584, "history": [{"asOf": 1, "chains": [8453], "gauges": {}}],
-                         "gauges": [{"chainId": 8453, "gauge": "0x" + "a3" * 20}]}}
-        repo = mock.Mock()
-
-        def gc(path, ref=None):
-            if path == "data/epochs.json":
-                return mock.Mock(content=base64.b64encode(json.dumps({"epochs": {"1": {"tokens": ["0x1"]}}}).encode()).decode())
-            if path == "data/estimated_rewards_usd.json":
-                return mock.Mock(content=base64.b64encode(json.dumps(prev).encode()).decode())
-            raise FileNotFoundError(path)
-        repo.get_contents.side_effect = gc
-        updater = mock.Mock(branch="main")
-        with mock.patch.dict(os.environ, {"EPOCH_STAKING_DISTRIBUTOR": DIST, "LIVE_YIELD_ENABLED": "true",
-                                          "YIELD_HISTORY_ENABLED": "false"}), \
-             mock.patch.object(realized_yield, "build_estimated_rewards", return_value=_payload(EPOCH_22_OCT)), \
-             mock.patch.object(main, "_build_live_block", side_effect=RuntimeError("token_meta: 429 Too Many Requests")):
-            main._update_realized_yield(repo, updater, mock.Mock(reward_funded_events=mock.Mock(return_value=[])),
-                                        mock.Mock())          # adapted (round 6): no Aero-era funding
-        written = updater.update_json.call_args.args[1]
+        # adapted (measured headline): main runs on test_measured_headline's simulated chains
+        from test_measured_headline import World, RUN0, DAY as D
+        w = World()
+        before = [w.run(RUN0 + d * D) for d in range(2)][-1]
+        written = w.run(RUN0 + 2 * D, live_error=RuntimeError("token_meta: 429 Too Many Requests"))
         self.assertIn("live", written, "previous live.history and gauge list are dropped from the published file")
+        self.assertEqual(written["live"]["history"], before["live"]["history"])
+        self.assertTrue(written["live"]["stale"])
 
 
 if __name__ == "__main__":

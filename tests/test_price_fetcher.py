@@ -246,5 +246,62 @@ class PriceFetcherDexTest(unittest.TestCase):
         self.assertIsNone(pf._dex_price_one(AERO))
 
 
+
+RH_WETH = "0x0bd7d308f8e1639fab988df18a8011f41eacad73"
+RH_USDG = "0x5fc5360d0400a0fd4f2af552add042d716f1d168"
+
+
+class _Base:
+    def __init__(self, prices):
+        self.prices = prices
+
+    def fetch_batch(self, addrs):
+        return {a: {"priceUsd": self.prices.get(a, 0.0), "updatedAt": 0, "source": "llama" if a in self.prices else "none"}
+                for a in addrs}
+
+
+class RobinhoodPricingTest(unittest.TestCase):
+    """Robinhood (4663): DefiLlama robinhood:<address> first; else the explicit mapping table; never a guess."""
+
+    def test_mapping_table(self):
+        import position_earnings as pe
+        self.assertEqual(pe.ROBINHOOD_PRICE_MAP, {
+            RH_WETH: "ethereum:0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",       # Robinhood WETH -> Ethereum WETH
+            RH_USDG: "coingecko:global-dollar"})                                  # USDG -> its coingecko id
+
+    def test_native_price_first_then_mapping_then_unpriced(self):
+        mp = price_fetcher.MappedPriceFetcher(_Base({RH_WETH: 2400.0}), {RH_WETH: "ethereum:0xw", RH_USDG: "coingecko:g"})
+        with mock.patch.object(price_fetcher, "llama_prices", return_value={"coingecko:g": 0.9999}) as lp:
+            out = mp.fetch_batch([RH_WETH, RH_USDG, "0xother"])
+        lp.assert_called_once_with(["coingecko:g"])                              # only what the chain didn't price
+        self.assertEqual((out[RH_WETH]["priceUsd"], out[RH_WETH]["source"]), (2400.0, "llama"))
+        self.assertEqual((out[RH_USDG]["priceUsd"], out[RH_USDG]["source"]), (0.9999, "mapped:coingecko:g"))
+        self.assertEqual((out["0xother"]["priceUsd"], out["0xother"]["source"]), (0.0, "none"))    # not mapped
+        with mock.patch.object(price_fetcher, "llama_prices", return_value={}):
+            out = mp.fetch_batch([RH_USDG])
+        self.assertEqual(out[RH_USDG]["priceUsd"], 0.0)                         # mapped key unpriced too
+
+    def test_native_robinhood_key_is_tried_first(self):
+        pf = price_fetcher.PriceFetcher(chain_slug="robinhood", cache_file=os.path.join(tempfile.mkdtemp(), "c.json"))
+        resp = mock.Mock(status_code=200)
+        resp.json.return_value = {"coins": {f"robinhood:{RH_WETH}": {"price": 2384.5}}}
+        with mock.patch.object(price_fetcher.requests, "get", return_value=resp) as get:
+            got = pf._fetch_llama([RH_WETH])
+        self.assertIn(f"robinhood:{RH_WETH}", get.call_args.args[0])
+        self.assertEqual(got[RH_WETH]["priceUsd"], 2384.5)
+
+    def test_llama_prices_keeps_only_positive_finite(self):
+        resp = mock.Mock(status_code=200)
+        resp.json.return_value = {"coins": {"a:1": {"price": 2.0}, "a:2": {"price": 0}, "a:3": {"price": float("nan")},
+                                            "a:4": {}}}
+        with mock.patch.object(price_fetcher.requests, "get", return_value=resp):
+            self.assertEqual(price_fetcher.llama_prices(["a:1", "a:2", "a:3", "a:4"]), {"a:1": 2.0})
+        with mock.patch.object(price_fetcher.requests, "get", return_value=mock.Mock(status_code=502, text="bad")):
+            self.assertEqual(price_fetcher.llama_prices(["a:1"]), {})
+        with mock.patch.object(price_fetcher.requests, "get", side_effect=OSError("down")):
+            self.assertEqual(price_fetcher.llama_prices(["a:1"]), {})
+        self.assertEqual(price_fetcher.llama_prices([]), {})
+
+
 if __name__ == "__main__":
     unittest.main()

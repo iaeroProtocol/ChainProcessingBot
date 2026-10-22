@@ -407,3 +407,43 @@ class PriceFetcher:
         self._save()
         return out
 
+
+def llama_prices(keys: List[str], timeout: int = 10) -> Dict[str, float]:
+    """DefiLlama prices for arbitrary keys ("chain:0xaddr" or "coingecko:<id>"); missing or bad ones are left out."""
+    if not keys:
+        return {}
+    try:
+        r = requests.get(LLAMA_URL.format(",".join(sorted(set(keys)))), timeout=timeout)
+        if r.status_code != 200:
+            logger.warning(f"Llama HTTP {r.status_code}: {r.text[:160]}")
+            return {}
+        out = {}
+        for k, v in (r.json().get("coins") or {}).items():
+            p = v.get("price")
+            if p is not None and math.isfinite(float(p)) and float(p) > 0:
+                out[k] = float(p)
+        return out
+    except Exception as e:
+        logger.warning(f"Llama fetch error: {e}")
+        return {}
+
+
+class MappedPriceFetcher:
+    """fetch_batch for a chain DefiLlama may not cover: the chain's own prices first (PriceFetcher), then, for tokens
+    still unpriced, the explicit mapping {token: DefiLlama key} (e.g. Robinhood WETH -> Ethereum WETH). Nothing is
+    guessed: a token neither priced nor mapped comes back 0.0 (source "none")."""
+
+    def __init__(self, base, mapping: Dict[str, str]):
+        self.base = base
+        self.mapping = {k.lower(): v for k, v in (mapping or {}).items()}
+
+    def fetch_batch(self, addrs: List[str]) -> Dict[str, dict]:
+        out = dict(self.base.fetch_batch(addrs))
+        missing = {a.lower(): self.mapping[a.lower()] for a in addrs
+                   if float((out.get(a.lower()) or {}).get("priceUsd", 0.0) or 0.0) <= 0 and a.lower() in self.mapping}
+        got = llama_prices(list(missing.values())) if missing else {}
+        for a, key in missing.items():
+            if key in got:
+                out[a] = {"priceUsd": got[key], "updatedAt": _now(), "source": f"mapped:{key}"}
+        return out
+
