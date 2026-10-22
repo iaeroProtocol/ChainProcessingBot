@@ -1,18 +1,24 @@
 # realized_yield.py
 """
-Realized staking yield for data/estimated_rewards_usd.json
-(replaces the estimate pushed by the legacy EnhancedOptimizedVotesKeeper).
+Realized staking yield for data/estimated_rewards_usd.json and data/yield_history.json
+(replaces the legacy EnhancedOptimizedVotesKeeper estimate and the rewards keeper's yield snapshot).
 
-For the last COMPLETED epoch E (weeks start Thursday 00:00 UTC, E = ts // WEEK * WEEK):
+Epoch E (weeks start Thursday 00:00 UTC, E = ts // WEEK * WEEK) is chosen by mode:
+  latest_funded  (default) newest epoch with funding in epochs.json: the current epoch once the
+                 Thursday 00:01 funding has landed, else the previous one. Older than 2 weeks -> 0.
+  last_completed the most recent epoch whose week has ended.
   fundedUSD      = sum over tokens of rewardsForEpoch(token, E) * current USD price
   stakedUSD      = staked iAERO at E's start (the distributor's payout denominator) * iAERO price
   weeklyYieldPct = fundedUSD / stakedUSD * 100
   apyPct         = weeklyYieldPct * 52            (simple annualisation, no compounding)
 
 Prices are CURRENT prices from PriceFetcher, not prices at funding time.
-Readers: TwitterBot (apyPct) and DefiLlama yield-server iaero-protocol (apyPct, tvlUSD_1e18).
+Readers of estimated_rewards_usd.json: TwitterBot (apyPct), DefiLlama yield-server iaero-protocol
+(apyPct, tvlUSD_1e18), iaero-frontend (stakersWeeklyUSD_1e18, estimatedWeeklyUSD_1e18).
 All legacy fields are kept with the same names and units; new fields are only added.
 """
+import json
+import math
 import time
 import logging
 from datetime import datetime, timezone
@@ -30,6 +36,10 @@ ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 WETH_ADDRESS = "0x4200000000000000000000000000000000000006"
 AERO_ADDRESS = "0x3f5bF3EdAc59d650D8fDf9657a71F2f904A3a4Ee"   # Aero AERO (post-migration)
 IAERO_ADDRESS = "0x81034Fb34009115F215f5d5F564AAc9FfA46a1Dc"
+
+EPOCH_MODES = ("latest_funded", "last_completed")
+STALE_AFTER_SEC = 2 * WEEK      # latest funded epoch older than this -> publish 0, not a stale figure
+MAX_SANE_APY_PCT = 500.0        # above this, don't publish (likely a bad price), log and skip
 
 # Split of harvested rewards (RewardsHarvesterV2.processAndDistribute): 80% goes to the
 # EpochStakingDistributor, so the realized funding IS the stakers' share.
@@ -63,6 +73,29 @@ def last_completed_epoch(now_ts: int) -> int:
     return epoch_start(now_ts) - WEEK
 
 
+def latest_funded_epoch(epochs_doc: dict, now_ts: int) -> Optional[int]:
+    """Newest epoch (not in the future) with funded tokens in epochs.json (RewardFunded only fires for amount > 0)."""
+    cur = epoch_start(now_ts)
+    funded = [int(k) for k, v in (epochs_doc.get("epochs") or {}).items()
+              if str(k).isdigit() and int(k) <= cur and (v or {}).get("tokens")]
+    return max(funded) if funded else None
+
+
+def select_epoch(epochs_doc: dict, now_ts: int, mode: str = "latest_funded") -> tuple:
+    """Return (epoch, stale). stale=True: the latest funded epoch is older than STALE_AFTER_SEC -> publish 0."""
+    if mode == "last_completed":
+        return last_completed_epoch(now_ts), False
+    ep = latest_funded_epoch(epochs_doc, now_ts)
+    if ep is None:
+        return last_completed_epoch(now_ts), False
+    return ep, (int(now_ts) - ep) > STALE_AFTER_SEC
+
+
+def is_sane_apy(payload: dict) -> bool:
+    apy = payload.get("apyPct")
+    return isinstance(apy, (int, float)) and math.isfinite(apy) and 0 <= apy <= MAX_SANE_APY_PCT
+
+
 def _to_1e18(x: Decimal) -> str:
     return str(int(x * E18))
 
@@ -80,11 +113,16 @@ def compute_realized(
     aero_price: float,
     distributor: str = "",
     now_ts: Optional[int] = None,
+    epoch_mode: str = "latest_funded",
+    stale: bool = False,
 ) -> dict:
     """
     Pure computation of the estimated_rewards_usd.json payload.
     funded: [{"address", "amount" (raw int), "decimals", "priceUsd"}] for epoch `epoch`.
+    stale=True publishes 0 for `epoch` (its funding is too old to be a current yield).
     """
+    if stale:
+        funded = []
     now_ts = int(now_ts if now_ts is not None else time.time())
 
     aero_px = Decimal(str(aero_price or 0.0))
@@ -143,6 +181,8 @@ def compute_realized(
         "method": "realized",
         "epoch": int(epoch),
         "epochEnd": int(epoch) + WEEK,
+        "epochSelection": epoch_mode,
+        "stale": bool(stale),
         "weeklyYieldPct": weekly_pct,
         "annualisation": "simple_x52",
         "priceBasis": "current",
@@ -167,18 +207,25 @@ def build_estimated_rewards(
     epoch: Optional[int] = None,
     aero: str = AERO_ADDRESS,
     iaero: Optional[str] = None,
+    epoch_mode: str = "latest_funded",
 ) -> dict:
     """
-    Read funding for the last completed epoch from the EpochStakingDistributor and price it.
+    Read funding for the selected epoch (see select_epoch) from the EpochStakingDistributor and price it.
     Token list per epoch comes from epochs.json (RewardFunded scan); amounts from rewardsForEpoch().
     """
     now_ts = int(now_ts if now_ts is not None else time.time())
-    epoch = int(epoch if epoch is not None else last_completed_epoch(now_ts))
+    if epoch_mode not in EPOCH_MODES:
+        logger.warning(f"[realized_yield] unknown epoch mode {epoch_mode!r}; using latest_funded")
+        epoch_mode = "latest_funded"
+    if epoch is not None:
+        epoch, stale = int(epoch), False
+    else:
+        epoch, stale = select_epoch(epochs_doc, now_ts, epoch_mode)
     cs = w3.to_checksum_address
     dist = w3.eth.contract(cs(distributor), abi=DIST_ABI)
 
     ep = (epochs_doc.get("epochs") or {}).get(str(epoch)) or {}
-    tokens = sorted({t.lower() for t in (ep.get("tokens") or []) if t})
+    tokens = [] if stale else sorted({t.lower() for t in (ep.get("tokens") or []) if t})
     funded_raw: Dict[str, int] = {}
     for t in tokens:
         amt = int(dist.functions.rewardsForEpoch(cs(t), epoch).call())
@@ -221,10 +268,71 @@ def build_estimated_rewards(
         aero_price=px(aero),
         distributor=distributor,
         now_ts=now_ts,
+        epoch_mode=epoch_mode,
+        stale=stale,
     )
     logger.info(
-        f"[realized_yield] epoch={epoch} tokens={out['fundedTokenCount']} funded=${out['fundedUSD_human']} "
-        f"staked=${out['stakedUSD_human']} weekly={out['weeklyYieldPct']:.4f}% apy={out['apyPct']:.2f}% "
-        f"unpriced={len(out['unpricedTokens'])}"
+        f"[realized_yield] epoch={epoch} ({epoch_mode}{', STALE' if stale else ''}) tokens={out['fundedTokenCount']} "
+        f"funded=${out['fundedUSD_human']} staked=${out['stakedUSD_human']} weekly={out['weeklyYieldPct']:.4f}% "
+        f"apy={out['apyPct']:.2f}% unpriced={len(out['unpricedTokens'])}"
     )
     return out
+
+
+# ---------------- data/yield_history.json ----------------
+# Same schema as the rewards keeper's pushYieldHistoryToGitHub (ultimate-keeper.mjs):
+#   {updatedAt, latest: {epoch, apyPct, tvlUSD_1e18, stakersWeeklyUSD_1e18},
+#    series: [{epoch, timestamp, apyPct, tvlUSD_1e18, stakersWeeklyUSD_1e18}] sorted by epoch}
+# Entry for epoch E = rewards funded INTO E (the keeper wrote it at E + ~1 min, right after funding).
+# Our entries carry "method": "realized"; entries without it were published by the keeper and are never touched.
+
+def yield_history_entry(payload: dict, now_ts: int) -> dict:
+    return {
+        "epoch": int(payload["epoch"]),
+        "timestamp": int(now_ts),
+        "apyPct": payload["apyPct"],
+        "tvlUSD_1e18": payload["stakedUSD_1e18"],             # staked iAERO at epoch start x iAERO price
+        "stakersWeeklyUSD_1e18": payload["fundedUSD_1e18"],   # realized funding to stakers for the epoch
+        "method": "realized",
+    }
+
+
+def merge_yield_history(cur_doc: dict, payload: dict, now_ts: int) -> tuple:
+    """
+    Append or update ONLY the entry for payload["epoch"]. Returns (new_doc, reason); new_doc is None to skip.
+    Never modifies any other entry, and never replaces an entry the keeper published (no "method").
+    """
+    series = cur_doc.get("series") if isinstance(cur_doc, dict) else None
+    if not isinstance(series, list) or not series:
+        return None, "existing yield_history.json missing/unreadable; refusing to start a new series"
+    if payload.get("stale") or not payload.get("fundedTokenCount"):
+        return None, f"epoch {payload.get('epoch')} has no current funding; no entry"
+    entry = yield_history_entry(payload, now_ts)
+    ep = entry["epoch"]
+    idx = [i for i, x in enumerate(series) if int((x or {}).get("epoch", -1)) == ep]
+    if idx:
+        old = series[idx[0]]
+        if old.get("method") != "realized":
+            return None, f"epoch {ep} entry was published by the rewards keeper; not rewriting it"
+        if all(old.get(k) == entry[k] for k in ("apyPct", "tvlUSD_1e18", "stakersWeeklyUSD_1e18")):
+            return None, f"epoch {ep} entry unchanged"
+        new_series = list(series)
+        new_series[idx[0]] = entry
+        reason = f"updated realized entry for epoch {ep}"
+    else:
+        if ep < max(int((x or {}).get("epoch", 0)) for x in series):
+            return None, f"epoch {ep} is older than the newest entry; not inserting into history"
+        new_series = sorted(list(series) + [entry], key=lambda x: int(x["epoch"]))
+        reason = f"appended realized entry for epoch {ep}"
+    latest = {k: entry[k] for k in ("epoch", "apyPct", "tvlUSD_1e18", "stakersWeeklyUSD_1e18", "method")}
+    doc = {
+        "updatedAt": datetime.fromtimestamp(int(now_ts), tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z"),
+        "latest": latest,
+        "series": new_series,
+    }
+    return doc, reason
+
+
+def dump_yield_history(doc: dict) -> str:
+    """Byte-compatible with the keeper's JSON.stringify(payload, null, 2) (insertion order, 2-space indent)."""
+    return json.dumps(doc, indent=2)

@@ -1,7 +1,8 @@
 # test_realized_yield.py
-# Unit tests for the realized-APY feed (data/estimated_rewards_usd.json). No network.
+# Unit tests for the realized-APY feed (data/estimated_rewards_usd.json + data/yield_history.json). No network.
 # Run: python -m unittest discover -s tests
 import base64
+import copy
 import json
 import os
 import sys
@@ -20,8 +21,13 @@ from realized_yield import (  # noqa: E402
     WETH_ADDRESS,
     build_estimated_rewards,
     compute_realized,
+    dump_yield_history,
     epoch_start,
+    is_sane_apy,
     last_completed_epoch,
+    latest_funded_epoch,
+    merge_yield_history,
+    select_epoch,
 )
 
 E18 = 10 ** 18
@@ -57,6 +63,35 @@ class EpochMathTest(unittest.TestCase):
         self.assertEqual(last_completed_epoch(EPOCH_22_OCT), EPOCH_15_OCT)
         # one week later the 22 Oct epoch (final Aerodrome-era funding) is the one reported
         self.assertEqual(last_completed_epoch(EPOCH_22_OCT + WEEK + 1), EPOCH_22_OCT)
+
+    def test_latest_funded_epoch(self):
+        doc = {"epochs": {str(EPOCH_15_OCT): {"tokens": [USDC]}, str(EPOCH_22_OCT): {"tokens": [USDC]},
+                          str(EPOCH_22_OCT + WEEK): {"tokens": []}}}
+        # Thu 22 Oct 02:31, after the 00:01 funding landed -> the running 22 Oct epoch
+        self.assertEqual(latest_funded_epoch(doc, EPOCH_22_OCT + 9060), EPOCH_22_OCT)
+        # Thu 22 Oct before the funding was scanned -> previous week
+        self.assertEqual(latest_funded_epoch({"epochs": {str(EPOCH_15_OCT): {"tokens": [USDC]}}}, EPOCH_22_OCT + 30), EPOCH_15_OCT)
+        # an entry with no tokens is not funded; future keys are ignored
+        self.assertEqual(latest_funded_epoch(doc, EPOCH_22_OCT + WEEK + 60), EPOCH_22_OCT)
+        self.assertEqual(latest_funded_epoch(doc, EPOCH_15_OCT - 1), None)
+
+    def test_select_epoch_modes_and_staleness(self):
+        doc = {"epochs": {str(EPOCH_22_OCT): {"tokens": [USDC]}}}
+        self.assertEqual(select_epoch(doc, EPOCH_22_OCT + 9060), (EPOCH_22_OCT, False))
+        self.assertEqual(select_epoch(doc, EPOCH_22_OCT + 9060, "last_completed"), (EPOCH_15_OCT, False))
+        # keeper missed 29 Oct and 5 Nov: still fine at 5 Nov 00:00 (exactly 2 weeks), stale after
+        self.assertEqual(select_epoch(doc, EPOCH_22_OCT + 2 * WEEK), (EPOCH_22_OCT, False))
+        self.assertEqual(select_epoch(doc, EPOCH_22_OCT + 2 * WEEK + 9060), (EPOCH_22_OCT, True))
+        # nothing funded at all -> last completed (reports 0)
+        self.assertEqual(select_epoch({"epochs": {}}, EPOCH_22_OCT + 9060), (EPOCH_15_OCT, False))
+
+    def test_sanity_guard(self):
+        self.assertTrue(is_sane_apy({"apyPct": 13.8}))
+        self.assertTrue(is_sane_apy({"apyPct": 0.0}))
+        self.assertTrue(is_sane_apy({"apyPct": 500.0}))
+        self.assertFalse(is_sane_apy({"apyPct": 500.01}))
+        self.assertFalse(is_sane_apy({"apyPct": float("nan")}))
+        self.assertFalse(is_sane_apy({"apyPct": -1.0}))
 
 
 class ComputeRealizedTest(unittest.TestCase):
@@ -184,11 +219,21 @@ class BuildEstimatedRewardsTest(unittest.TestCase):
         self.pf = FakePriceFetcher({USDC: 1.0, OLD_AERO: 0.8, WETH_ADDRESS: 4_000.0, AERO: 0.81, IAERO: 0.66})
         self.decimals = lambda toks: {USDC: 6, OLD_AERO: 18}
 
-    def test_uses_last_completed_epoch_and_snapshot_denominator(self):
-        # daily run on Thu 22 Oct 02:31: 22 Oct funding (booked to the running epoch) is NOT used yet
-        p = build_estimated_rewards(self.w3, DIST, self.epochs_doc, self.pf, self.decimals,
-                                    now_ts=EPOCH_22_OCT + 9060)
-        self.assertEqual(p["epoch"], EPOCH_15_OCT)
+    def build(self, now_ts, **kw):
+        return build_estimated_rewards(self.w3, DIST, self.epochs_doc, self.pf, self.decimals, now_ts=now_ts, **kw)
+
+    def test_default_is_latest_funded_epoch(self):
+        # daily run Thu 22 Oct 02:31: the 22 Oct funding (00:01) is the latest funded epoch
+        p = self.build(EPOCH_22_OCT + 9060)
+        self.assertEqual((p["epoch"], p["epochEnd"]), (EPOCH_22_OCT, EPOCH_22_OCT + WEEK))
+        self.assertEqual((p["epochSelection"], p["stale"]), ("latest_funded", False))
+        self.assertEqual(p["fundedUSD_human"], "99999.0000")
+        # no cached snapshot -> falls back to totalSupplyAtEpochStart
+        self.assertEqual(p["stakedAtEpochStart_1e18"], "1")
+
+    def test_last_completed_mode_and_snapshot_denominator(self):
+        p = self.build(EPOCH_22_OCT + 9060, epoch_mode="last_completed")
+        self.assertEqual((p["epoch"], p["epochSelection"]), (EPOCH_15_OCT, "last_completed"))
         # $3000 USDC + 1000 x $0.8 + 1 ETH x $4000 (native ETH priced as WETH)
         self.assertEqual(p["fundedUSD_human"], "7800.0000")
         self.assertEqual(p["stakedAtEpochStart_1e18"], str(4_000_000 * E18))  # snapshot, not supply()=1
@@ -198,65 +243,180 @@ class BuildEstimatedRewardsTest(unittest.TestCase):
         self.assertNotIn(ZERO_ADDRESS, self.pf.asked)
         self.assertNotIn(("rewardsForEpoch", (Web3.to_checksum_address(USDC), EPOCH_22_OCT)), self.w3.calls)
 
-    def test_22_oct_funding_is_reported_once_its_week_completes(self):
-        p = build_estimated_rewards(self.w3, DIST, self.epochs_doc, self.pf, self.decimals,
-                                    now_ts=EPOCH_22_OCT + WEEK + 9060)
-        self.assertEqual(p["epoch"], EPOCH_22_OCT)
-        self.assertEqual(p["fundedUSD_human"], "99999.0000")
-        # no cached snapshot -> falls back to totalSupplyAtEpochStart
-        self.assertEqual(p["stakedAtEpochStart_1e18"], "1")
+    def test_unknown_mode_falls_back_to_latest_funded(self):
+        self.assertEqual(self.build(EPOCH_22_OCT + 9060, epoch_mode="bogus")["epochSelection"], "latest_funded")
 
-    def test_epoch_without_funding_reports_zero_with_epoch(self):
-        p = build_estimated_rewards(self.w3, DIST, self.epochs_doc, self.pf, self.decimals,
-                                    now_ts=EPOCH_22_OCT + 2 * WEEK + 60)
+    def test_previous_week_used_until_new_funding_lands(self):
+        del self.epochs_doc["epochs"][str(EPOCH_22_OCT)]
+        p = self.build(EPOCH_22_OCT + 30)
+        self.assertEqual(p["epoch"], EPOCH_15_OCT)
+        self.assertEqual(p["fundedUSD_human"], "7800.0000")
+
+    def test_stale_latest_funded_epoch_reports_zero_with_that_epoch(self):
+        # no funding for 29 Oct or 5 Nov: on 5 Nov 02:31 the latest funded epoch (22 Oct) is > 2 weeks old
+        p = self.build(EPOCH_22_OCT + 2 * WEEK + 9060)
+        self.assertEqual((p["epoch"], p["stale"]), (EPOCH_22_OCT, True))
+        self.assertEqual((p["apyPct"], p["weeklyYieldPct"], p["fundedTokenCount"]), (0.0, 0.0, 0))
+        self.assertNotIn("rewardsForEpoch", [c[0] for c in self.w3.calls])
+
+    def test_unfunded_last_completed_epoch_reports_zero_with_epoch(self):
+        p = self.build(EPOCH_22_OCT + 2 * WEEK + 60, epoch_mode="last_completed")
         self.assertEqual(p["epoch"], EPOCH_22_OCT + WEEK)
         self.assertEqual(p["apyPct"], 0.0)
         self.assertEqual(p["fundedTokenCount"], 0)
 
 
+def _keeper_history():
+    """Shape and formatting of the live file written by the rewards keeper (ultimate-keeper.mjs)."""
+    return {
+        "updatedAt": "2026-10-22T00:01:48.938Z",
+        "latest": {"epoch": EPOCH_22_OCT, "apyPct": 12.589882348027016,
+                   "tvlUSD_1e18": "3826910581165999363239397", "stakersWeeklyUSD_1e18": "9265452687173005722519"},
+        "series": [
+            {"epoch": EPOCH_15_OCT, "timestamp": 1792022518, "apyPct": 10.301653994505198,
+             "tvlUSD_1e18": "4278836860930409070696684", "stakersWeeklyUSD_1e18": "8476749392353813493097"},
+            {"epoch": EPOCH_22_OCT, "timestamp": 1792627308, "apyPct": 12.589882348027016,
+             "tvlUSD_1e18": "3826910581165999363239397", "stakersWeeklyUSD_1e18": "9265452687173005722519"},
+        ],
+    }
+
+
+def _payload(epoch, apy=13.8, funded=8_336 * E18, staked=3_135_570 * E18, tokens=36, stale=False):
+    return {"epoch": epoch, "apyPct": apy, "fundedUSD_1e18": str(funded), "stakedUSD_1e18": str(staked),
+            "fundedTokenCount": tokens, "stale": stale}
+
+
+class YieldHistoryTest(unittest.TestCase):
+    EPOCH_29_OCT = EPOCH_22_OCT + WEEK
+
+    def test_never_rewrites_keeper_entry(self):
+        doc, reason = merge_yield_history(_keeper_history(), _payload(EPOCH_22_OCT), EPOCH_22_OCT + 9060)
+        self.assertIsNone(doc)
+        self.assertIn("rewards keeper", reason)
+
+    def test_appends_new_epoch_without_touching_history(self):
+        cur = _keeper_history()
+        before = copy.deepcopy(cur["series"])
+        now = self.EPOCH_29_OCT + 9060
+        doc, reason = merge_yield_history(cur, _payload(self.EPOCH_29_OCT), now)
+        self.assertIn("appended", reason)
+        self.assertEqual(doc["series"][:-1], before)                         # history byte-for-byte the same
+        self.assertEqual(cur["series"], before)                              # input not mutated
+        self.assertEqual(doc["series"][-1], {
+            "epoch": self.EPOCH_29_OCT, "timestamp": now, "apyPct": 13.8,
+            "tvlUSD_1e18": str(3_135_570 * E18), "stakersWeeklyUSD_1e18": str(8_336 * E18), "method": "realized"})
+        self.assertEqual(doc["latest"]["epoch"], self.EPOCH_29_OCT)
+        self.assertEqual(list(doc.keys()), ["updatedAt", "latest", "series"])  # keeper's key order
+        self.assertEqual(doc["updatedAt"], "2026-10-29T02:31:00.000Z")
+
+    def test_updates_only_its_own_latest_entry(self):
+        doc, _ = merge_yield_history(_keeper_history(), _payload(self.EPOCH_29_OCT), self.EPOCH_29_OCT + 9060)
+        before = copy.deepcopy(doc["series"][:-1])
+        doc2, reason = merge_yield_history(doc, _payload(self.EPOCH_29_OCT, apy=14.1), self.EPOCH_29_OCT + 86400)
+        self.assertIn("updated", reason)
+        self.assertEqual(len(doc2["series"]), len(doc["series"]))
+        self.assertEqual(doc2["series"][:-1], before)
+        self.assertEqual(doc2["series"][-1]["apyPct"], 14.1)
+        # identical numbers -> no write
+        self.assertIsNone(merge_yield_history(doc2, _payload(self.EPOCH_29_OCT, apy=14.1), self.EPOCH_29_OCT + 2 * 86400)[0])
+
+    def test_skips_stale_unfunded_or_older_epochs_and_unreadable_file(self):
+        h = _keeper_history()
+        self.assertIsNone(merge_yield_history(h, _payload(self.EPOCH_29_OCT, stale=True), 0)[0])
+        self.assertIsNone(merge_yield_history(h, _payload(self.EPOCH_29_OCT, tokens=0), 0)[0])
+        self.assertIsNone(merge_yield_history(h, _payload(EPOCH_15_OCT - WEEK), 0)[0])  # never back-fill history
+        self.assertIsNone(merge_yield_history({}, _payload(self.EPOCH_29_OCT), 0)[0])   # API failure -> {} -> no wipe
+
+    def test_serialisation_matches_keeper_format(self):
+        # the keeper writes JSON.stringify(payload, null, 2); json.dumps(indent=2) reproduces it byte-for-byte
+        raw = ('{\n  "updatedAt": "x",\n  "latest": {\n    "epoch": 1,\n    "apyPct": 12.589882348027016\n  },\n'
+               '  "series": [\n    {\n      "epoch": 1,\n      "timestamp": 2,\n      "apyPct": 12.589882348027016,\n'
+               '      "tvlUSD_1e18": "3826910581165999363239397"\n    }\n  ]\n}')
+        self.assertEqual(dump_yield_history(json.loads(raw)), raw)
+
+
 class MainHookTest(unittest.TestCase):
-    """main._update_estimated_rewards: publishes via the updater; never publishes 0% on a bad epochs.json."""
+    """main._update_realized_yield: publishes via the updater; never publishes 0% on a bad epochs.json or a spike."""
 
     @classmethod
     def setUpClass(cls):
         import main  # noqa: F401  (imports github/dotenv; no network at import)
         cls.main = main
 
-    def _repo(self, epochs_doc):
+    def _repo(self, epochs_doc, history=None):
         repo = mock.Mock()
 
         def get_contents(path, ref=None):
             if path == "data/epochs.json" and epochs_doc is not None:
                 return mock.Mock(content=base64.b64encode(json.dumps(epochs_doc).encode()).decode())
+            if path == "data/yield_history.json" and history is not None:
+                return mock.Mock(content=base64.b64encode(dump_yield_history(history).encode()).decode())
             raise FileNotFoundError(path)
         repo.get_contents.side_effect = get_contents
         return repo
 
-    def test_writes_estimated_rewards_file(self):
+    def _run(self, payload, env=None, epochs_doc=None, history=None):
         updater = mock.Mock(branch="main")
-        scanner = mock.Mock()
-        payload = {"apyPct": 12.5, "tvlUSD_1e18": "1"}
-        with mock.patch.dict(os.environ, {"EPOCH_STAKING_DISTRIBUTOR": DIST}), \
+        envs = {"EPOCH_STAKING_DISTRIBUTOR": DIST}
+        envs.update(env or {})
+        with mock.patch.dict(os.environ, envs), \
              mock.patch.object(realized_yield, "build_estimated_rewards", return_value=payload) as b:
-            changed = self.main._update_estimated_rewards(self._repo({"epochs": {"1": {"tokens": []}}}), updater, scanner, mock.Mock())
+            changed = self.main._update_realized_yield(
+                self._repo(epochs_doc if epochs_doc is not None else {"epochs": {"1": {"tokens": [USDC]}}}, history),
+                updater, mock.Mock(), mock.Mock())
+        return changed, updater, b
+
+    def test_writes_estimated_rewards_and_appends_yield_history(self):
+        payload = dict(_payload(EPOCH_22_OCT + WEEK), tvlUSD_1e18="1")
+        changed, updater, b = self._run(payload, history=_keeper_history())
         self.assertTrue(changed)
-        b.assert_called_once()
+        self.assertEqual(b.call_args.kwargs["epoch_mode"], "latest_funded")
         updater.update_json.assert_called_once_with("data/estimated_rewards_usd.json", payload)
+        path, content = updater.update_file.call_args.args
+        self.assertEqual(path, "data/yield_history.json")
+        self.assertEqual(updater.update_file.call_args.kwargs["commit_message"], f"Yield snapshot {EPOCH_22_OCT + WEEK}")
+        written = json.loads(content)
+        self.assertEqual(written["series"][:2], _keeper_history()["series"])
+        self.assertEqual(written["series"][-1]["epoch"], EPOCH_22_OCT + WEEK)
+
+    def test_epoch_mode_env_is_passed_through(self):
+        _, _, b = self._run(_payload(EPOCH_15_OCT), env={"ESTIMATED_REWARDS_EPOCH": "last_completed",
+                                                          "YIELD_HISTORY_ENABLED": "false"})
+        self.assertEqual(b.call_args.kwargs["epoch_mode"], "last_completed")
+
+    def test_keeper_entry_for_same_epoch_is_left_alone(self):
+        changed, updater, _ = self._run(_payload(EPOCH_22_OCT), history=_keeper_history())
+        self.assertTrue(changed)                          # estimated_rewards_usd.json still written
+        updater.update_file.assert_not_called()           # yield_history.json untouched
+
+    def test_apy_spike_is_not_published(self):
+        changed, updater, _ = self._run(_payload(EPOCH_22_OCT + WEEK, apy=812.0), history=_keeper_history())
+        self.assertFalse(changed)
+        updater.update_json.assert_not_called()
+        updater.update_file.assert_not_called()
 
     def test_skips_when_epochs_json_unavailable(self):
         updater = mock.Mock(branch="main")
         with mock.patch.dict(os.environ, {"EPOCH_STAKING_DISTRIBUTOR": DIST}), \
              mock.patch.object(realized_yield, "build_estimated_rewards") as b:
-            changed = self.main._update_estimated_rewards(self._repo(None), updater, mock.Mock(), mock.Mock())
+            changed = self.main._update_realized_yield(self._repo(None), updater, mock.Mock(), mock.Mock())
         self.assertFalse(changed)
         b.assert_not_called()
         updater.update_json.assert_not_called()
 
-    def test_can_be_disabled(self):
-        updater = mock.Mock(branch="main")
-        with mock.patch.dict(os.environ, {"EPOCH_STAKING_DISTRIBUTOR": DIST, "ESTIMATED_REWARDS_ENABLED": "false"}):
-            self.assertFalse(self.main._update_estimated_rewards(self._repo({"epochs": {"1": {}}}), updater, mock.Mock(), mock.Mock()))
+    def test_each_file_can_be_disabled(self):
+        _, updater, _ = self._run(_payload(EPOCH_22_OCT + WEEK), env={"ESTIMATED_REWARDS_ENABLED": "false"},
+                                  history=_keeper_history())
         updater.update_json.assert_not_called()
+        updater.update_file.assert_called_once()
+        _, updater, _ = self._run(_payload(EPOCH_22_OCT + WEEK), env={"YIELD_HISTORY_ENABLED": "false"},
+                                  history=_keeper_history())
+        updater.update_json.assert_called_once()
+        updater.update_file.assert_not_called()
+        changed, _, b = self._run(_payload(EPOCH_22_OCT + WEEK), env={"ESTIMATED_REWARDS_ENABLED": "false",
+                                                                       "YIELD_HISTORY_ENABLED": "false"})
+        self.assertFalse(changed)
+        b.assert_not_called()
 
 
 if __name__ == "__main__":

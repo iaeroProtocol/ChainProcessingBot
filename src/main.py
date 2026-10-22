@@ -303,25 +303,24 @@ def _update_staker_rewards(repo, updater: GitHubUpdater) -> bool:
     # push only if changed
     return _push_if_changed(repo, updater, out_path, payload)
 
-def _update_estimated_rewards(repo, updater: GitHubUpdater, scanner: ChainScanner, price_fetcher: PriceFetcher) -> bool:
+def _update_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner, price_fetcher: PriceFetcher) -> bool:
     """
-    Publish realized staking APY (last completed epoch) to data/estimated_rewards_usd.json.
-    Replaces the estimate from the legacy EnhancedOptimizedVotesKeeper; same schema plus new fields.
+    Realized staking APY -> data/estimated_rewards_usd.json (replaces the legacy EnhancedOptimizedVotesKeeper;
+    same schema plus new fields) and -> data/yield_history.json (replaces the rewards keeper's weekly snapshot).
     """
-    if os.environ.get("ESTIMATED_REWARDS_ENABLED", "true").lower() != "true":
-        return False
-    path = os.environ.get("ESTIMATED_REWARDS_JSON_PATH", "data/estimated_rewards_usd.json")
+    er_enabled = os.environ.get("ESTIMATED_REWARDS_ENABLED", "true").lower() == "true"
+    yh_enabled = os.environ.get("YIELD_HISTORY_ENABLED", "true").lower() == "true"
     distributor = os.environ.get("EPOCH_STAKING_DISTRIBUTOR")
-    if not distributor:
+    if not (er_enabled or yh_enabled) or not distributor:
         return False
 
     epochs_doc = _load_json(repo, updater.branch, os.environ.get("EPOCHS_JSON_PATH", "data/epochs.json"))
     if not epochs_doc.get("epochs"):
         # never publish a 0% APY because epochs.json failed to load
-        logger.warning("[estimated_rewards] epochs.json missing/empty; skipping.")
+        logger.warning("[realized_yield] epochs.json missing/empty; skipping.")
         return False
 
-    from realized_yield import build_estimated_rewards, AERO_ADDRESS
+    from realized_yield import build_estimated_rewards, is_sane_apy, AERO_ADDRESS
     payload = build_estimated_rewards(
         w3=scanner.w3,
         distributor=distributor,
@@ -330,8 +329,35 @@ def _update_estimated_rewards(repo, updater: GitHubUpdater, scanner: ChainScanne
         decimals_fn=lambda toks: scanner.decimals_map(toks, chunk_size=int(os.environ.get("DEC_CHUNK_SIZE", "75")), default_decimals=18),
         aero=os.environ.get("AERO_ADDRESS") or AERO_ADDRESS,
         iaero=os.environ.get("IAERO_ADDRESS"),
+        epoch_mode=os.environ.get("ESTIMATED_REWARDS_EPOCH", "latest_funded").lower(),
     )
-    return _push_if_changed(repo, updater, path, payload)
+    if not is_sane_apy(payload):
+        logger.error(
+            f"[realized_yield] apyPct={payload.get('apyPct')} for epoch {payload.get('epoch')} fails the sanity guard "
+            f"(funded ${payload.get('fundedUSD_human')}, staked ${payload.get('stakedUSD_human')}); NOT publishing."
+        )
+        return False
+
+    changed = False
+    if er_enabled:
+        path = os.environ.get("ESTIMATED_REWARDS_JSON_PATH", "data/estimated_rewards_usd.json")
+        changed = _push_if_changed(repo, updater, path, payload) or changed
+    if yh_enabled:
+        changed = _update_yield_history(repo, updater, payload) or changed
+    return changed
+
+def _update_yield_history(repo, updater: GitHubUpdater, payload: dict) -> bool:
+    """Append/update only the realized entry for payload's epoch; keeper-published entries are never rewritten."""
+    from realized_yield import merge_yield_history, dump_yield_history
+    path = os.environ.get("YIELD_HISTORY_JSON_PATH", "data/yield_history.json")
+    cur = _load_json(repo, updater.branch, path)
+    doc, reason = merge_yield_history(cur, payload, int(time.time()))
+    logger.info(f"[yield_history] {reason}")
+    if doc is None:
+        return False
+    # keep the keeper's exact file format (JSON.stringify(..., null, 2)) so old entries stay byte-identical
+    updater.update_file(path, dump_yield_history(doc), commit_message=f"Yield snapshot {payload['epoch']}")
+    return True
 
 def _stable_json_bytes(obj) -> bytes:
     # stable formatting ensures reproducible hashes
@@ -698,7 +724,7 @@ def _run_once() -> bool:
         logger.exception(f"[staker_rewards] failed: {e}")
         _log_status({"event": "staker_rewards", "error": str(e), "triggers": sr_triggers})
 
-    # === realized APY -> data/estimated_rewards_usd.json (daily) ===
+    # === realized APY -> data/estimated_rewards_usd.json + data/yield_history.json (daily) ===
     er_changed = False
     try:
         er_pf = PriceFetcher(
@@ -711,15 +737,15 @@ def _run_once() -> bool:
             weth=weth_addr,
             max_price_usd=max_price_usd,
         )
-        er_changed = _update_estimated_rewards(repo, updater, scanner, er_pf)
+        er_changed = _update_realized_yield(repo, updater, scanner, er_pf)
         if er_changed:
-            logger.info("[estimated_rewards] Published realized APY to estimated_rewards_usd.json")
+            logger.info("[realized_yield] Published realized APY (estimated_rewards_usd.json / yield_history.json)")
         else:
-            logger.info("[estimated_rewards] No change; skipped commit.")
-        _log_status({"event": "estimated_rewards", "changed": er_changed})
+            logger.info("[realized_yield] No change; skipped commit.")
+        _log_status({"event": "realized_yield", "changed": er_changed})
     except Exception as e:
-        logger.exception(f"[estimated_rewards] failed: {e}")
-        _log_status({"event": "estimated_rewards", "error": str(e)})
+        logger.exception(f"[realized_yield] failed: {e}")
+        _log_status({"event": "realized_yield", "error": str(e)})
 
     _log_status({"event": "run_end", "any_changed": bool(changed_rewards or st_changed or epochs_changed or sr_changed or er_changed)})
     return changed_rewards or st_changed or epochs_changed or sr_changed or er_changed
