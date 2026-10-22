@@ -13,9 +13,10 @@ Headline figures (estimated_rewards_usd.json):
                  last Aerodrome-era funding). Each funding pays for #1584's accrual since the previous one, so
                  rate = fundings in (P, T_last] / (T_last - P), T_last = the latest funding (rolling_plan):
                  P = #1584's accrual start (position_earnings.FIRST_ALLOCATION / PROTOCOL_AERO_STAKE_SINCE) until 14
-                 days after the first Aero-era funding (a split or test first funding is then all counted), then the
-                 latest funding at or before now - 7 d. Used once T_last - P >= 1 day (and, in the first 14 days,
-                 once there are two funding times); otherwise the per-epoch figure of the last COMPLETED epoch, its
+                 days after the SECOND Aero-era funding time (a split, test or smoke-test first funding is then all
+                 counted, however early), then the latest funding at or before now - 7 d (looked up before the scan
+                 when a whole epoch went unfunded). Used once there are two funding times and T_last - P >= 1 day;
+                 otherwise the per-epoch figure of the last COMPLETED epoch, its
                  Aero-era fundings left out when it also holds an Aerodrome-era week (then at most one, maybe partial,
                  Aero-era funding: the complete week is published, not both); never a rolling 0.
                  stakersWeeklyUSD = fundedUSD * 7 / spanDays; apyWindow = {from: P, to: T_last, spanDays}
@@ -71,7 +72,7 @@ MIN_WINDOW_DAYS = 1.0           # a funding window shorter than this is not annu
 # block 52918979 at 1792627305 (22 Oct 2026 00:01:45 UTC; checked on chain). Fundings after it are Aero-era.
 AERODROME_LAST_FUNDING_TS = 1792627305
 ROLLING_CUTOFF_TS = AERODROME_LAST_FUNDING_TS + 1   # first Aero-era block time (env ROLLING_CUTOFF_TS)
-ACCRUAL_PHASE_DAYS = 14         # rate since the stake's accrual start until this long after the first Aero-era funding
+ACCRUAL_PHASE_DAYS = 14         # rate since the stake's accrual start until this long after the 2nd Aero-era funding
 
 # Split of harvested rewards (RewardsHarvesterV2.processAndDistribute): 80% goes to the
 # EpochStakingDistributor, so the realized funding IS the stakers' share.
@@ -158,21 +159,21 @@ def trusted_dex_tokens() -> set:
     return toks or set(TRUSTED_DEX_TOKENS)
 
 
-def rolling_plan(times: Iterable[int], now: int, accrual_start: int, first_funding: Optional[int]) -> Optional[tuple]:
+def rolling_plan(times: Iterable[int], now: int, accrual_start: int, second_funding: Optional[int]) -> Optional[tuple]:
     """
     (P, T_last) for the rolling rate at `now`: fundings with block time in (P, T_last], over T_last - P.
-    times: Aero-era RewardFunded block times in view; first_funding: the first Aero-era funding ever (None: none yet).
-    Each funding pays for the stake's accrual since the previous one. Until ACCRUAL_PHASE_DAYS after the first funding,
-    P = accrual_start (everything funded so far, however split, paid for accrual since then; a single funding time is
-    not enough, as it may be only part of the catch-up). Afterwards P = the latest funding at or before now - 7 d.
-    None (fall back) when there is no funding, no funding at or before now - 7 d in view, or T_last - P < 1 day.
+    times: Aero-era RewardFunded block times in view (plus, when it predates the view, the latest one before it);
+    second_funding: the second distinct Aero-era funding time ever (None: fewer so far).
+    Each funding pays for the stake's accrual since the previous one. Until ACCRUAL_PHASE_DAYS after the second funding
+    time, P = accrual_start (everything funded so far, however split, paid for accrual since then; one funding time
+    alone may be only part of the catch-up). Afterwards P = the latest funding at or before now - 7 d.
+    None (fall back) with fewer than two funding times by `now`, no funding at or before now - 7 d after the phase, or
+    T_last - P < 1 day.
     """
     ts = sorted({int(t) for t in times if int(t) < int(now)})
-    if not ts or first_funding is None:
+    if not ts or second_funding is None or int(second_funding) >= int(now):
         return None
-    if int(now) < int(first_funding) + ACCRUAL_PHASE_DAYS * DAY:
-        if len(ts) < 2:
-            return None
+    if int(now) < int(second_funding) + ACCRUAL_PHASE_DAYS * DAY:
         p = int(accrual_start)
     else:
         before = [t for t in ts if t <= int(now) - WEEK]

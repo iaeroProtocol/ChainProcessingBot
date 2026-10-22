@@ -421,10 +421,12 @@ class YieldHistoryTest(unittest.TestCase):
         self.assertEqual(dump_yield_history(json.loads(raw)), raw)
 
 
-def _mock_repo(epochs_doc, history=None, estimated=None):
+def _mock_repo(epochs_doc, history=None, estimated=None, state=None):
     repo = mock.Mock()
 
     def get_contents(path, ref=None):
+        if path == "data/realized_yield_state.json" and state is not None:
+            return mock.Mock(content=base64.b64encode(json.dumps(state).encode()).decode())
         if path == "data/epochs.json" and epochs_doc is not None:
             return mock.Mock(content=base64.b64encode(json.dumps(epochs_doc).encode()).decode())
         if path == "data/yield_history.json" and history is not None:
@@ -447,7 +449,8 @@ class MainHookTest(unittest.TestCase):
         cls.main = main
 
     def _repo(self, epochs_doc, history=None, estimated=None):
-        return _mock_repo(epochs_doc, history, estimated)
+        # adapted (round 6): the state file says no Aero-era funding and everything scanned (no state write)
+        return _mock_repo(epochs_doc, history, estimated, state={"aeroFundings": [], "scannedUntil": 2_000_000_000})
 
     def _run(self, payload, env=None, epochs_doc=None, history=None, estimated=None, now=None, hist_payload=None):
         """now defaults to a week after payload's epoch, so payload's epoch is the last completed one; build() with an
@@ -462,7 +465,7 @@ class MainHookTest(unittest.TestCase):
             changed = self.main._update_realized_yield(
                 self._repo(epochs_doc if epochs_doc is not None else {"epochs": {"1": {"tokens": [USDC]}}}, history,
                            estimated),
-                updater, mock.Mock(), mock.Mock())
+                updater, mock.Mock(reward_funded_events=mock.Mock(return_value=[])), mock.Mock())  # no Aero-era funding
         return changed, updater, b
 
     def test_writes_estimated_rewards_and_appends_yield_history(self):
@@ -626,7 +629,8 @@ class RollingModeTest(unittest.TestCase):
     def _daily(self, start, days):
         return self._harvests([start + k * DAY for k in range(days)])
 
-    def _run(self, now, events=(), legacy=LEGACY, estimated=None, history=None, scan_error=None, env=None):
+    def _run(self, now, events=(), legacy=LEGACY, estimated=None, history=None, scan_error=None, env=None, state=None,
+             epochs=None):
         events = [e for e in events if e["timestamp"] < now]
         rewards = dict(legacy or {})
         for e in events:
@@ -637,8 +641,8 @@ class RollingModeTest(unittest.TestCase):
         scanner.decimals_map.side_effect = lambda toks, **k: {USDC: 6}
         scanner.reward_funded_events.side_effect = scan_error or (
             lambda dist, frm, to: [e for e in events if frm <= e["timestamp"] <= to])
-        repo = _mock_repo({"epochs": {str(ep): {"tokens": [USDC]} for (_, ep) in rewards}},
-                          history if history is not None else _keeper_history(), estimated)
+        repo = _mock_repo(epochs or {"epochs": {str(ep): {"tokens": [USDC]} for (_, ep) in rewards}},
+                          history if history is not None else _keeper_history(), estimated, state)
         updater = mock.Mock(branch="main")
         envs = {"EPOCH_STAKING_DISTRIBUTOR": DIST, "LIVE_YIELD_ENABLED": "false", "ROLLING_SINCE_TS": ""}
         envs.update(env or {})
@@ -646,7 +650,9 @@ class RollingModeTest(unittest.TestCase):
             self.main._update_realized_yield(repo, updater, scanner,
                                              FakePriceFetcher({USDC: 1.0, AERO: 0.81, IAERO: 0.66}))
         written = updater.update_json.call_args.args[1] if updater.update_json.called else None
-        hist = json.loads(updater.update_file.call_args.args[1]) if updater.update_file.called else None
+        files = {c.args[0]: c.args[1] for c in updater.update_file.call_args_list}
+        hist = json.loads(files["data/yield_history.json"]) if "data/yield_history.json" in files else None
+        self.state = json.loads(files["data/realized_yield_state.json"]) if "data/realized_yield_state.json" in files else None
         return written, hist, scanner
 
     def test_no_aero_era_funding_keeps_the_per_epoch_mode(self):
@@ -654,15 +660,16 @@ class RollingModeTest(unittest.TestCase):
         self.assertEqual(scanner.reward_funded_events.call_args.args, (DIST, self.CUTOFF, EPOCH_22_OCT + 9060))
         self.assertEqual((p["epochSelection"], p["epoch"]), ("latest_funded", EPOCH_22_OCT))
         self.assertNotIn("apyWindow", p)
-        self.assertNotIn("firstAeroFundingTs", p)
+        self.assertEqual(self.state, {"aeroFundings": [], "scannedUntil": EPOCH_22_OCT + 9060})
 
     def test_after_two_weeks_the_fundings_since_the_last_one_7_days_back(self):
         events = self._daily(self.LAUNCH, 20)
-        now = EPOCH_22_OCT + 2 * WEEK + 2 * DAY + 9060      # Sat 7 Nov 02:31, past 14 days after the first funding
+        now = EPOCH_22_OCT + 2 * WEEK + 3 * DAY + 9060      # Sun 8 Nov 02:31, past 14 days after the second funding
         p, _, scanner = self._run(now, events)
         self.assertAlmostEqual(p["apyPct"], self.APY, places=6)
-        self.assertEqual(p["apyWindow"], {"from": self.LAUNCH + 7 * DAY, "to": self.LAUNCH + 14 * DAY, "spanDays": 7.0})
-        self.assertEqual((p["epochSelection"], p["firstAeroFundingTs"]), ("rolling_7d", self.LAUNCH))
+        self.assertEqual(p["apyWindow"], {"from": self.LAUNCH + 8 * DAY, "to": self.LAUNCH + 15 * DAY, "spanDays": 7.0})
+        self.assertEqual(p["epochSelection"], "rolling_7d")
+        self.assertEqual(self.state, {"aeroFundings": [self.LAUNCH, self.LAUNCH + DAY]})
         self.assertEqual(scanner.reward_funded_events.call_args_list[0].args, (DIST, self.CUTOFF, now))
 
     def test_first_two_weeks_count_everything_since_the_accrual_start(self):
@@ -713,19 +720,30 @@ class RollingModeTest(unittest.TestCase):
 
     def test_nothing_in_view_keeps_the_previous_headline_never_a_zero(self):
         events = self._daily(self.LAUNCH, 8)                                      # to Fri 30 Oct, then nothing
-        p, hist, _ = self._run(EPOCH_22_OCT + 3 * WEEK + 4 * DAY + 9060, events, estimated={"firstAeroFundingTs": self.LAUNCH})
-        self.assertEqual((p, hist), (None, None))                                 # 5 Nov epoch empty: nothing written
+        p, hist, _ = self._run(EPOCH_22_OCT + 3 * WEEK + 4 * DAY + 9060, events,
+                               state={"aeroFundings": [self.LAUNCH, self.LAUNCH + DAY]})
+        self.assertEqual((p, hist, self.state), (None, None, None))               # 5 Nov epoch empty: nothing written
 
     def test_first_funding_before_the_scan_is_found_once_and_kept(self):
         events = self._daily(self.LAUNCH, 30)
         now = EPOCH_22_OCT + 3 * WEEK + 2 * DAY + 9060          # Sat 14 Nov: the scan starts 29 Oct, after the cutoff
         p, _, scanner = self._run(now, events)
-        self.assertEqual(p["firstAeroFundingTs"], self.LAUNCH)
+        self.assertEqual(self.state, {"aeroFundings": [self.LAUNCH, self.LAUNCH + DAY]})
         self.assertEqual(scanner.reward_funded_events.call_args_list[0].args, (DIST, EPOCH_22_OCT + WEEK, now))
         self.assertEqual(scanner.reward_funded_events.call_args_list[1].args, (DIST, self.CUTOFF, EPOCH_22_OCT + WEEK - 1))
-        p, _, scanner = self._run(now, events, estimated={"firstAeroFundingTs": self.LAUNCH})
+        p, _, scanner = self._run(now, events, state=self.state)
         self.assertEqual(scanner.reward_funded_events.call_count, 1)
+        self.assertIsNone(self.state)                                             # unchanged: not rewritten
         self.assertAlmostEqual(p["apyPct"], self.APY, places=6)
+        # before the launch the state records how far the bot has looked: an old point -> one look-back from it, then
+        # a new point; a recent one -> no look-back and no write
+        now = EPOCH_22_OCT + 3 * WEEK + 3 * DAY + 9060                         # Sun 15 Nov: the scan starts 29 Oct
+        p, _, scanner = self._run(now, [], state={"aeroFundings": [], "scannedUntil": EPOCH_22_OCT + DAY})
+        self.assertEqual(scanner.reward_funded_events.call_args_list[1].args,
+                         (DIST, EPOCH_22_OCT + DAY + 1, EPOCH_22_OCT + WEEK - 1))
+        self.assertEqual(self.state, {"aeroFundings": [], "scannedUntil": now})
+        p, _, scanner = self._run(now + DAY, [], state=self.state)
+        self.assertEqual((scanner.reward_funded_events.call_count, self.state), (1, None))
 
     def test_rolling_since_is_ignored_and_env_never_crashes(self):
         events = self._daily(self.LAUNCH, 20)
@@ -737,13 +755,57 @@ class RollingModeTest(unittest.TestCase):
             self.assertEqual(p["apyPct"], ref["apyPct"], env)
 
     def test_scan_failure(self):
+        # rewritten (round 6): a failed scan publishes nothing whenever Aero-era funding exists or may exist
         now = EPOCH_22_OCT + 2 * WEEK + 2 * DAY + 9060
-        # Aero-era funding known (kept in the file): nothing published rather than a partial week
-        p, hist, _ = self._run(now, scan_error=RuntimeError("eth_getLogs 429"), estimated={"firstAeroFundingTs": self.LAUNCH})
-        self.assertEqual((p, hist), (None, None))
-        # none known yet: the per-epoch figure as before the Aero era
-        p, _, _ = self._run(now, scan_error=RuntimeError("eth_getLogs 429"), legacy={(USDC, EPOCH_22_OCT + WEEK): 7_000 * 10**6})
-        self.assertEqual(p["epochSelection"], "latest_funded")
+        err = RuntimeError("eth_getLogs 429")
+        p, hist, _ = self._run(now, scan_error=err, state={"aeroFundings": [self.LAUNCH, self.LAUNCH + DAY]})
+        self.assertEqual((p, hist, self.state), (None, None, None))
+        p, hist, _ = self._run(now, scan_error=err, legacy={(USDC, EPOCH_22_OCT + WEEK): 7_000 * 10**6})
+        self.assertEqual((p, hist), (None, None))                                 # a funded epoch after 22 Oct
+        # nothing on record and no funded epoch after the transition epoch (it may hold Aero-era funding on top of
+        # its Aerodrome week): the last Aerodrome-only epoch, 15 Oct
+        legacy = {**self.LEGACY, (USDC, EPOCH_22_OCT): 13_000 * 10**6}
+        p, hist, _ = self._run(EPOCH_22_OCT + WEEK + 9060, scan_error=err, legacy=legacy)
+        self.assertEqual((p["epoch"], p["fundedUSD_human"]), (EPOCH_15_OCT, "7000.0000"))
+        self.assertIn("rollingFallback", p)
+        self.assertIsNone(hist)
+
+    def test_look_back_failure_publishes_nothing(self):
+        events = self._daily(self.LAUNCH, 30)
+        calls = {"n": 0}
+
+        def scan(dist, frm, to):
+            calls["n"] += 1
+            if calls["n"] > 1:
+                raise RuntimeError("archive range refused")
+            return [e for e in events if frm <= e["timestamp"] <= to and e["timestamp"] < now]
+        now = EPOCH_22_OCT + 3 * WEEK + 2 * DAY + 9060                          # the start look-back is needed
+        p, hist, _ = self._run(now, events, scan_error=scan)
+        self.assertEqual((p, hist, self.state), (None, None, None))
+
+    def test_a_whole_unfunded_epoch_is_bridged_by_looking_up_p(self):
+        # daily fundings to Wed 4 Nov, none until Wed 18 Nov (14 days), daily after: the 12 Nov epoch has none
+        times = [self.LAUNCH + k * DAY for k in range(13)] + [self.LAUNCH + k * DAY for k in range(26, 40)]
+        events = self._harvests(times)
+        state = {"aeroFundings": [self.LAUNCH, self.LAUNCH + DAY]}
+        for k in range(8):                                                       # Thu 19 .. Thu 26 Nov
+            now = EPOCH_22_OCT + 4 * WEEK + k * DAY + 9060
+            p, _, scanner = self._run(now, events, state=state)
+            self.assertAlmostEqual(p["apyPct"], self.APY, places=6, msg=k)
+        # the first of them looked P up before the scan: 4 Nov 06:00
+        p, _, scanner = self._run(EPOCH_22_OCT + 4 * WEEK + 9060, events, state=state)
+        self.assertEqual(p["apyWindow"]["from"], self.LAUNCH + 12 * DAY)
+        self.assertEqual(scanner.reward_funded_events.call_args_list[1].args,
+                         (DIST, self.LAUNCH, EPOCH_22_OCT + 2 * WEEK - 1))
+
+    def test_the_phase_runs_from_the_second_funding(self):
+        # a $50 smoke test on Mon 26 Oct, the first live run Tue 10 Nov 06:00 (19 days of accrual)
+        smoke = self._ev(EPOCH_22_OCT + 4 * DAY + 12 * 3600, 50.0)
+        launch = EPOCH_22_OCT + 19 * DAY + 6 * 3600
+        events = [smoke] + self._harvests([launch + k * DAY for k in range(15)])
+        for k in range(1, 10):
+            p, _, _ = self._run(launch - 6 * 3600 + k * DAY + 9060, events)
+            self.assertLess(abs(p["apyPct"] - self.APY), 0.05, k)          # + the $50 while it is in view
 
     def test_yield_history_entry_per_completed_epoch(self):
         events = self._daily(self.LAUNCH, 30)

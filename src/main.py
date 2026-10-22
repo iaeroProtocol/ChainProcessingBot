@@ -353,7 +353,9 @@ def _update_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner, 
     Realized staking APY -> data/estimated_rewards_usd.json (replaces the legacy EnhancedOptimizedVotesKeeper;
     same schema plus new fields) and -> data/yield_history.json (replaces the rewards keeper's weekly snapshot).
     Headline: the rolling rate once any Aero-era funding exists (rolling_plan), else the per-epoch figure.
-    yield_history only gets the last COMPLETED epoch (see realized_yield's docstring).
+    yield_history only gets the last COMPLETED epoch (see realized_yield's docstring). data/realized_yield_state.json
+    keeps the first two Aero-era funding times. A failed RewardFunded scan or look-back publishes nothing, unless
+    nothing shows Aero-era funding yet (then the last epoch that ended before the Aero era).
     """
     er_enabled = os.environ.get("ESTIMATED_REWARDS_ENABLED", "true").lower() == "true"
     yh_enabled = os.environ.get("YIELD_HISTORY_ENABLED", "true").lower() == "true"
@@ -368,7 +370,8 @@ def _update_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner, 
         return False
 
     from realized_yield import (build_estimated_rewards, build_window_rewards, sanity_problems, epoch_start,
-                                last_completed_epoch, rolling_plan, aero_era_raw, AERO_ADDRESS, WEEK)
+                                last_completed_epoch, rolling_plan, aero_era_raw, AERO_ADDRESS, WEEK,
+                                ACCRUAL_PHASE_DAYS)
     dec_chunk = int(os.environ.get("DEC_CHUNK_SIZE", "75"))
     decimals_fn = lambda toks: scanner.decimals_map(toks, chunk_size=dec_chunk, default_decimals=18)
     aero = os.environ.get("AERO_ADDRESS") or AERO_ADDRESS
@@ -410,54 +413,92 @@ def _update_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner, 
     hist_epoch = last_completed_epoch(now)
     cutoff = _rolling_cutoff_ts()
     accrual_start = _stake_accrual_start()
-    prev_first = prev_doc.get("firstAeroFundingTs")
-    prev_first = int(prev_first) if isinstance(prev_first, int) and prev_first >= cutoff else None
+    phase = ACCRUAL_PHASE_DAYS * 24 * 3600
+    # the first two Aero-era funding times, and how far every funding before that is known (the start look-back below
+    # is then never repeated), kept in a state file written whatever happens to the headline
+    state_path = os.environ.get("REALIZED_STATE_JSON_PATH", "data/realized_yield_state.json")
+    state = _load_json(repo, updater.branch, state_path)
+    known = sorted({int(t) for t in (state.get("aeroFundings") or []) if isinstance(t, int) and t >= cutoff})[:2]
+    until = state.get("scannedUntil") if isinstance(state.get("scannedUntil"), int) else None
     # <= 3 weeks: the rolling window, the completed epoch, and the 7 days before it (P is the latest funding at or
     # before now - 7 d, or at or before the completed epoch's start)
     scan_from = max(cutoff, hist_epoch - WEEK)
     try:
         events = [e for e in scanner.reward_funded_events(distributor, scan_from, now) if int(e["timestamp"]) >= cutoff]
-        known = [x for x in [prev_first] + [int(e["timestamp"]) for e in events] if x is not None]
-        first = min(known) if known else None
-        if prev_first is None and scan_from > cutoff:
-            # whether Aero-era funding came before the scan is unknown: look once (the answer is kept in the file)
-            earlier = [int(e["timestamp"]) for e in scanner.reward_funded_events(distributor, cutoff, scan_from - 1)
-                       if int(e["timestamp"]) >= cutoff]
-            first = min(earlier + known) if (earlier or known) else None
+        times = [int(e["timestamp"]) for e in events]
+        older = []
+        if len(known) < 2:
+            # the start of the Aero era may predate the scan: look back once (then it is in the state file)
+            lb_from = max(cutoff, until + 1) if until is not None else cutoff
+            if lb_from < scan_from:
+                older = [int(e["timestamp"]) for e in scanner.reward_funded_events(distributor, lb_from, scan_from - 1)
+                         if int(e["timestamp"]) >= cutoff]
+        start_times = sorted(set(known) | set(older) | set(times))[:2]
+        first = start_times[0] if start_times else None
+        second = start_times[1] if len(start_times) > 1 else None
+        if (second is not None and now >= second + phase and first < scan_from
+                and not any(t <= hist_epoch for t in times)):
+            # after the accrual phase P (the latest funding at or before the completed epoch's start / now - 7 d) may
+            # predate the scan when a whole epoch went unfunded: look it up, as P only (its funding is not counted)
+            back = older or [int(e["timestamp"]) for e in
+                             scanner.reward_funded_events(distributor, max(cutoff, first), scan_from - 1)
+                             if int(e["timestamp"]) >= cutoff]
+            if back:
+                times = times + [max(back)]
     except Exception as e:
-        if prev_first is not None:
-            # a gap would understate the funding; the per-epoch figure would be a partial week
+        aero_epochs = [k for k, v in (epochs_doc.get("epochs") or {}).items()
+                       if str(k).isdigit() and int(k) > epoch_start(cutoff) and (v or {}).get("tokens")]
+        if known or aero_epochs:
+            # Aero-era funding exists (or may): the per-epoch figure could be a running or catch-up epoch
             logger.error(f"[realized_yield] RewardFunded scan failed ({str(e)[:160]}); NOT publishing this run.")
             _log_status({"event": "realized_yield_blocked", "reasons": ["RewardFunded scan failed"]})
             return False
-        logger.warning(f"[realized_yield] RewardFunded scan failed ({str(e)[:160]}); no Aero-era funding known yet, "
-                       f"publishing the per-epoch figure")
-        events, first = [], None
-    times = [int(e["timestamp"]) for e in events]
+        # no Aero-era funding on record: the last epoch that ended before the Aero era (the transition epoch may hold
+        # Aero-era funding on top of its Aerodrome week)
+        logger.warning(f"[realized_yield] RewardFunded scan failed ({str(e)[:160]}); no Aero-era funding on record, "
+                       f"publishing the last Aerodrome-only epoch")
+        payload = build(epoch=epoch_start(cutoff) - WEEK)
+        payload["rollingFallback"] = "RewardFunded scan failed; the last Aerodrome-only epoch"
+        events, times, first, second, yh_enabled = None, [], None, None, False
+    else:
+        # rewritten when the fundings change, or (fewer than two so far) when the scanned-until point is about to fall
+        # behind the scan start (the start look-back would otherwise repeat): not on every run
+        if len(start_times) >= 2:
+            new_state = {"aeroFundings": start_times}
+        elif start_times != known or until is None or until + 1 < scan_from + 2 * 24 * 3600:
+            new_state = {"aeroFundings": start_times, "scannedUntil": now}
+        else:
+            new_state = state
+        if new_state != state:
+            try:
+                updater.update_file(state_path, json.dumps(new_state, indent=2), commit_message="Realized yield state")
+            except Exception as e:
+                logger.warning(f"[realized_yield] could not write {state_path}: {e}")
     if first is not None and accrual_start is None:
         logger.warning("[realized_yield] the stake's accrual start is unknown (PROTOCOL_AERO_STAKE_SINCE); "
                        "using the first Aero-era funding")
     start = accrual_start if accrual_start is not None else first
 
-    payload, keep_headline = None, False
-    if first is not None:
-        plan = rolling_plan(times, now, start, first)
+    keep_headline = False
+    if events is None:
+        pass                                            # the scan failed: payload set above
+    elif first is not None:
+        plan = rolling_plan(times, now, start, second)
         if plan:
             payload = build_window(plan, epoch_start(now), "rolling_7d")
         else:
-            # under a day of funding (or a single funding time) since the accrual start, or no funding at or before
-            # now - 7 d in view: the last completed epoch; if it also holds an Aerodrome-era week, that week without
-            # its (at most one, maybe partial) Aero-era funding (never a rolling 0, never both)
+            # one funding time so far, under a day of funding since the accrual start, or no funding at or before
+            # now - 7 d: the last completed epoch; if it also holds an Aerodrome-era week, that week without its (at
+            # most one, maybe partial) Aero-era funding (never a rolling 0, never both)
             aero_part = aero_era_raw(events, hist_epoch, cutoff)
-            logger.info(f"[realized_yield] no rolling figure yet (first Aero-era funding {first}); publishing the last "
-                        f"completed epoch {hist_epoch}")
+            logger.info(f"[realized_yield] no rolling figure yet (first Aero-era fundings {start_times}); publishing "
+                        f"the last completed epoch {hist_epoch}")
             payload = build(epoch=hist_epoch, aero_era=aero_part or None)
-            payload["rollingFallback"] = "under a day of funding since the accrual start, or none in 7 days"
+            payload["rollingFallback"] = "one funding time so far, under a day of funding, or none in 7 days"
             if not payload.get("fundedTokenCount"):
                 logger.warning(f"[realized_yield] epoch {hist_epoch} has no funding either; keeping the previous "
                                f"headline figures")
                 keep_headline = True
-        payload["firstAeroFundingTs"] = int(first)
     else:
         payload = build()
     problems = sanity_problems(payload)
@@ -486,7 +527,7 @@ def _update_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner, 
                     logger.info(f"[yield_history] completed epoch {hist_epoch} has no funding; no entry")
             else:
                 # the rolling rule at the epoch's end
-                plan = rolling_plan(times, hist_epoch + WEEK, start, first)
+                plan = rolling_plan(times, hist_epoch + WEEK, start, second)
                 if plan:
                     hist_payload = build_window(plan, hist_epoch, "epoch_window")
                 else:

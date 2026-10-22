@@ -90,6 +90,7 @@ class F2_ZeroPrices(unittest.TestCase):
         w3 = FakeDistributorWeb3(rewards={(USDC.lower(), EPOCH_22_OCT): 8_300 * 10**6},
                                  snapshot={EPOCH_22_OCT: 4_710_927 * E18}, supply_at_start={}, total_staked=4_710_930 * E18)
         scanner = mock.Mock(w3=w3)
+        scanner.reward_funded_events.return_value = []       # adapted (round 6): no Aero-era funding, per-epoch path
         scanner.decimals_map.side_effect = lambda toks, **k: {USDC.lower(): 6}
         epochs = {"epochs": {str(EPOCH_22_OCT): {"tokens": [USDC.lower()]}}}
         repo = mock.Mock()
@@ -170,7 +171,8 @@ class F4_LiveHistoryLoss(unittest.TestCase):
                                           "YIELD_HISTORY_ENABLED": "false"}), \
              mock.patch.object(realized_yield, "build_estimated_rewards", return_value=_payload(EPOCH_22_OCT)), \
              mock.patch.object(main, "_build_live_block", side_effect=RuntimeError("token_meta: 429 Too Many Requests")):
-            main._update_realized_yield(repo, updater, mock.Mock(), mock.Mock())
+            main._update_realized_yield(repo, updater, mock.Mock(reward_funded_events=mock.Mock(return_value=[])),
+                                        mock.Mock())          # adapted (round 6): no Aero-era funding
         written = updater.update_json.call_args.args[1]
         self.assertIn("live", written, "previous live.history and gauge list are dropped from the published file")
 

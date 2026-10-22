@@ -83,6 +83,7 @@ def _run_bot(repo, updater, funded_prices, rewards, now, env=None, pf=None):
     w3 = FakeDistributorWeb3(rewards=rewards, snapshot={e: STAKED_RAW for e in (E_22_OCT, E_29_OCT, E_05_NOV)},
                              supply_at_start={}, total_staked=STAKED_RAW)
     scanner = mock.Mock(w3=w3)
+    scanner.reward_funded_events.return_value = []           # adapted (round 6): these fund via rewardsForEpoch only
     scanner.decimals_map.side_effect = lambda toks, **k: {USDC: 6, WETH: 18}
     prices = dict(funded_prices or {}, **{realized_yield.AERO_ADDRESS.lower(): 0.81, IAERO: IAERO_PX})
     e = {"EPOCH_STAKING_DISTRIBUTOR": DIST, "LIVE_YIELD_ENABLED": "false", "YIELD_HISTORY_ENABLED": "true"}
