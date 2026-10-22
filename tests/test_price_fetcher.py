@@ -2,6 +2,7 @@
 # Unit tests for the on-chain DEX fallback in PriceFetcher (deepest Aero / Aerodrome pool, ~$10 quote).
 # Uses a fake in-memory web3; no network. Run: python -m unittest discover -s tests
 import json
+import math
 import os
 import sys
 import tempfile
@@ -27,6 +28,7 @@ WETH = cs("0x4200000000000000000000000000000000000006")
 AERO = cs("0x3f5bF3EdAc59d650D8fDf9657a71F2f904A3a4Ee")
 OLD_AERO = cs("0x940181a94A35A4569E4529A3CDfB74e38FD98631")
 LIQ = cs("0x7ee8964160126081cebC443a42482E95e393e6A8")
+IAERO = cs("0x81034Fb34009115F215f5d5F564AAc9FfA46a1Dc")
 
 
 class Reverted(Exception):
@@ -40,7 +42,8 @@ class FakeChain:
         self.aero = {cs(AERO_VOLATILE_FACTORY): {}, cs(AERO_STABLE_FACTORY): {}}
         self.aerodrome = {cs(AERODROME_FACTORY): {}}
         self.pools = {}  # pool -> {token: reserve}
-        self.decimals = {USDC: 6, WETH: 18, AERO: 18, OLD_AERO: 18, LIQ: 18}
+        self.cl = {}     # CL pool -> (token0, token1, sqrtPriceX96)
+        self.decimals = {USDC: 6, WETH: 18, AERO: 18, OLD_AERO: 18, LIQ: 18, IAERO: 18}
         self._n = 0
 
     def _new_pool(self, ta, ra, tb, rb):
@@ -71,9 +74,12 @@ class FakeChain:
             if name != "getPool" or len(args) != 3:
                 raise Reverted("execution reverted")
             return self.aerodrome[address].get((frozenset((cs(args[0]), cs(args[1]))), bool(args[2])), zero)
-        if address in self.pools and name in ("token0", "getReserves"):
+        if address in self.cl and name in ("token0", "token1", "slot0"):
+            t0, t1, sp = self.cl[address]
+            return {"token0": t0, "token1": t1, "slot0": [sp, 0, 0, 1, 1, True]}[name]
+        if address in self.pools and name in ("token0", "token1", "getReserves"):
             t0, t1 = sorted(self.pools[address], key=str.lower)        # pools order their tokens by address
-            return t0 if name == "token0" else [self.pools[address][t0], self.pools[address][t1], 0]
+            return {"token0": t0, "token1": t1}.get(name) or [self.pools[address][t0], self.pools[address][t1], 0]
         if address in self.pools and name == "getAmountOut":
             amount_in, token_in = args
             reserves = self.pools[address]
@@ -301,6 +307,116 @@ class RobinhoodPricingTest(unittest.TestCase):
         with mock.patch.object(price_fetcher.requests, "get", side_effect=OSError("down")):
             self.assertEqual(price_fetcher.llama_prices(["a:1"]), {})
         self.assertEqual(price_fetcher.llama_prices([]), {})
+
+
+
+class IaeroRouteTest(unittest.TestCase):
+    """Operational blocker I-1 (review 8): DefiLlama's iAERO price went stale when the Aerodrome pools were drained and
+    no USDC/WETH route exists, so iAERO = AERO price x AERO per iAERO from the Aero AERO/iAERO CL pool, cross-checked
+    against the v2 pool; core-token aggregator prices older than 2 h count as missing."""
+    NOW = 1_792_703_700
+
+    def setUp(self):
+        env = mock.patch.dict(os.environ, {}, clear=False)
+        env.start()
+        self.addCleanup(env.stop)
+        for k in ("COINGECKO_API_KEY", "DEX_TRUSTED_DEPTH_USD", "TRUSTED_DEX_TOKENS"):
+            os.environ.pop(k, None)
+        self.chain = FakeChain()
+        self.chain.add_aero_pool(AERO_VOLATILE_FACTORY, WETH, 10_000 * 10**18, USDC, 40_000_000 * 10**6)
+        self.set_pools(0.816, 46_441, 56_913)
+
+    def set_pools(self, cl_aero_per_iaero, v2_aero, v2_iaero):
+        """CL slot0 at `cl_aero_per_iaero` AERO per iAERO (token0 AERO, token1 iAERO); v2 reserves."""
+        sp = int(math.sqrt(1 / cl_aero_per_iaero) * 2 ** 96)
+        self.chain.cl[cs(price_fetcher.IAERO_CL_POOL)] = (AERO, IAERO, sp)
+        self.chain.pools[cs(price_fetcher.IAERO_V2_POOL)] = {AERO: v2_aero * 10**18, IAERO: v2_iaero * 10**18}
+
+    def make_pf(self, llama=None, cg=None):
+        with mock.patch.object(price_fetcher, "Web3", fake_web3_cls(self.chain)):
+            pf = PriceFetcher(cache_file=os.path.join(tempfile.mkdtemp(), "c.json"), rpc_url="http://fake", usdc=USDC,
+                              weth=WETH, aerodrome_factory=None)
+        resp = mock.Mock(status_code=200)
+        resp.json.return_value = {"coins": {f"base:{a.lower()}": v for a, v in (llama or {}).items()}}
+        self.llama_resp = resp
+        pf._fetch_coingecko = lambda addrs: {}
+        return pf
+
+    def fetch(self, pf, tokens):
+        with mock.patch.object(price_fetcher.requests, "get", return_value=self.llama_resp), \
+             mock.patch.object(price_fetcher, "_now", return_value=self.NOW):
+            return pf.fetch_batch([t.lower() for t in tokens])
+
+    def test_stale_llama_iaero_is_replaced_by_the_route(self):
+        pf = self.make_pf({AERO: {"price": 0.8, "timestamp": self.NOW - 60},
+                           IAERO: {"price": 0.6656, "timestamp": self.NOW - 9 * 3600},     # stale since 12:21 UTC
+                           LIQ: {"price": 0.02, "timestamp": self.NOW - 9 * 3600}})       # not a core token: kept
+        out = self.fetch(pf, [AERO, IAERO, LIQ])
+        ia = out[IAERO.lower()]
+        self.assertEqual(ia["source"], "route")
+        self.assertAlmostEqual(ia["priceUsd"], 0.8 * 0.816, places=9)
+        self.assertAlmostEqual(ia["route"]["aeroPerIaero"], 0.816, places=9)
+        self.assertAlmostEqual(ia["route"]["aeroPerIaeroV2"], 0.816, places=3)               # a 1-iAERO v2 swap
+        self.assertEqual((ia["route"]["aeroSource"], ia["route"]["clPool"]),
+                         ("llama", price_fetcher.IAERO_CL_POOL.lower()))
+        self.assertEqual((out[AERO.lower()]["source"], out[LIQ.lower()]["priceUsd"]), ("llama", 0.02))
+
+    def test_fresh_llama_iaero_is_used_as_is(self):
+        pf = self.make_pf({AERO: {"price": 0.8, "timestamp": self.NOW}, IAERO: {"price": 0.66, "timestamp": self.NOW - 600}})
+        self.assertEqual(self.fetch(pf, [AERO, IAERO])[IAERO.lower()], {"priceUsd": 0.66, "updatedAt": self.NOW,
+                                                                           "source": "llama"})
+
+    def test_pools_disagreeing_by_more_than_3pct_leave_iaero_unpriced(self):
+        self.set_pools(0.816, 46_441, 50_000)                                  # v2 ~0.926: 13% apart
+        pf = self.make_pf({AERO: {"price": 0.8, "timestamp": self.NOW}})
+        ia = self.fetch(pf, [AERO, IAERO])[IAERO.lower()]
+        self.assertEqual((ia["priceUsd"], ia["source"]), (0.0, "none"))
+        self.set_pools(0.816, 46_441, 56_000)                                  # v2 ~0.828: 1.5% apart -> ok
+        ia = self.fetch(self.make_pf({AERO: {"price": 0.8, "timestamp": self.NOW}}), [AERO, IAERO])[IAERO.lower()]
+        self.assertEqual(ia["source"], "route")
+
+    def test_the_aero_price_must_be_trusted(self):
+        # AERO stale on DefiLlama too -> DEX fallback; from a $30k pool it is not trusted -> iAERO unpriced, and the
+        # generic DEX fallback is never used for iAERO (even with an iAERO/USDC pool)
+        self.chain.add_aero_pool(AERO_VOLATILE_FACTORY, AERO, 37_000 * 10**18, USDC, 30_000 * 10**6)
+        self.chain.add_aero_pool(AERO_VOLATILE_FACTORY, IAERO, 1_000_000 * 10**18, USDC, 900_000 * 10**6)
+        pf = self.make_pf({AERO: {"price": 0.8, "timestamp": self.NOW - 3 * 3600}})
+        out = self.fetch(pf, [AERO, IAERO])
+        self.assertEqual(out[AERO.lower()]["source"], "dex")
+        self.assertEqual((out[IAERO.lower()]["priceUsd"], out[IAERO.lower()]["source"]), (0.0, "none"))
+        # from a deep ($5.3M) pool it is trusted -> the route prices iAERO
+        chain = self.chain
+        self.chain = FakeChain()
+        self.chain.add_aero_pool(AERO_VOLATILE_FACTORY, WETH, 10_000 * 10**18, USDC, 40_000_000 * 10**6)
+        self.chain.add_aero_pool(AERO_VOLATILE_FACTORY, AERO, 6_500_000 * 10**18, USDC, 5_265_000 * 10**6)
+        self.set_pools(0.816, 46_441, 56_913)
+        out = self.fetch(self.make_pf({}), [AERO, IAERO])
+        self.assertEqual(out[IAERO.lower()]["source"], "route")
+        self.assertAlmostEqual(out[IAERO.lower()]["priceUsd"], out[AERO.lower()]["priceUsd"] * 0.816, places=9)
+        self.assertEqual(out[IAERO.lower()]["route"]["aeroSource"], "dex")
+        del chain
+
+    def test_stale_or_undated_coingecko_core_price_is_dropped(self):
+        pf = self.make_pf({})
+        del pf._fetch_coingecko
+        resp = mock.Mock(status_code=200)
+        resp.json.return_value = {IAERO.lower(): {"usd": 0.6656, "last_updated_at": self.NOW - 5 * 3600},
+                                  LIQ.lower(): {"usd": 0.02}}
+        with mock.patch.object(price_fetcher.requests, "get", return_value=resp) as get, \
+             mock.patch.object(price_fetcher, "_now", return_value=self.NOW):
+            got = pf._fetch_coingecko([IAERO.lower(), LIQ.lower()])
+        self.assertEqual(sorted(got), [LIQ.lower()])
+        self.assertEqual(get.call_args.kwargs["params"]["include_last_updated_at"], "true")
+
+    def test_iaero_price_source_is_recorded(self):
+        import realized_yield as ry
+        p = ry.compute_realized(1, [], 10**24, 10**24, iaero_price=0.65, aero_price=0.8, iaero_price_source="route",
+                                iaero_price_route={"aeroPerIaero": 0.816})
+        self.assertEqual((p["iaeroPriceSource"], p["iaeroPriceRoute"]), ("route", {"aeroPerIaero": 0.816}))
+        p = ry.compute_realized(1, [], 10**24, 10**24, iaero_price=0.0, aero_price=0.8, iaero_price_source="none")
+        self.assertEqual(p["iaeroPriceSource"], "fallback:aero")
+        self.assertNotIn("iaeroPriceRoute", p)
+        self.assertIn("iAERO is unpriced", ry.sanity_problems(p))
 
 
 if __name__ == "__main__":

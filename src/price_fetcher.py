@@ -25,6 +25,18 @@ ZERO_ADDRESS="0x0000000000000000000000000000000000000000"
 MAX_PRICE_USD = 10_000_000.0     # sanity cap on any price (BTC wrappers trade above $50k)
 DEX_MIN_QUOTE_USD = 25_000.0     # a pool needs this much USDC (or WETH, in USD) on its quote side to price a token
 DEX_QUOTE_NOTIONAL_USD = 10.0    # size of the test swap the DEX price is scaled from
+# Core tokens (Base): an aggregator price older than LLAMA_MAX_AGE_SEC is treated as missing (DefiLlama kept iAERO's
+# last price for hours after the Aerodrome pools were drained on 22 Oct 2026)
+AERO_ADDRESS = "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee"      # Aero AERO
+IAERO_ADDRESS = "0x81034fb34009115f215f5d5f564aac9ffa46a1dc"
+CORE_TOKENS = (AERO_ADDRESS, IAERO_ADDRESS)
+LLAMA_MAX_AGE_SEC = 2 * 3600
+# iAERO route: iAERO = AERO price x AERO per iAERO from the Aero AERO/iAERO CL100 pool's slot0 (token0 AERO, token1
+# iAERO; checked on chain), cross-checked against the Aero v2 AERO/iAERO pool (refused if > 3% apart). iAERO has no
+# USDC/WETH pool, so the generic DEX fallback never prices it.
+IAERO_CL_POOL = "0x361D728c97E591Ef47A68CAe2DC5C8ef475608EB"
+IAERO_V2_POOL = "0x72Decb30DFE4F6Cf7Db3ba1D58411dDda5ed903b"
+IAERO_ROUTE_MAX_DIFF = 0.03
 
 
 # --- Aerodrome / Velodrome-style ABIs ---
@@ -62,6 +74,22 @@ PAIR_ABI = [
         {"internalType":"address","name":"tokenIn","type":"address"}],
      "name":"getAmountOut","outputs":[{"internalType":"uint256","name":"amountOut","type":"uint256"}],
      "stateMutability":"view","type":"function"}
+]
+
+# Aero CL (Slipstream) pool: token0/token1 and slot0 (sqrtPriceX96 first)
+CL_POOL_ABI = [
+    {"inputs":[],"name":"token0","outputs":[{"internalType":"address","name":"","type":"address"}],
+     "stateMutability":"view","type":"function"},
+    {"inputs":[],"name":"token1","outputs":[{"internalType":"address","name":"","type":"address"}],
+     "stateMutability":"view","type":"function"},
+    {"inputs":[],"name":"slot0","outputs":[
+        {"internalType":"uint160","name":"sqrtPriceX96","type":"uint160"},
+        {"internalType":"int24","name":"tick","type":"int24"},
+        {"internalType":"uint16","name":"observationIndex","type":"uint16"},
+        {"internalType":"uint16","name":"observationCardinality","type":"uint16"},
+        {"internalType":"uint16","name":"observationCardinalityNext","type":"uint16"},
+        {"internalType":"bool","name":"unlocked","type":"bool"}],
+     "stateMutability":"view","type":"function"},
 ]
 
 ERC20_DEC_ABI = [
@@ -106,6 +134,7 @@ class PriceFetcher:
         self.max_price_usd = max_price_usd
         self.dex_min_quote_usd = dex_min_quote_usd
         self._weth_usd_px: Optional[float] = None   # DEX WETH price, computed once per _fetch_dex
+        self.core_tokens = set(CORE_TOKENS) if chain_slug == "base" else set()
 
         # web3 for quoter
         self.w3: Optional[Web3] = None
@@ -183,9 +212,14 @@ class PriceFetcher:
                     p = float(price)
                     if not math.isfinite(p) or p <= 0 or p > self.max_price_usd:
                         continue
+                    addr = k.split(":")[1]
+                    ts = v.get("timestamp")
+                    if addr in self.core_tokens and isinstance(ts, (int, float)) and now - int(ts) > LLAMA_MAX_AGE_SEC:
+                        logger.warning(f"[PriceFetcher] DefiLlama price of core token {addr} is {(now - int(ts)) / 3600:.1f} h "
+                                       f"old (> {LLAMA_MAX_AGE_SEC / 3600:g} h); treated as unpriced")
+                        continue
                     entry = {"priceUsd": p, "updatedAt": now, "source": "llama"}
                     self.mem[k] = entry
-                    addr = k.split(":")[1]
                     out[addr] = entry
             else:
                 logger.warning(f"Llama HTTP {r.status_code}: {r.text[:160]}")
@@ -204,7 +238,7 @@ class PriceFetcher:
         CHUNK = 100
         for i in range(0, len(addrs), CHUNK):
             chunk = addrs[i:i+CHUNK]
-            params = {"contract_addresses": ",".join(chunk), "vs_currencies": "usd"}
+            params = {"contract_addresses": ",".join(chunk), "vs_currencies": "usd", "include_last_updated_at": "true"}
             try:
                 r = requests.get(CG_SIMPLE_URL.format(self.chain), params=params, headers=headers, timeout=10)
                 if r.status_code == 200:
@@ -217,6 +251,12 @@ class PriceFetcher:
                         if not math.isfinite(p) or p <= 0 or p > self.max_price_usd:
                             continue
                         k_lower = k.lower()
+                        ts = v.get("last_updated_at")
+                        if k_lower in self.core_tokens and (not isinstance(ts, (int, float))
+                                                            or now - int(ts) > LLAMA_MAX_AGE_SEC):
+                            logger.warning(f"[PriceFetcher] CoinGecko price of core token {k_lower} is stale or "
+                                           f"undated; treated as unpriced")
+                            continue
                         entry = {"priceUsd": p, "updatedAt": now, "source": "coingecko"}
                         self.mem[self._key(k_lower)] = entry
                         out[k_lower] = entry
@@ -338,6 +378,76 @@ class PriceFetcher:
         price = self._quote_usd(pool, token, r_tok, r_quote, tok_dec, quote_dec, quote_usd)
         return (price, depth, pool) if price and price > 0 and math.isfinite(price) else None
 
+    def _aero_trusted(self, entry: Optional[dict]) -> bool:
+        """An AERO price the iAERO route may build on: an aggregator's (recent: stale core prices are dropped), or a
+        DEX price from a trusted pool (realized_yield's trusted-DEX rule)."""
+        if not entry or float(entry.get("priceUsd") or 0) <= 0:
+            return False
+        if entry.get("source") in ("llama", "coingecko"):
+            return True
+        if entry.get("source") == "dex":
+            from realized_yield import trusted_dex_tokens, DEX_TRUSTED_DEPTH_USD
+            depth_min = float(os.environ.get("DEX_TRUSTED_DEPTH_USD") or DEX_TRUSTED_DEPTH_USD)
+            depth = entry.get("dexDepthUsd")
+            return AERO_ADDRESS in trusted_dex_tokens() and isinstance(depth, (int, float)) and depth >= depth_min
+        return False
+
+    def _aero_per_iaero(self) -> Optional[Tuple[float, float]]:
+        """(AERO per iAERO from the CL pool's slot0, from a 1-iAERO v2 swap), or None if a pool can't be read or
+        holds other tokens."""
+        cs = self.w3.to_checksum_address
+        cl = self.w3.eth.contract(cs(IAERO_CL_POOL), abi=CL_POOL_ABI)
+        t0, t1 = cl.functions.token0().call().lower(), cl.functions.token1().call().lower()
+        if {t0, t1} != {AERO_ADDRESS, IAERO_ADDRESS}:
+            logger.warning(f"[PriceFetcher] iAERO route: CL pool {IAERO_CL_POOL} holds {t0}/{t1}; not used")
+            return None
+        sqrt_p = int(cl.functions.slot0().call()[0])
+        if sqrt_p <= 0:
+            return None
+        d_aero, d_iaero = self._decimals(AERO_ADDRESS), self._decimals(IAERO_ADDRESS)
+        # token1 per token0 (whole tokens) = (sqrtPriceX96 / 2^96)^2 * 10^(dec0 - dec1)
+        p1_per_0 = (sqrt_p / 2 ** 96) ** 2 * 10 ** ((d_aero - d_iaero) if t0 == AERO_ADDRESS else (d_iaero - d_aero))
+        cl_rate = 1.0 / p1_per_0 if t0 == AERO_ADDRESS else p1_per_0
+        v2 = self.w3.eth.contract(cs(IAERO_V2_POOL), abi=PAIR_ABI)
+        v0 = v2.functions.token0().call().lower()
+        v1 = v2.functions.token1().call().lower()
+        if {v0, v1} != {AERO_ADDRESS, IAERO_ADDRESS}:
+            logger.warning(f"[PriceFetcher] iAERO route: v2 pool {IAERO_V2_POOL} holds {v0}/{v1}; not used")
+            return None
+        out = int(v2.functions.getAmountOut(10 ** d_iaero, cs(IAERO_ADDRESS)).call())
+        return cl_rate, out / 10 ** d_aero
+
+    def _iaero_route(self, aero_entry: Optional[dict]) -> Optional[dict]:
+        """iAERO price entry from the route (see IAERO_CL_POOL), or None (iAERO then stays unpriced)."""
+        if not self.w3:
+            return None
+        if not self._aero_trusted(aero_entry):
+            logger.warning(f"[PriceFetcher] iAERO route: the AERO price ({aero_entry}) is not trusted; iAERO unpriced")
+            return None
+        try:
+            rates = self._aero_per_iaero()
+        except Exception as e:
+            logger.warning(f"[PriceFetcher] iAERO route: pool read failed ({str(e)[:120]}); iAERO unpriced")
+            return None
+        if not rates:
+            return None
+        cl_rate, v2_rate = rates
+        if not (cl_rate > 0 and v2_rate > 0 and math.isfinite(cl_rate)) or abs(cl_rate - v2_rate) / cl_rate > IAERO_ROUTE_MAX_DIFF:
+            logger.warning(f"[PriceFetcher] iAERO route: CL {cl_rate:.6f} and v2 {v2_rate:.6f} AERO per iAERO disagree by "
+                           f"more than {IAERO_ROUTE_MAX_DIFF:.0%}; iAERO unpriced")
+            return None
+        price = float(aero_entry["priceUsd"]) * cl_rate
+        if not (0 < price <= self.max_price_usd):
+            return None
+        entry = {"priceUsd": price, "updatedAt": _now(), "source": "route",
+                 "route": {"aeroPriceUsd": float(aero_entry["priceUsd"]), "aeroSource": aero_entry.get("source"),
+                           "aeroPerIaero": cl_rate, "aeroPerIaeroV2": v2_rate, "clPool": IAERO_CL_POOL.lower(),
+                           "v2Pool": IAERO_V2_POOL.lower()}}
+        self.mem[self._key(IAERO_ADDRESS)] = entry
+        logger.info(f"[PriceFetcher] iAERO from the route: ${price:.6f} = AERO ${float(aero_entry['priceUsd']):.6f} x "
+                    f"{cl_rate:.6f} (v2 {v2_rate:.6f})")
+        return entry
+
     def _fetch_dex(self, addrs: List[str]) -> Dict[str, dict]:
         out: Dict[str, dict] = {}
         now = _now()
@@ -386,11 +496,20 @@ class PriceFetcher:
             out.update(cg)
             missing = [a for a in missing if a not in cg]
 
-        # 3. DEX fallback
-        if missing:
-            logger.info(f"[PriceFetcher] DEX fallback for {len(missing)} tokens")
-            dex = self._fetch_dex(missing)
-            logger.info(f"[PriceFetcher] DEX filled {len(dex)} / {len(missing)}")
+        # 2b. iAERO: AERO price x AERO per iAERO from the Aero AERO/iAERO pools (no USDC/WETH pool exists)
+        if self.core_tokens and IAERO_ADDRESS in missing:
+            aero = out.get(AERO_ADDRESS) or self.fetch_batch([AERO_ADDRESS]).get(AERO_ADDRESS)
+            route = self._iaero_route(aero)
+            if route:
+                out[IAERO_ADDRESS] = route
+                missing = [a for a in missing if a != IAERO_ADDRESS]
+
+        # 3. DEX fallback (never for iAERO: the route above, or unpriced)
+        dex_want = [a for a in missing if not (self.core_tokens and a == IAERO_ADDRESS)]
+        if dex_want:
+            logger.info(f"[PriceFetcher] DEX fallback for {len(dex_want)} tokens")
+            dex = self._fetch_dex(dex_want)
+            logger.info(f"[PriceFetcher] DEX filled {len(dex)} / {len(dex_want)}")
             out.update(dex)
             missing = [a for a in missing if a not in dex]
 

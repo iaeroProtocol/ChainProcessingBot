@@ -126,17 +126,27 @@ class SimReader:
         self.block_ts = sim.ts_of(self.block)
 
     def many(self, calls):
-        return [self._one((t or "").lower(), sig) for t, sig, _, _ in calls]
+        return [self._one((t or "").lower(), sig, list(args)) for t, sig, args, _ in calls]
 
-    def _one(self, target, sig):
+    def _one(self, target, sig, args=None):
+        """Answers for the sim's own gauge / VRM / pool only (another target: the call fails, None)."""
         s = self.sim
         acc, cl = s.accrued(self.block_ts), s.claimed(self.block)
         left = lambda k: acc[k] - cl.get(k, 0)
+        own = {"votingRewardsManager()": s.gauge, "pool()": s.gauge, "tickSpacing()": s.pool, "gauge()": s.vrm,
+               "token0()": s.vrm, "token1()": s.vrm, "earnedFees(uint256,uint256)": s.vrm, "incentiveCount()": s.vrm,
+               "incentive(uint256)": s.vrm, "earnedIncentives(uint256,uint256,uint256)": s.vrm}
+        if sig in own and target != own[sig]:
+            return None
+        if sig in ("gaugeToRewards(address)", "allocations(uint256,address)", "gaugeStates(address)") \
+                and args is not None and str(args[-1]).lower() != s.gauge:
+            return None
         return {
             "allocatedGauges(uint256)": [Web3.to_checksum_address(s.gauge)],
             "tokenStates(uint256)": (pe.ZERO, T0, False, 1_000_000 * E18),
             "allocations(uint256,address)": 1_000_000 * E18,
-            "votingRewardsManager()": s.vrm, "gaugeToRewards(address)": s.vrm, "pool()": s.pool,
+            "votingRewardsManager()": s.vrm, "gaugeToRewards(address)": s.vrm, "pool()": s.pool, "gauge()": s.gauge,
+            "gaugeStates(address)": (0, 0, 0, True, True, 0, 0, 0, 0, 0, 0, 0),
             "token0()": s.t0, "token1()": s.t1,
             "earnedFees(uint256,uint256)": (left(("fee", s.t0)), left(("fee", s.t1))),
             "incentiveCount()": 1, "tickSpacing()": 100,
@@ -150,13 +160,14 @@ class SimReader:
         return max(0, min(self.block, self.sim.block_of(ts)))
 
     def logs(self, addresses, topics, from_block, to_block=None, **kw):
+        """addresses None: any contract (the discovery scan); the sim's claims all come from its VRM."""
         self.sim.log_calls.append(int(from_block))
         if self.sim.logs_down:
             return None
-        addrs = {a.lower() for a in addresses}
+        addrs = None if addresses is None else {a.lower() for a in addresses}
         tb = self.block if to_block is None else min(to_block, self.block)
         return [self.sim.log(b, k, t, a) for b, k, t, a in self.sim.claims
-                if from_block <= b <= tb and self.sim.vrm in addrs]
+                if from_block <= b <= tb and (addrs is None or self.sim.vrm in addrs)]
 
 
 class AnyEpoch(dict):
@@ -225,7 +236,8 @@ def previous_headline():
 class World:
     """Runs main._update_realized_yield day by day against the simulated chains."""
 
-    def __init__(self, harvests=(), fundings=(), prev=None, chain_prices=None, base_pf=None, llama=None):
+    def __init__(self, harvests=(), fundings=(), prev=None, chain_prices=None, base_pf=None, llama=None,
+                 first_gauges=None):
         self.sims = {cid: SimChain(cid) for cid in (8453, 1, 4663)}
         self.harvests = sorted(harvests)                     # [(ts, chainId)]
         self.fundings = list(fundings)                       # [(ts, raw USDC)] into the distributor
@@ -237,6 +249,7 @@ class World:
         self.chain_prices = chain_prices or {1: FakePF(PRICES[1]), 4663: FakePF(PRICES[4663])}
         self.base_pf = base_pf or FakePF(PRICES[8453])
         self.llama = llama or {}                             # DefiLlama by key, for MappedPriceFetcher's lookups
+        self.first_gauges = first_gauges or {}               # more first-allocation gauges for the config {cid: [g]}
 
     def run(self, now, env=None, unreachable=(), live_error=None):
         while self.harvests and self.harvests[0][0] <= now:
@@ -269,7 +282,10 @@ class World:
         e.update(env or {})
         live_patch = (mock.patch.object(main, "_build_live_block", side_effect=live_error) if live_error
                       else mock.patch.object(main, "_stake_accrual_start", wraps=main._stake_accrual_start))
+        # the config's first-allocation gauges are this world's gauges (#1584's real ones don't exist here)
+        seed = {1584: {cid: [s.gauge] + list(self.first_gauges.get(cid, [])) for cid, s in self.sims.items()}}
         with mock.patch.dict(os.environ, e), mock.patch("time.time", return_value=now), \
+             mock.patch.object(pe, "FIRST_ALLOCATION_GAUGES", seed), \
              mock.patch.object(pe, "ChainReader", side_effect=lambda w3_, cid, block=None, **k: SimReader(self.sims[cid], now)), \
              mock.patch("web3.Web3", FakeWeb3), \
              mock.patch.object(main, "PriceFetcher", side_effect=lambda chain_slug="base", **k: self.chain_prices[slug[chain_slug]]), \
@@ -306,7 +322,7 @@ def daily_fundings(first_day=1, last_day=24, scale=None):
 
 # ---------------- unit tests: realized_yield ----------------
 def _live(**kw):
-    live = {"stale": False, "asOf": RUN0 + 8 * DAY, "since": T0, "elapsedDays": 8.0, "readComplete": True,
+    live = {"stale": False, "asOf": RUN0 + 8 * DAY, "since": T0, "elapsedDays": 6.0, "readComplete": True,
             "usdPerDay": 1_000.0, "trailing": {"7d": {"complete": True, "partial": False, "usdPerDay": 900.0,
                                                       "snapshotAsOf": RUN0 + DAY}}}
     live.update(kw)
@@ -324,7 +340,10 @@ class MeasuredHeadlineTest(unittest.TestCase):
                    {"complete": False, "partial": False, "usdPerDay": 5.0, "snapshotAsOf": RUN0}, None):
             rate, src, win = ry.measured_headline(_live(trailing={"7d": t7}))
             self.assertEqual((rate, src), (1_000.0, "measured-since-allocation"))
-            self.assertEqual(win, {"from": T0, "to": RUN0 + 8 * DAY, "days": 8.0})
+            self.assertEqual(win, {"from": T0, "to": RUN0 + 8 * DAY, "days": 6.0})
+            # review 8 M-1: after week 1 the lifetime average (front-loaded) is never used; the headline is kept
+            self.assertIsNone(ry.measured_headline(_live(trailing={"7d": t7}, elapsedDays=7.0)))
+            self.assertIsNone(ry.measured_headline(_live(trailing={"7d": t7}, elapsedDays=30.0)))
 
     def test_otherwise_nothing_never_a_zero(self):
         no7 = {"trailing": {"7d": None}}
@@ -342,6 +361,10 @@ class MeasuredHeadlineTest(unittest.TestCase):
         for part in ("no 7-day window", "chains not read [4663]", "claims not scanned on 1", "unpriced"):
             self.assertIn(part, r)
         self.assertIn("under 1 day", ry.measured_unavailable_reason(_live(elapsedDays=0.2, trailing={"7d": None})))
+        late = ry.measured_unavailable_reason(_live(elapsedDays=9.0, readComplete=False, unmeasuredChains=[1],
+                                                    trailing={"7d": None}))
+        self.assertIn("not used after 7 days", late)
+        self.assertIn("chains not read [1]", late)
         self.assertIn("failed", ry.measured_unavailable_reason(_live(stale=True)))
 
 
@@ -491,12 +514,13 @@ class MainMeasuredTest(unittest.TestCase):
         self.assertEqual(rh.log_calls, [block8 + 1])               # resumed from the persisted block
         self.assertEqual(d10["apySource"], "measured-7d")
         self.assertAlmostEqual(d10["apyPct"], TRUE_APY, delta=TRUE_APY * 1e-5)
-        # 7 days after the incomplete point its 7d window is incomplete -> since-allocation, same true rate
+        # 7 days after the incomplete point: the window ends at a complete neighbour 6-8 days old (review 8 M-1),
+        # never at the incomplete point, and never the since-allocation average after week 1
         for d in range(11, 17):
             doc = w.run(RUN0 + d * DAY)
-        self.assertEqual(doc["live"]["trailing"]["7d"]["snapshotAsOf"], RUN0 + 9 * DAY)
-        self.assertFalse(doc["live"]["trailing"]["7d"]["complete"])
-        self.assertEqual(doc["apySource"], "measured-since-allocation")
+        self.assertIn(doc["live"]["trailing"]["7d"]["snapshotAsOf"], (RUN0 + 8 * DAY, RUN0 + 10 * DAY))
+        self.assertTrue(doc["live"]["trailing"]["7d"]["complete"])
+        self.assertEqual(doc["apySource"], "measured-7d")
         self.assertAlmostEqual(doc["apyPct"], TRUE_APY, delta=TRUE_APY * 1e-5)
 
     def test_restart_with_no_state_rescans_from_the_allocation(self):

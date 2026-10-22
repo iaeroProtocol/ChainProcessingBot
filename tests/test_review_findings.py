@@ -132,7 +132,8 @@ class F3_TrailingPoisoning(unittest.TestCase):
 
     def test_gauge_missing_from_snapshot_counts_its_whole_cumulative(self):
         # yesterday's point lost gauge G_CL (e.g. its VRM read failed and the row was dropped); it has earned since T0
-        snap = {"asOf": self.NOW - DAY, "chains": [8453], "accruedUSD": 0, "feesCumUSD": 0, "gauges": {}}
+        snap = {"asOf": self.NOW - DAY, "chains": [8453], "accruedUSD": 0, "feesCumUSD": 0, "gauges": {},
+                "complete": True}           # adapted (review 8 M-1): only complete points end a window
         live = _live([_g2(G_CL, fees={USDC: 1_000 * 10**6})], self.NOW, [snap])
         rate = live["trailing"]["24h"]["usdPerDay"]
         self.assertLess(rate, 500.0, f"10 days of earnings (${rate:.0f}) reported as one day's")

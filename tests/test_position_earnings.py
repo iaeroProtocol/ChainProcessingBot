@@ -41,8 +41,9 @@ class FakeReader:
     def block_at(self, ts):
         return 1
 
-    def logs(self, addresses, topics, from_block, step=10_000):
-        self.log_calls.append((sorted(a.lower() for a in addresses), topics, from_block))
+    def logs(self, addresses, topics, from_block, to_block=None, step=10_000):
+        """addresses None: any contract (the discovery scan), recorded as None."""
+        self.log_calls.append((None if addresses is None else sorted(a.lower() for a in addresses), topics, from_block))
         return self._logs
 
 
@@ -103,9 +104,9 @@ class ReadChainPositionTest(unittest.TestCase):
                          [(1, AERO, 50 * E18), (2, USDC, 7 * 10**6)])
         self.assertEqual(v2["claimed"], {USDC: 2 * 10**6, AERO: 4 * E18})
         self.assertFalse(cl["truncated"])
-        # one filter for all VRMs, both claim events, indexed tokenId
+        # one filter, any contract (discovery; review 8 M-2), both claim events, indexed tokenId
         addrs, topics, _ = r.log_calls[0]
-        self.assertEqual(addrs, sorted([VRM_CL, VRM_V2]))
+        self.assertEqual((addrs, len(r.log_calls)), (None, 1))
         self.assertEqual(topics[0], [pe.CLAIM_FEES_TOPIC, pe.CLAIM_INCENTIVES_TOPIC])
         self.assertEqual(topics[1], "0x" + (1584).to_bytes(32, "big").hex())
 
@@ -143,9 +144,11 @@ class ReadChainPositionTest(unittest.TestCase):
 
     def test_no_gauges_means_claims_complete(self):
         a = {(LV, "allocatedGauges(uint256)", (1584,)): [], (LV, "tokenStates(uint256)", (1584,)): (pe.ZERO, T0, False, 0)}
-        r = FakeReader(a, logs=None)
+        r = FakeReader(a, logs=[])
         ch = pe.read_chain_position(r, 1584)
-        self.assertEqual((ch["claimsScanned"], ch["gaugeListRead"], ch["gauges"], r.log_calls), (True, True, [], []))
+        # no gauge: still one address-less scan (a claim would reveal a gauge to read; review 8 M-2)
+        self.assertEqual((ch["claimsScanned"], ch["gaugeListRead"], ch["gauges"]), (True, True, []))
+        self.assertEqual([c[0] for c in r.log_calls], [None])
 
     def test_revote_keeps_first_allocation_and_previous_gauges(self):
         a = base_answers()
@@ -252,7 +255,8 @@ class TrailingTest(unittest.TestCase):
         """History point `ago` seconds before NOW with cumulative USDC fees and AERO incentives (human units)."""
         g = {f"8453:{gauge}": {"usd": 0, "fees": {USDC: usdc_fees}, "incentives": {AERO: aero_inc}}}
         g.update(extra or {})
-        return {"asOf": self.NOW - ago, "chains": [8453], "accruedUSD": 0, "feesCumUSD": 0, "gauges": g}
+        return {"asOf": self.NOW - ago, "chains": [8453], "accruedUSD": 0, "feesCumUSD": 0, "gauges": g,
+                "complete": True}           # review 8 M-1: only complete points end a window
 
     def test_windows_are_null_without_history_and_a_point_is_recorded(self):
         live = _live([_g2(G_CL, fees={USDC: 100 * 10**6}, inc={AERO: 50 * E18})], self.NOW)
@@ -407,9 +411,8 @@ class TrailingTest(unittest.TestCase):
         # today both read in full, and the stake re-voted after yesterday's point: G_V2 still isn't "new"
         live = self._value([self._chain_at(self.NOW, [_g2(G_CL, fees={USDC: 20 * 10**6}), _g2(G_V2, fees={USDC: 500 * 10**6})],
                                            last_alloc=self.NOW - 3600)], self.NOW, day9["history"])
-        t24 = live["trailing"]["24h"]
-        self.assertTrue(t24["partial"])
-        self.assertAlmostEqual(t24["usdPerDay"], 10.0)
+        # adapted (review 8 M-1): a point with an unread gauge never ends a window (it was a partial window before)
+        self.assertIsNone(live["trailing"]["24h"])
         self.assertIsNone(live["gauges"][1]["usdPerDay24h"])
 
     def test_gauge_missing_from_snapshot_counts_only_after_a_reallocation(self):
@@ -453,6 +456,7 @@ class BuildLiveTest(unittest.TestCase):
                 raise RuntimeError("rpc down")
             return orig(reader, *a, **k)
         with mock.patch.object(pe, "read_chain_position", side_effect=read) as rcp, \
+             mock.patch.object(pe, "FIRST_ALLOCATION_GAUGES", {}), \
              mock.patch.object(pe, "token_meta", return_value=META[8453]):
             live = pe.build_live([(good, pe.FACTORY_REGISTRY_BASE), (bad, None)], 1584, {8453: pf}, 1000 * E18, 0.8, 600.0,
                                  prev_live={"stakeId": 1584, "gauges": [{"chainId": 8453, "gauge": G_OLD}]}, now_ts=NOW)
@@ -464,10 +468,12 @@ class BuildLiveTest(unittest.TestCase):
         self.assertGreater(live["accruedUSD"], 0)
 
     def test_history_from_another_stake_is_ignored(self):
-        old_point = {"asOf": NOW - DAY, "chains": [8453], "gauges": {f"8453:{G_CL}": {"fees": {WETH: 0.0}, "incentives": {}}}}
+        old_point = {"asOf": NOW - DAY, "chains": [8453], "gauges": {f"8453:{G_CL}": {"fees": {WETH: 0.0}, "incentives": {}}},
+                     "complete": True}
         pf = mock.Mock()
         pf.fetch_batch.side_effect = lambda toks: {t: {"priceUsd": PRICES[8453].get(t, 0.0)} for t in toks}
-        with mock.patch.object(pe, "token_meta", return_value=META[8453]):
+        with mock.patch.object(pe, "token_meta", return_value=META[8453]), \
+             mock.patch.object(pe, "FIRST_ALLOCATION_GAUGES", {}):
             mine = pe.build_live([(FakeReader(base_answers(), logs=[]), pe.FACTORY_REGISTRY_BASE)], 1584, {8453: pf},
                                  1_000_000 * E18, 0.8, 600_000.0, prev_live={"stakeId": 1584, "history": [old_point]}, now_ts=NOW)
             other = pe.build_live([(FakeReader(base_answers(), logs=[]), pe.FACTORY_REGISTRY_BASE)], 1584, {8453: pf},
@@ -538,16 +544,18 @@ class BlockLogsReader(FakeReader):
         super().__init__(answers, logs=[], block=block)
         self.block_logs, self.since_block = block_logs, since_block
         self.fail = False
+        self.need_address = False           # True: refuses address-less filters (publicnode on Ethereum)
 
     def block_at(self, ts):
         return self.since_block
 
-    def logs(self, addresses, topics, from_block, step=10_000):
-        self.log_calls.append((sorted(a.lower() for a in addresses), topics, from_block))
-        if self.fail:
+    def logs(self, addresses, topics, from_block, to_block=None, step=10_000):
+        self.log_calls.append((None if addresses is None else sorted(a.lower() for a in addresses), topics, from_block))
+        if self.fail or (addresses is None and self.need_address):
             return None
-        want = {a.lower() for a in addresses}
-        return [lg for b, lg in self.block_logs if from_block <= b <= self.block and lg["address"].lower() in want]
+        want = None if addresses is None else {a.lower() for a in addresses}
+        tb = self.block if to_block is None else min(to_block, self.block)
+        return [lg for b, lg in self.block_logs if from_block <= b <= tb and (want is None or lg["address"].lower() in want)]
 
 
 FEE_USDC = lambda amt: _log(VRM_V2, pe.CLAIM_FEES_TOPIC, bytes(12) + bytes.fromhex(USDC[2:]), amt)
@@ -555,28 +563,35 @@ INC_AERO = lambda amt: _log(VRM_V2, pe.CLAIM_INCENTIVES_TOPIC, (1).to_bytes(32, 
 
 
 class IncrementalClaimsTest(unittest.TestCase):
-    """Claims are scanned from the last scanned block on (claimsState per chain, data/live_state.json)."""
+    """Claims are scanned from the last scanned block on (claimsState per chain, data/live_state.json); the scan is
+    address-less where the RPC allows it (discovery, review 8 M-2), else per known VRM."""
+    TOPICS = [[pe.CLAIM_FEES_TOPIC, pe.CLAIM_INCENTIVES_TOPIC], "0x" + (1584).to_bytes(32, "big").hex()]
 
     def read(self, reader, state):
         return pe.read_chain_position(reader, 1584, registry=pe.FACTORY_REGISTRY_BASE, claims_state=state)
 
+    def state(self, block=900, v2_fees=None, cl=True):
+        vrms = {VRM_V2: {"fees": dict(v2_fees or {USDC: 2 * 10**6}), "incentives": {AERO: 4 * E18}}}
+        if cl:
+            vrms[VRM_CL] = {"fees": {}, "incentives": {}}
+        return {"since": T0, "block": block, "blockTimestamp": NOW - 3600, "gauges": sorted([G_CL, G_V2]), "vrms": vrms}
+
     def test_first_run_scans_from_the_allocation_and_records_every_vrm(self):
         r = BlockLogsReader(base_answers(), [(500, FEE_USDC(2 * 10**6)), (600, INC_AERO(4 * E18))])
         ch = self.read(r, None)
-        self.assertEqual(r.log_calls[0][0], sorted([VRM_CL, VRM_V2]))
-        self.assertEqual(r.log_calls[0][2], 10)                        # block_at(since)
-        self.assertEqual(ch["claimsState"], {"since": T0, "block": 1000, "blockTimestamp": NOW, "vrms": {
+        self.assertEqual([(c[0], c[2]) for c in r.log_calls], [(None, 10)])      # once, from block_at(since)
+        self.assertEqual(ch["claimsState"], {"since": T0, "block": 1000, "blockTimestamp": NOW,
+                                             "gauges": sorted([G_CL, G_V2]), "vrms": {
             VRM_V2: {"fees": {USDC: 2 * 10**6}, "incentives": {AERO: 4 * E18}},
             VRM_CL: {"fees": {}, "incentives": {}}}})                   # scanned, no claims: not rescanned later
         self.assertEqual(ch["gauges"][1]["claimed"], {USDC: 2 * 10**6, AERO: 4 * E18})
 
     def test_resume_scans_only_new_blocks_and_adds_to_the_totals(self):
-        state = {"since": T0, "block": 900, "blockTimestamp": NOW - 3600, "vrms": {
-            VRM_V2: {"fees": {USDC: 2 * 10**6}, "incentives": {AERO: 4 * E18}}, VRM_CL: {"fees": {}, "incentives": {}}}}
+        state = self.state()
         r = BlockLogsReader(base_answers(), [(500, FEE_USDC(2 * 10**6)), (600, INC_AERO(4 * E18)),
                                             (950, FEE_USDC(1 * 10**6))])
         ch = self.read(r, state)
-        self.assertEqual([(c[0], c[2]) for c in r.log_calls], [(sorted([VRM_CL, VRM_V2]), 901)])
+        self.assertEqual([(c[0], c[2]) for c in r.log_calls], [(None, 901)])
         self.assertEqual(ch["gauges"][1]["claimedFees"], {USDC: 3 * 10**6})       # 2 before + 1 new, not 2 + 2 + 1
         self.assertEqual(ch["claimsState"]["vrms"][VRM_V2]["fees"], {USDC: 3 * 10**6})
         self.assertEqual(ch["claimsState"]["block"], 1000)
@@ -586,9 +601,21 @@ class IncrementalClaimsTest(unittest.TestCase):
         ch2 = self.read(r2, ch["claimsState"])
         self.assertEqual((r2.log_calls, ch2["claimsScanned"], ch2["gauges"][1]["claimedFees"]), ([], True, {USDC: 3 * 10**6}))
 
+    def test_rpc_wanting_an_address_scans_the_known_vrms(self):
+        # e.g. publicnode on Ethereum refuses address-less filters: per-VRM scans, no discovery
+        r = BlockLogsReader(base_answers(), [(500, FEE_USDC(2 * 10**6)), (950, FEE_USDC(1 * 10**6))])
+        r.need_address = True
+        ch = self.read(r, self.state())
+        self.assertEqual([(c[0], c[2]) for c in r.log_calls], [(None, 901), (sorted([VRM_CL, VRM_V2]), 901)])
+        self.assertEqual((ch["claimsScanned"], ch["gauges"][1]["claimedFees"]), (True, {USDC: 3 * 10**6}))
+        r = BlockLogsReader(base_answers(), [(500, FEE_USDC(2 * 10**6))])
+        r.need_address = True
+        ch = self.read(r, None)
+        self.assertEqual([(c[0], c[2]) for c in r.log_calls], [(None, 10), (sorted([VRM_CL, VRM_V2]), 10)])
+        self.assertEqual(ch["gauges"][1]["claimedFees"], {USDC: 2 * 10**6})
+
     def test_failed_scan_keeps_the_state_for_the_next_run(self):
-        state = {"since": T0, "block": 900, "blockTimestamp": NOW, "vrms": {
-            VRM_V2: {"fees": {USDC: 2 * 10**6}, "incentives": {}}, VRM_CL: {"fees": {}, "incentives": {}}}}
+        state = self.state(cl=True)
         r = BlockLogsReader(base_answers(), [(950, FEE_USDC(1 * 10**6))])
         r.fail = True
         ch = self.read(r, state)
@@ -605,32 +632,118 @@ class IncrementalClaimsTest(unittest.TestCase):
                       {"since": T0, "block": "900", "vrms": {}}):
             r = BlockLogsReader(base_answers(), logs)
             ch = self.read(r, state)
-            self.assertEqual([c[2] for c in r.log_calls], [10], state)
+            self.assertEqual([(c[0], c[2]) for c in r.log_calls], [(None, 10)], state)
             self.assertEqual(ch["claimsState"]["vrms"][VRM_V2]["fees"], {USDC: 3 * 10**6})
 
     def test_a_new_vrm_is_scanned_from_the_allocation(self):
-        state = {"since": T0, "block": 900, "vrms": {VRM_V2: {"fees": {USDC: 2 * 10**6}, "incentives": {}}}}
+        state = self.state(cl=False)
+        state["vrms"][VRM_V2] = {"fees": {USDC: 2 * 10**6}, "incentives": {}}
         cl_fee = _log(VRM_CL, pe.CLAIM_FEES_TOPIC, bytes(12) + bytes.fromhex(USDC[2:]), 5 * 10**6)
-        r = BlockLogsReader(base_answers(), [(500, FEE_USDC(2 * 10**6)), (300, cl_fee)])
+        cl_fee2 = _log(VRM_CL, pe.CLAIM_FEES_TOPIC, bytes(12) + bytes.fromhex(USDC[2:]), 1 * 10**6)
+        r = BlockLogsReader(base_answers(), [(500, FEE_USDC(2 * 10**6)), (300, cl_fee), (990, cl_fee2)])
         ch = self.read(r, state)
-        self.assertEqual([(c[0], c[2]) for c in r.log_calls], [([VRM_V2], 901), ([VRM_CL], 10)])
-        self.assertEqual(ch["gauges"][0]["claimedFees"], {USDC: 5 * 10**6})
+        # known from 901 (any contract), the new VRM's earlier history from block_at(since) up to 900
+        self.assertEqual([(c[0], c[2]) for c in r.log_calls], [(None, 901), ([VRM_CL], 10)])
+        self.assertEqual(ch["gauges"][0]["claimedFees"], {USDC: 6 * 10**6})       # 5 (block 300) + 1 (block 990)
         self.assertEqual(ch["gauges"][1]["claimedFees"], {USDC: 2 * 10**6})
 
     def test_rpc_behind_the_state_means_claims_unknown(self):
-        state = {"since": T0, "block": 2000, "vrms": {VRM_V2: {"fees": {USDC: 2 * 10**6}, "incentives": {}}}}
+        state = self.state(block=2000)
         r = BlockLogsReader(base_answers(), [], block=1000)
         ch = self.read(r, state)
         self.assertEqual((ch["claimsScanned"], ch["claimsState"], r.log_calls), (False, state, []))
 
     def test_unresolved_incentive_claim_is_retried_not_lost(self):
-        a = base_answers()
         unknown = _log(VRM_V2, pe.CLAIM_INCENTIVES_TOPIC, (9).to_bytes(32, "big"), 4 * E18)   # program 9: unreadable
-        r = BlockLogsReader(a, [(500, FEE_USDC(2 * 10**6)), (600, unknown)])
+        r = BlockLogsReader(base_answers(), [(500, FEE_USDC(2 * 10**6)), (600, unknown)])
         ch = self.read(r, None)
         self.assertFalse(ch["claimsScanned"])
-        self.assertIsNone(ch["claimsState"])
+        self.assertEqual(ch["claimsState"], {"gauges": sorted([G_CL, G_V2])})    # no block: scanned again from since
         self.assertEqual(ch["gauges"][1]["claimed"], {})
+
+
+def _registered(a, gauge, vrm, registered=True, with_registry=True):
+    """answers making `vrm` the VRM of `gauge`, registered (or not) with the LeafVoter."""
+    a[(vrm, "gauge()", ())] = gauge
+    a[(gauge, "votingRewardsManager()", ())] = vrm
+    if with_registry:
+        a[(REG, "gaugeToRewards(address)", (gauge,))] = vrm
+    a[(LV, "gaugeStates(address)", (gauge,))] = (0, 0, 0, registered, registered, 0, 0, 0, 0, 0, 0, 0)
+    a[(vrm, "token0()", ())], a[(vrm, "token1()", ())] = USDC, WETH
+    a[(vrm, "earnedFees(uint256,uint256)", (1584, 10_000))] = (7 * 10**6, 0)
+    a[(vrm, "earnedFees(uint256,uint256)", (1584, 20_000))] = (7 * 10**6, 0)
+    a[(vrm, "incentiveCount()", ())] = 0
+    return a
+
+
+class GaugeDiscoveryTest(unittest.TestCase):
+    """Review 8 M-2: gauges the stake left before the bot first ran, or between two runs, are still measured."""
+
+    def test_first_allocation_gauges_from_config(self):
+        cfg = pe.FIRST_ALLOCATION_GAUGES[1584]
+        self.assertEqual({c: len(g) for c, g in cfg.items()}, {8453: 9, 1: 1, 4663: 1})
+        for gs in cfg.values():
+            self.assertTrue(all(Web3.to_checksum_address(g) == g for g in gs))           # checksummed forms
+        self.assertIn("0xe033F4Bd3D7Ccf537A2F954eCDC8eB1218e3B7a6", cfg[4663])
+        # build_live reads them on their chain even when allocatedGauges no longer lists them
+        pf = mock.Mock()
+        pf.fetch_batch.side_effect = lambda toks: {t: {"priceUsd": PRICES[8453].get(t, 0.0)} for t in toks}
+        with mock.patch.object(pe, "read_chain_position", wraps=pe.read_chain_position) as rcp, \
+             mock.patch.object(pe, "token_meta", return_value=META[8453]):
+            pe.build_live([(BlockLogsReader(base_answers(), []), pe.FACTORY_REGISTRY_BASE)], 1584, {8453: pf},
+                          1000 * E18, 0.8, 600.0, now_ts=NOW)
+        self.assertEqual(rcp.call_args.kwargs["extra_gauges"], tuple(cfg[8453]))
+
+    def test_a_claim_from_a_registered_gauge_not_read_adds_it(self):
+        a = _registered(base_answers(), G_OLD, VRM_OLD)
+        old_fee = _log(VRM_OLD, pe.CLAIM_FEES_TOPIC, bytes(12) + bytes.fromhex(USDC[2:]), 3 * 10**6)
+        r = BlockLogsReader(a, [(700, old_fee)])
+        ch = pe.read_chain_position(r, 1584, registry=pe.FACTORY_REGISTRY_BASE)
+        self.assertEqual(ch["discoveredGauges"], [G_OLD])
+        old = [g for g in ch["gauges"] if g["gauge"] == G_OLD][0]
+        self.assertEqual((old["active"], old["fees"], old["claimedFees"]), (False, {USDC: 7 * 10**6, WETH: 0},
+                                                                           {USDC: 3 * 10**6}))
+        self.assertIn(G_OLD, ch["claimsState"]["gauges"])                    # remembered from now on
+        self.assertTrue(ch["claimsScanned"])
+        # next run: the state's gauges are read even though nothing else lists G_OLD
+        r2 = BlockLogsReader(a, [(700, old_fee)], block=1100)
+        ch2 = pe.read_chain_position(r2, 1584, registry=pe.FACTORY_REGISTRY_BASE, claims_state=ch["claimsState"])
+        self.assertIn(G_OLD, [g["gauge"] for g in ch2["gauges"]])
+        self.assertEqual(ch2["discoveredGauges"], [])
+        # Ethereum / Robinhood (no registry): the gauge's own pointer
+        a = _registered(base_answers(), G_OLD, VRM_OLD, with_registry=False)
+        ch = pe.read_chain_position(BlockLogsReader(a, [(700, old_fee)]), 1584)
+        self.assertEqual(ch["discoveredGauges"], [G_OLD])
+
+    def test_claims_from_anything_else_are_ignored(self):
+        fake_vrm, fake_gauge = "0x" + "e1" * 20, "0x" + "e2" * 20
+        spoof = _log(fake_vrm, pe.CLAIM_FEES_TOPIC, bytes(12) + bytes.fromhex(USDC[2:]), 10**12)
+        for variant in ("unregistered", "vrm mismatch", "no gauge()"):
+            a = _registered(base_answers(), fake_gauge, fake_vrm, registered=variant != "unregistered")
+            if variant == "vrm mismatch":
+                a[(REG, "gaugeToRewards(address)", (fake_gauge,))] = VRM_CL
+            if variant == "no gauge()":
+                del a[(fake_vrm, "gauge()", ())]
+            ch = pe.read_chain_position(BlockLogsReader(a, [(700, spoof)]), 1584, registry=pe.FACTORY_REGISTRY_BASE)
+            self.assertEqual(ch["discoveredGauges"], [], variant)
+            self.assertNotIn(fake_gauge, [g["gauge"] for g in ch["gauges"]], variant)
+            self.assertNotIn(fake_vrm, ch["claimsState"]["vrms"], variant)
+            self.assertTrue(ch["claimsScanned"], variant)                    # never a reason to stall the feed
+
+    def test_a_gauge_first_read_while_not_allocated_never_counts_from_zero(self):
+        # a window whose older point lacks a gauge counts it from zero only if the stake re-allocated since AND it is
+        # allocated now: a gauge first read later (found from a claim) may hold earnings from before the window
+        snap = {"asOf": NOW - DAY, "chains": [8453], "complete": True, "unread": [],
+                "gauges": {f"8453:{G_CL}": {"fees": {USDC: 10.0}, "incentives": {}}}}
+        cur = {"asOf": NOW, "chains": [8453], "gauges": {
+            f"8453:{G_CL}": {"active": True, "fees": {USDC: 20.0}, "incentives": {}},
+            f"8453:{G_OLD}": {"active": False, "fees": {USDC: 500.0}, "incentives": {}}}}
+        price = lambda cid, t: 1.0
+        d = pe.window_delta(cur, snap, price, {8453: NOW - 3600})               # re-voted after the snapshot
+        self.assertTrue(d["partial"])
+        self.assertAlmostEqual(d["usdPerDay"], 10.0)                            # G_OLD's 500 left out
+        cur["gauges"][f"8453:{G_OLD}"]["active"] = True                          # newly allocated: counted from zero
+        self.assertAlmostEqual(pe.window_delta(cur, snap, price, {8453: NOW - 3600})["usdPerDay"], 510.0)
 
 
 class BlockAtTest(unittest.TestCase):
@@ -727,7 +840,8 @@ class BuildLiveChainsTest(unittest.TestCase):
     def test_unreachable_chain_is_unmeasured_and_prices_and_state_are_returned(self):
         pf = mock.Mock()
         pf.fetch_batch.side_effect = lambda toks: {t: {"priceUsd": PRICES[8453].get(t, 0.0)} for t in toks}
-        with mock.patch.object(pe, "token_meta", return_value=META[8453]):
+        with mock.patch.object(pe, "token_meta", return_value=META[8453]), \
+             mock.patch.object(pe, "FIRST_ALLOCATION_GAUGES", {}):
             live = pe.build_live([(BlockLogsReader(base_answers(), []), pe.FACTORY_REGISTRY_BASE)], 1584, {8453: pf},
                                  1000 * E18, 0.8, 600.0, now_ts=NOW, unreachable=[4663],
                                  claims_state={"stakeId": 1584, "chains": {"1": {"keep": True}}})
@@ -742,11 +856,12 @@ class BuildLiveChainsTest(unittest.TestCase):
         pf = mock.Mock()
         pf.fetch_batch.side_effect = lambda toks: {t: {"priceUsd": PRICES[8453].get(t, 0.0)} for t in toks}
         r = BlockLogsReader(base_answers(), [])
-        with mock.patch.object(pe, "token_meta", return_value=META[8453]):
+        with mock.patch.object(pe, "token_meta", return_value=META[8453]), \
+             mock.patch.object(pe, "FIRST_ALLOCATION_GAUGES", {}):
             pe.build_live([(r, pe.FACTORY_REGISTRY_BASE)], 1584, {8453: pf}, 1000 * E18, 0.8, 600.0, now_ts=NOW,
                           claims_state={"stakeId": 77, "chains": {"8453": {"since": T0, "block": 999, "vrms": {
                               VRM_CL: {"fees": {}, "incentives": {}}, VRM_V2: {"fees": {}, "incentives": {}}}}}})
-        self.assertEqual([c[2] for c in r.log_calls], [10])                 # full scan, not from 1000
+        self.assertEqual([(c[0], c[2]) for c in r.log_calls], [(None, 10)])     # full scan, not from 1000
 
 
 if __name__ == "__main__":

@@ -8,12 +8,14 @@ position_earnings: fees + incentives accrued on every chain it votes on, claimed
 fundings: payouts don't carry the period they pay for, and partial payouts are normal (measured_headline):
   measured-7d               the live block's trailing 7-day rate, when that window is complete (both ends read in
                             full on every chain, claims scanned, every earned token priced, nothing left out)
-  measured-since-allocation otherwise the average since the stake's first allocation (live usdPerDay), if >= 1 day
-                            and the current read is complete
+  measured-since-allocation otherwise the average since the stake's first allocation (live usdPerDay), if it covers
+                            1 to 7 days and the current read is complete (after week 1 the lifetime average of a
+                            front-loaded stake overstates: then the headline is kept)
   kept                      otherwise the previous headline figures stay (staleReason; never a 0 from missing data)
   apyPct           = usdPerDay * 365 * stakers share (8000 bps) / stakedUSD * 100
   stakersWeeklyUSD = usdPerDay * 7 * stakers share; estimatedWeeklyUSD = usdPerDay * 7 (the gross; legacy fields)
   stakedUSD        = staked iAERO at the current epoch's start (the distributor's payout denominator) * iAERO price
+                     (iaeroPriceSource: an aggregator price under 2 h old, else AERO x the Aero AERO/iAERO pools)
 fundedRealized (secondary, not the headline): the distributor fundings booked to the last completed epoch (epochs
 are weeks from Thursday 00:00 UTC; rewardsForEpoch), as the realized per-epoch figure.
 
@@ -58,6 +60,8 @@ MAX_SANE_APY_PCT = 500.0        # above this, don't publish (likely a bad price)
 TRUSTED_DEX_TOKENS = (AERO_ADDRESS.lower(),)   # DEX prices that may count (env TRUSTED_DEX_TOKENS, comma-separated)
 DEX_TRUSTED_DEPTH_USD = 1_000_000.0            # ... when their pool's quote side is this deep (env DEX_TRUSTED_DEPTH_USD)
 MIN_WINDOW_DAYS = 1.0           # a since-allocation average over less than this is not used
+SINCE_ALLOCATION_MAX_DAYS = 7.0 # ... nor over this much: earnings are front-loaded (launch programs, vote dilution),
+                                # so after week 1 only a complete 7-day window counts, else the headline is kept
 
 # Split of harvested rewards (RewardsHarvesterV2.processAndDistribute): 80% goes to the
 # EpochStakingDistributor, so the realized funding IS the stakers' share.
@@ -146,7 +150,8 @@ def trusted_dex_tokens() -> set:
 
 def measured_headline(live: Optional[dict]) -> Optional[tuple]:
     """(usdPerDay, apySource, apyWindow) from a freshly built live block, or None (keep the previous headline):
-    the trailing 7-day window if complete, else the since-allocation average if the read is complete and >= 1 day."""
+    the trailing 7-day window if complete, else the since-allocation average if the read is complete and it covers
+    1 to 7 days (after week 1 the lifetime average overstates a front-loaded stake: the headline is kept instead)."""
     if not isinstance(live, dict) or live.get("stale"):
         return None
     t7 = (live.get("trailing") or {}).get("7d")
@@ -155,7 +160,8 @@ def measured_headline(live: Optional[dict]) -> Optional[tuple]:
         frm, to = int(t7["snapshotAsOf"]), int(live["asOf"])
         return float(t7["usdPerDay"]), "measured-7d", {"from": frm, "to": to, "days": round((to - frm) / DAY, 6)}
     days = live.get("elapsedDays")
-    if live.get("readComplete") and isinstance(days, (int, float)) and days >= MIN_WINDOW_DAYS \
+    if live.get("readComplete") and isinstance(days, (int, float)) \
+            and MIN_WINDOW_DAYS <= days < SINCE_ALLOCATION_MAX_DAYS \
             and isinstance(live.get("usdPerDay"), (int, float)) and math.isfinite(live["usdPerDay"]):
         return (float(live["usdPerDay"]), "measured-since-allocation",
                 {"from": int(live["since"]), "to": int(live["asOf"]), "days": round(float(days), 6)})
@@ -211,10 +217,13 @@ def measured_unavailable_reason(live: Optional[dict]) -> str:
     why = []
     t7 = (live.get("trailing") or {}).get("7d")
     if not isinstance(t7, dict):
-        why.append("no 7-day window yet (no complete history point 6-8 days old)")
+        why.append("no 7-day window (no complete history point 6-8 days old)")
     else:
         why.append("7-day window incomplete" + (" (partial)" if t7.get("partial") else ""))
     days = live.get("elapsedDays")
+    late = isinstance(days, (int, float)) and days >= SINCE_ALLOCATION_MAX_DAYS
+    if late:
+        why.append(f"the since-allocation average is not used after {SINCE_ALLOCATION_MAX_DAYS:g} days ({days:.3f} d)")
     if not live.get("readComplete"):
         bad = []
         if live.get("unmeasuredChains"):
@@ -227,7 +236,7 @@ def measured_unavailable_reason(live: Optional[dict]) -> str:
         if live.get("unpricedTokens"):
             bad.append(f"unpriced {live['unpricedTokens']}")
         why.append("current read incomplete" + (f": {'; '.join(bad)}" if bad else ""))
-    elif not (isinstance(days, (int, float)) and days >= MIN_WINDOW_DAYS):
+    elif not late and not (isinstance(days, (int, float)) and days >= MIN_WINDOW_DAYS):
         why.append(f"under {MIN_WINDOW_DAYS:g} day since the first allocation "
                    f"({days:.3f} d)" if isinstance(days, (int, float)) else "elapsed time unknown")
     return "; ".join(why)
@@ -284,6 +293,8 @@ def compute_realized(
     dex_trusted_depth_usd: Optional[float] = None,
     trusted_tokens: Optional[Iterable[str]] = None,
     span_days: float = 7.0,
+    iaero_price_source: Optional[str] = None,
+    iaero_price_route: Optional[dict] = None,
 ) -> dict:
     """
     Pure computation of the estimated_rewards_usd.json payload.
@@ -383,6 +394,10 @@ def compute_realized(
         "stakedUSD_1e18": _to_1e18(staked_usd),
         "stakedUSD_human": _human(staked_usd),
         "fundedTokenCount": sum(1 for f in funded if int(f["amount"]) > 0),
+        # where the iAERO price (the APY denominator) came from: llama / coingecko / route (AERO x the Aero
+        # AERO/iAERO pools, iaeroPriceRoute) / fallback:aero (refused by sanity_problems) / none
+        "iaeroPriceSource": "fallback:aero" if used_fallback else (iaero_price_source or ("none" if iaero_px <= 0 else None)),
+        **({"iaeroPriceRoute": dict(iaero_price_route)} if iaero_price_route and not used_fallback else {}),
         "unpricedTokens": sorted(unpriced),
         "dexPricedTokens": sorted(dex_priced, key=lambda x: x["address"]),
         "excludedTokens": sorted(excluded, key=lambda x: x["address"]),
@@ -434,6 +449,8 @@ def _price_and_compute(w3, distributor: str, funded_raw: Dict[str, int], epoch: 
         total_staked_raw=total_staked,
         iaero_price=px(iaero),
         aero_price=px(aero),
+        iaero_price_source=src(iaero),
+        iaero_price_route=(prices.get(iaero) or {}).get("route"),
         distributor=distributor,
         now_ts=now_ts,
         epoch_mode=epoch_mode,

@@ -350,7 +350,7 @@ def _claims_state_due(old: dict, new: dict) -> bool:
         return True
     for cid, n in nc.items():
         o = oc.get(cid) or {}
-        if o.get("since") != n.get("since") or o.get("vrms") != n.get("vrms"):
+        if o.get("since") != n.get("since") or o.get("vrms") != n.get("vrms") or o.get("gauges") != n.get("gauges"):
             return True
         if int(n.get("blockTimestamp") or 0) - int(o.get("blockTimestamp") or 0) >= LIVE_STATE_REWRITE_SEC:
             return True
@@ -414,6 +414,10 @@ def _update_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner, 
             live_prices = live.pop("_prices", None)
         except Exception as e:
             logger.exception(f"[position] live block failed: {e}")
+    if live is not None:
+        # the current iAERO price (the APY denominator) and where it came from, also when the headline is kept
+        live["iaeroPriceUsd"] = int(base["iaeroPrice_1e18"]) / 1e18
+        live["iaeroPriceSource"] = base.get("iaeroPriceSource")
     if live is None and isinstance(prev_live, dict):
         live = dict(prev_live, stale=True)              # keep its history and gauge list
     if _claims_state_due(claims_state, new_claims_state):
