@@ -357,7 +357,7 @@ class MainHookTest(unittest.TestCase):
 
     def _run(self, payload, env=None, epochs_doc=None, history=None):
         updater = mock.Mock(branch="main")
-        envs = {"EPOCH_STAKING_DISTRIBUTOR": DIST}
+        envs = {"EPOCH_STAKING_DISTRIBUTOR": DIST, "LIVE_YIELD_ENABLED": "false"}
         envs.update(env or {})
         with mock.patch.dict(os.environ, envs), \
              mock.patch.object(realized_yield, "build_estimated_rewards", return_value=payload) as b:
@@ -417,6 +417,30 @@ class MainHookTest(unittest.TestCase):
                                                                        "YIELD_HISTORY_ENABLED": "false"})
         self.assertFalse(changed)
         b.assert_not_called()
+
+    def test_live_block_is_added_without_touching_apy_or_history(self):
+        payload = dict(_payload(EPOCH_22_OCT + WEEK), aeroPrice_1e18=str(8 * 10**17), stakedUSD_1e18=str(3 * 10**24))
+        live = {"method": "live_position", "positionAprPct": 30.0}
+        with mock.patch.object(self.main, "_build_live_block", return_value=live) as bl:
+            changed, updater, _ = self._run(payload, env={"LIVE_YIELD_ENABLED": "true"}, history=_keeper_history())
+        self.assertTrue(changed)
+        bl.assert_called_once()
+        written = updater.update_json.call_args.args[1]
+        self.assertEqual(written["live"], live)
+        self.assertEqual({k: v for k, v in written.items() if k != "live"}, payload)   # apyPct etc. unchanged
+        self.assertNotIn("live", json.loads(updater.update_file.call_args.args[1])["series"][-1])
+
+    def test_live_failure_still_publishes_realized_file(self):
+        payload = _payload(EPOCH_22_OCT + WEEK)
+        with mock.patch.object(self.main, "_build_live_block", side_effect=RuntimeError("rpc down")):
+            changed, updater, _ = self._run(payload, env={"LIVE_YIELD_ENABLED": "true", "YIELD_HISTORY_ENABLED": "false"})
+        self.assertTrue(changed)
+        updater.update_json.assert_called_once_with("data/estimated_rewards_usd.json", payload)
+
+    def test_live_can_be_disabled(self):
+        with mock.patch.object(self.main, "_build_live_block") as bl:
+            self._run(_payload(EPOCH_22_OCT + WEEK), env={"LIVE_YIELD_ENABLED": "false", "YIELD_HISTORY_ENABLED": "false"})
+        bl.assert_not_called()
 
 
 if __name__ == "__main__":

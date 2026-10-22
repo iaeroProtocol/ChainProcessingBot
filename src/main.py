@@ -339,12 +339,49 @@ def _update_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner, 
         return False
 
     changed = False
-    if er_enabled:
-        path = os.environ.get("ESTIMATED_REWARDS_JSON_PATH", "data/estimated_rewards_usd.json")
-        changed = _push_if_changed(repo, updater, path, payload) or changed
     if yh_enabled:
         changed = _update_yield_history(repo, updater, payload) or changed
+    if er_enabled:
+        path = os.environ.get("ESTIMATED_REWARDS_JSON_PATH", "data/estimated_rewards_usd.json")
+        if os.environ.get("LIVE_YIELD_ENABLED", "true").lower() == "true":
+            # additional real-time block; apyPct and every legacy field are untouched
+            try:
+                prev_live = _load_json(repo, updater.branch, path).get("live")
+                payload = dict(payload, live=_build_live_block(scanner, price_fetcher, payload, prev_live))
+            except Exception as e:
+                logger.exception(f"[position] live block failed; publishing without it: {e}")
+        changed = _push_if_changed(repo, updater, path, payload) or changed
     return changed
+
+def _build_live_block(scanner: ChainScanner, price_fetcher: PriceFetcher, payload: dict, prev_live) -> dict:
+    """Real-time earnings of the protocol's Aero stake (Base + Ethereum) -> estimated_rewards_usd.json `live`."""
+    from web3 import Web3
+    from position_earnings import (ChainReader, build_live, staked_aero, DEFAULT_STAKE_ID, FIRST_ALLOCATION,
+                                   FACTORY_REGISTRY_BASE, VOTING_ESCROW)
+    token_id = int(os.environ.get("PROTOCOL_AERO_STAKE_ID") or DEFAULT_STAKE_ID)
+    since_env = os.environ.get("PROTOCOL_AERO_STAKE_SINCE")
+    first_allocation = int(since_env) if since_env else FIRST_ALLOCATION.get(token_id)
+
+    base = ChainReader(scanner.w3, 8453)
+    readers = [(base, os.environ.get("AERO_FACTORY_REGISTRY") or FACTORY_REGISTRY_BASE)]
+    price_fetchers = {8453: price_fetcher}
+    try:
+        eth_w3 = Web3(Web3.HTTPProvider(os.environ.get("ETH_RPC_URL") or "https://ethereum-rpc.publicnode.com",
+                                        request_kwargs={"timeout": 20}))
+        readers.append((ChainReader(eth_w3, 1, block=max(0, int(eth_w3.eth.block_number) - 3)), None))
+        price_fetchers[1] = PriceFetcher(chain_slug="ethereum", cache_file="price_cache_ethereum.json", ttl_sec=300)
+    except Exception as e:
+        logger.warning(f"[position] Ethereum RPC unavailable ({e}); measuring Base only")
+
+    return build_live(
+        readers, token_id, price_fetchers,
+        staked_aero_raw=staked_aero(base, token_id, os.environ.get("AERO_VOTING_ESCROW") or VOTING_ESCROW),
+        aero_price=int(payload["aeroPrice_1e18"]) / 1e18,
+        staked_iaero_usd=int(payload["stakedUSD_1e18"]) / 1e18,      # same denominator as apyPct
+        stakers_bps=int((payload.get("splitBps") or {}).get("stakers", 8000)),
+        prev_live=prev_live,
+        first_allocation=first_allocation,
+    )
 
 def _update_yield_history(repo, updater: GitHubUpdater, payload: dict) -> bool:
     """Append/update only the realized entry for payload's epoch; keeper-published entries are never rewritten."""

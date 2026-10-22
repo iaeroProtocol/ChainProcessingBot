@@ -13,8 +13,8 @@ logger = logging.getLogger(__name__)
 
 LLAMA_URL = "https://coins.llama.fi/prices/current/{}"  # {chain:addr,...}
 CG_SIMPLE_URL = (
-    "https://pro-api.coingecko.com/api/v3/simple/token_price/base"
-)  # ?contract_addresses=&vs_currencies=usd
+    "https://pro-api.coingecko.com/api/v3/simple/token_price/{}"
+)  # {platform: base|ethereum}?contract_addresses=&vs_currencies=usd
 AERODROME_FACTORY="0x420DD381b31aEf6683db6B902084cB0FFECe40Da"
 # Aero (post-migration, 2026-10-22) v2 pool factories: one factory per pool type.
 AERO_VOLATILE_FACTORY="0x8E6a9FCd1d638CC760Ffba397605Fe3355dE76D2"
@@ -197,7 +197,7 @@ class PriceFetcher:
             chunk = addrs[i:i+CHUNK]
             params = {"contract_addresses": ",".join(chunk), "vs_currencies": "usd"}
             try:
-                r = requests.get(CG_SIMPLE_URL, params=params, headers=headers, timeout=10)
+                r = requests.get(CG_SIMPLE_URL.format(self.chain), params=params, headers=headers, timeout=10)
                 if r.status_code == 200:
                     data = r.json()  # { "0xaddr": {"usd": price}, ... }
                     for k, v in data.items():
