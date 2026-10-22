@@ -9,8 +9,9 @@ rewards keeper funded once a week (Thursday 00:01, into the new epoch). The Aero
 UTC) into the RUNNING epoch, so a running epoch only holds part of a week.
 
 Headline figures (estimated_rewards_usd.json), in one of two modes:
-  rolling        (env ROLLING_SINCE_TS set, unix seconds: the daily harvester's first run; must be at or after
-                 ROLLING_CUTOFF_TS, just after the last Aerodrome-era funding, else it is rejected -> per-epoch)
+  rolling        (env ROLLING_SINCE_TS set, unix seconds: the daily harvester's first run; an earlier number is
+                 raised to ROLLING_CUTOFF_TS, just after the last Aerodrome-era funding; not a number or >= 1e10
+                 (milliseconds) -> rejected, per-epoch)
                  catch-up       the first funding at or after ROLLING_SINCE_TS (and the first after any 7 days without
                                 funding) pays for accrual from BEFORE it: it is never counted (funding_anchors)
                  window         [now - 7 d, now) once the latest catch-up is older than that; until then the fundings
@@ -71,7 +72,7 @@ MIN_WINDOW_DAYS = 1.0           # a funding window shorter than this is not annu
 # The rewards keeper's last (Aerodrome-era) weekly funding: one RewardFunded batch of 36 tokens into epoch 1792627200,
 # block 52918979 at 1792627305 (22 Oct 2026 00:01:45 UTC; checked on chain). Rolling mode starts after it.
 AERODROME_LAST_FUNDING_TS = 1792627305
-ROLLING_CUTOFF_TS = AERODROME_LAST_FUNDING_TS + 1   # earliest accepted ROLLING_SINCE_TS (env ROLLING_CUTOFF_TS)
+ROLLING_CUTOFF_TS = AERODROME_LAST_FUNDING_TS + 1   # ROLLING_SINCE_TS is raised to at least this (env ROLLING_CUTOFF_TS)
 MAX_UNIX_SECONDS = 10_000_000_000                   # larger values are milliseconds, not seconds
 
 # Split of harvested rewards (RewardsHarvesterV2.processAndDistribute): 80% goes to the

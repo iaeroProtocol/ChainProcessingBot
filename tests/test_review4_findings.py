@@ -3,8 +3,8 @@
 # R4_1 (M-1, the rolling window annualises lumps that pay for time before its anchor) and the flag-like
 # ROLLING_SINCE_TS test. Every test asserts the SAFE behaviour and fails on acf45ac. No network: main's realized step
 # runs end to end against an in-memory repo, a fake distributor and RewardFunded events with block times.
-# Adapted (see comments): LUMP_TS is the on-chain block time; the harness has the 15 Oct Aerodrome week that is on
-# chain (the last-completed fallback reads it); ROLLING_SINCE_TS before the cutoff (E0, 1) is now rejected.
+# Adapted: LUMP_TS is the on-chain block time, and the harness has the 15 Oct Aerodrome week that is on chain (the
+# last-completed fallback reads it). The test bodies are the review's.
 # The review's R4_2, the rest of R4_3 and R4_4 are Lows and are not here.
 # Run: python -m pytest -p no:pytest_ethereum -q tests/test_review4_findings.py
 import json
@@ -156,14 +156,10 @@ class R4_1_RollingAnchorAnnualisesLumps(unittest.TestCase):
         return [g for g in got if not self.BAND[0] <= g[1] <= self.BAND[1]]
 
     def test_anchor_at_the_aero_launch_epoch_annualises_the_last_aerodrome_week(self):
-        # ROLLING_SINCE_TS=1792627200 (E0 = "Aero era start", the runbook's key date): the 22 Oct 00:01:45 funding
-        # (one whole Aerodrome week) sits inside the window and is annualised over 1.1 .. 6.1 days.
-        # Adapted: E0 is before the cutoff (just after that funding), so it is rejected with an error and the bot stays
-        # in the per-epoch mode; the review asserted the 15% band, which only a clamped anchor would give.
-        with self.assertLogs("main", "ERROR") as logs:
-            got = week_of_runs(since=E_22_OCT, first_run=E_22_OCT + DAY + HARVEST)    # harvester from Fri 23 Oct 06:00
-        self.assertEqual([g for g in got if g[2] is not None], [], f"rolling windows over the Aerodrome week: {got}")
-        self.assertTrue(any("ROLLING_SINCE_TS" in m and "rejected" in m for m in logs.output))
+        # ROLLING_SINCE_TS=1792627200 (E0 = "Aero era start", the runbook's key date): the 22 Oct 00:01:48 funding
+        # (one whole Aerodrome week) sits inside the window and is annualised over 1.1 .. 6.1 days
+        got = week_of_runs(since=E_22_OCT, first_run=E_22_OCT + DAY + HARVEST)    # harvester from Fri 23 Oct 06:00
+        self.assertFalse(self._bad(got), f"true rate 15%; published (day, apyPct, spanDays): {got}")
 
     def test_documented_anchor_annualises_the_first_runs_catch_up(self):
         # ROLLING_SINCE_TS = the harvester's first run (the commit message / docstring). That run claims everything
@@ -188,13 +184,10 @@ class R4_3_EnvParsingFootguns(unittest.TestCase):
 
     def test_flag_like_rolling_since_does_not_count_the_aerodrome_week_twice(self):
         # ROLLING_SINCE_TS=1 ("on") is accepted: a full 7-day window from day one, holding the Aerodrome week paid on
-        # 22 Oct 00:01:45 AND the Aero harvests (+ catch-up) for the same days.
-        # Adapted: 1 (and 0, negative) is rejected with an error -> per-epoch mode; no rolling window holds both
-        for flag in (1, 0, -1):
-            with self.assertLogs("main", "ERROR") as logs:
-                got = week_of_runs(since=flag, first_run=E_22_OCT + DAY + HARVEST)
-            self.assertEqual([g for g in got if g[2] is not None], [], f"ROLLING_SINCE_TS={flag}: {got}")
-            self.assertTrue(any("rejected" in m for m in logs.output))
+        # 22 Oct 00:01:48 AND the Aero harvests (+ catch-up) for the same days
+        got = week_of_runs(since=1, first_run=E_22_OCT + DAY + HARVEST)
+        bad = [g for g in got if not 11.25 <= g[1] <= 18.75]
+        self.assertFalse(bad, f"ROLLING_SINCE_TS=1, true rate 15%; published (day, apyPct, spanDays): {got}")
 
 
 if __name__ == "__main__":

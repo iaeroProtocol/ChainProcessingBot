@@ -699,20 +699,30 @@ class RollingModeTest(unittest.TestCase):
         self.assertEqual(p["apyWindow"]["afterCatchUp"], resume)
         self.assertAlmostEqual(p["apyPct"], self.APY, places=6)
 
-    def test_rejected_rolling_since_keeps_the_per_epoch_mode(self):
+    def test_garbage_or_milliseconds_rolling_since_is_rejected(self):
         now = EPOCH_22_OCT + WEEK + 3 * DAY + 9060
-        for bad in ("not-a-timestamp", "0", "1", "-5", str(EPOCH_22_OCT), str(1792627305),       # before the cutoff
-                    str(self.SINCE * 1000)):                                                    # milliseconds
+        for bad in ("not-a-timestamp", "nan", str(self.SINCE * 1000)):          # milliseconds
             with self.assertLogs("main", "ERROR") as logs:
                 p, _, scanner = self._run(now, since=bad)
             self.assertNotIn("apyWindow", p, bad)
             self.assertEqual(p["epochSelection"], "latest_funded", bad)
             scanner.reward_funded_events.assert_not_called()
             self.assertTrue(any("ROLLING_SINCE_TS" in m and "rejected" in m for m in logs.output), logs.output)
-        p, _, _ = self._run(now, since=str(1792627306))                     # the cutoff itself is accepted
-        self.assertIn("apyWindow", p)
-        p, _, _ = self._run(now, since=bad, env={"ROLLING_CUTOFF_TS": "1"})  # the cutoff is configurable
-        self.assertNotIn("apyWindow", p)                                    # (ms is still rejected)
+
+    def test_early_rolling_since_is_raised_to_the_cutoff(self):
+        # flag-like values and anything up to the last Aerodrome-era funding (1792627305) start at the cutoff instead
+        now = EPOCH_22_OCT + WEEK + 3 * DAY + 9060
+        for early in ("0", "1", "-5", str(EPOCH_22_OCT), "1792627305", "1792627305.9"):
+            with self.assertLogs("main", "WARNING") as logs:
+                p, _, scanner = self._run(now, since=early)
+            self.assertEqual(p["apyWindow"]["afterCatchUp"], None, early)
+            self.assertAlmostEqual(p["apyPct"], self.APY, places=6, msg=early)
+            self.assertEqual(scanner.reward_funded_events.call_args.args[1], 1792627306, early)
+            self.assertTrue(any("ROLLING_SINCE_TS" in m and "using 1792627306" in m for m in logs.output), logs.output)
+        p, _, scanner = self._run(now, since="1792627306")                     # the cutoff itself, as is
+        self.assertEqual(scanner.reward_funded_events.call_args.args[1], 1792627306)
+        p, _, scanner = self._run(now, since="0", env={"ROLLING_CUTOFF_TS": str(self.SINCE)})   # configurable cutoff
+        self.assertEqual(scanner.reward_funded_events.call_args.args[1], self.SINCE)
 
     def test_scan_failure_publishes_nothing(self):
         p, hist, _ = self._run(EPOCH_22_OCT + WEEK + 3 * DAY, scan_error=RuntimeError("eth_getLogs 429"))

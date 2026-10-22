@@ -323,9 +323,10 @@ def _update_staker_rewards(repo, updater: GitHubUpdater) -> bool:
     return _push_if_changed(repo, updater, out_path, payload)
 
 def _rolling_since_ts():
-    """ROLLING_SINCE_TS (unix seconds: the daily harvester's first run), or None for the per-epoch mode. Rejected
-    (logged, per-epoch mode) unless it is plausible unix seconds at or after ROLLING_CUTOFF_TS, just after the last
-    Aerodrome-era funding: an earlier or flag-like value (0, 1, ...) would put that week in the rolling window."""
+    """ROLLING_SINCE_TS (unix seconds: the daily harvester's first run), or None for the per-epoch mode. A number below
+    ROLLING_CUTOFF_TS (just after the last Aerodrome-era funding; flag-like 0, 1, -1 included) is raised to it with a
+    warning, so that week never enters the rolling window. Not a number, or >= 1e10 (milliseconds): rejected with an
+    error, per-epoch mode."""
     from realized_yield import ROLLING_CUTOFF_TS, MAX_UNIX_SECONDS
     raw = (os.environ.get("ROLLING_SINCE_TS") or "").strip()
     if not raw:
@@ -341,11 +342,16 @@ def _rolling_since_ts():
         since = int(float(raw))
     except (ValueError, OverflowError):
         since = None
-    if since is None or not cutoff <= since < MAX_UNIX_SECONDS:
-        logger.error(f"[realized_yield] ROLLING_SINCE_TS={raw!r} rejected: it must be unix seconds at or after "
-                     f"{cutoff} (just after the last Aerodrome-era funding); using the per-epoch mode")
+    if since is None or since >= MAX_UNIX_SECONDS:
+        logger.error(f"[realized_yield] ROLLING_SINCE_TS={raw!r} rejected: it must be unix seconds (not milliseconds); "
+                     f"using the per-epoch mode")
         _log_status({"event": "realized_yield_config", "error": f"ROLLING_SINCE_TS={raw!r} rejected"})
         return None
+    if since < cutoff:
+        logger.warning(f"[realized_yield] ROLLING_SINCE_TS={raw!r} is before {cutoff} (just after the last "
+                       f"Aerodrome-era funding); using {cutoff}")
+        _log_status({"event": "realized_yield_config", "warning": f"ROLLING_SINCE_TS={raw!r} raised to {cutoff}"})
+        return cutoff
     return since
 
 def _update_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner, price_fetcher: PriceFetcher) -> bool:
