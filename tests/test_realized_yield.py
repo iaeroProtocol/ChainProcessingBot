@@ -596,31 +596,32 @@ class MainHookTest(unittest.TestCase):
 
 class RollingModeTest(unittest.TestCase):
     """ROLLING_SINCE_TS: the headline is the RewardFunded events of the last 7 days (block time) annualised over the
-    window; yield_history gets each completed epoch from the events inside it. The daily harvester funds $1,000 of
-    USDC at 06:00 UTC into the running epoch; 4M iAERO staked at $0.66 -> 13.79%."""
+    window, never counting a catch-up funding (the first after ROLLING_SINCE_TS or after 7 days without funding);
+    yield_history gets each completed epoch the same way. The daily harvester funds $1,000 of USDC at 06:00 UTC into
+    the running epoch; 4M iAERO staked at $0.66 -> 13.79%. The 15 Oct epoch holds a $7,000 Aerodrome-era week."""
     SINCE = EPOCH_22_OCT + 6 * 3600                       # first daily harvest, Thu 22 Oct 06:00
     STAKED = 4_000_000 * E18
     APY = 7_000 / (4_000_000 * 0.66) * 52 * 100
+    LEGACY = {(USDC, EPOCH_15_OCT): 7_000 * 10**6}       # rewardsForEpoch only (before the cutoff, never an event)
 
     @classmethod
     def setUpClass(cls):
         import main  # noqa: F401
         cls.main = main
 
-    def _events(self, until, start=SINCE):
+    def _daily(self, start, until, amount=1_000 * 10**6):
         out, ts = [], start
         while ts < until:
-            out.append({"token": USDC, "epoch": epoch_start(ts), "amount": 1_000 * 10**6, "timestamp": ts,
-                        "blockNumber": ts // 2})
+            out.append({"token": USDC, "epoch": epoch_start(ts), "amount": amount, "timestamp": ts, "blockNumber": ts // 2})
             ts += DAY
         return out
 
-    def _run(self, now, since=SINCE, history=None, scan_error=None, env=None):
-        events = self._events(now)
-        rewards = {}
+    def _run(self, now, since=SINCE, events=None, legacy=LEGACY, history=None, scan_error=None, env=None):
+        events = self._daily(self.SINCE, now) if events is None else [e for e in events if e["timestamp"] < now]
+        rewards = dict(legacy or {})
         for e in events:
             rewards[(USDC, e["epoch"])] = rewards.get((USDC, e["epoch"]), 0) + e["amount"]
-        w3 = FakeDistributorWeb3(rewards=rewards, snapshot={EPOCH_22_OCT + k * WEEK: self.STAKED for k in range(-2, 4)},
+        w3 = FakeDistributorWeb3(rewards=rewards, snapshot={EPOCH_22_OCT + k * WEEK: self.STAKED for k in range(-2, 5)},
                                  supply_at_start={}, total_staked=self.STAKED)
         scanner = mock.Mock(w3=w3)
         scanner.decimals_map.side_effect = lambda toks, **k: {USDC: 6}
@@ -644,7 +645,7 @@ class RollingModeTest(unittest.TestCase):
         p, _, scanner = self._run(now)
         self.assertAlmostEqual(p["apyPct"], self.APY, places=6)
         self.assertEqual(p["stakersWeeklyUSD_human"], "7000.0000")
-        self.assertEqual(p["apyWindow"], {"from": now - WEEK, "to": now, "spanDays": 7.0})
+        self.assertEqual(p["apyWindow"], {"from": now - WEEK, "to": now, "spanDays": 7.0, "afterCatchUp": None})
         self.assertEqual((p["epochSelection"], p["epoch"]), ("rolling_7d", EPOCH_22_OCT + WEEK))
         self.assertEqual(scanner.reward_funded_events.call_args.args, (DIST, self.SINCE, now))
         # the per-epoch mode shows the partial week
@@ -653,19 +654,65 @@ class RollingModeTest(unittest.TestCase):
         scanner.reward_funded_events.assert_not_called()
         self.assertNotIn("apyWindow", p)
 
-    def test_window_starts_at_rolling_since(self):
-        now = self.SINCE + 2 * DAY + 12 * 3600                  # 3 harvests in 2.5 days
-        p, _, _ = self._run(now)
-        self.assertEqual(p["apyWindow"], {"from": self.SINCE, "to": now, "spanDays": 2.5})
-        self.assertAlmostEqual(p["apyPct"], self.APY * 3 / 2.5, places=6)
+    def test_catch_up_funding_is_never_counted(self):
+        # the first run claims 3 days of accrual ($3,000); the daily ones after it pay for one day each
+        events = [dict(e, amount=3_000 * 10**6) if e["timestamp"] == self.SINCE else e
+                  for e in self._daily(self.SINCE, self.SINCE + 7 * DAY)]
+        now = self.SINCE + 2 * DAY + 12 * 3600
+        p, _, _ = self._run(now, events=events)
+        self.assertEqual(p["apyWindow"], {"from": self.SINCE + 1, "to": self.SINCE + 2 * DAY + 1, "spanDays": 2.0,
+                                          "afterCatchUp": self.SINCE})
+        self.assertAlmostEqual(p["apyPct"], self.APY, places=6)
+        # once the catch-up is over 7 days old, the plain window (it is outside)
+        p, _, _ = self._run(self.SINCE + 7 * DAY + 3600, events=events + self._daily(self.SINCE + 7 * DAY, self.SINCE + 8 * DAY))
+        self.assertEqual(p["apyWindow"]["afterCatchUp"], None)
+        self.assertAlmostEqual(p["apyPct"], self.APY, places=6)
 
-    def test_under_a_day_keeps_the_per_epoch_figure(self):
-        p, _, scanner = self._run(self.SINCE + 12 * 3600)
-        scanner.reward_funded_events.assert_not_called()
-        self.assertNotIn("apyWindow", p)
-        self.assertEqual(p["epochSelection"], "latest_funded")
-        p, _, _ = self._run(self.SINCE + 12 * 3600, since="not-a-timestamp")   # unparseable -> per-epoch
-        self.assertNotIn("apyWindow", p)
+    def test_until_a_day_after_the_catch_up_the_last_completed_week(self):
+        for now in (self.SINCE - 3600, self.SINCE + 12 * 3600):      # before the first funding, and just after it
+            p, _, _ = self._run(now)
+            self.assertNotIn("apyWindow", p)
+            self.assertEqual((p["epoch"], p["epochSelection"]), (EPOCH_15_OCT, "last_completed"))
+            self.assertAlmostEqual(p["apyPct"], self.APY, places=6)       # the 15 Oct week, $7,000
+            self.assertIn("rollingFallback", p)
+        # no completed week to fall back on either: the previous headline is kept (nothing written), never a 0
+        p, _, _ = self._run(self.SINCE + 12 * 3600, legacy={})
+        self.assertIsNone(p)
+
+    def test_catch_up_booked_to_the_completed_epoch_is_left_out_of_the_fallback(self):
+        # launched Wed 28 Oct 06:00 with a 6-day catch-up booked to the 22 Oct epoch, which also holds an Aerodrome week
+        launch = EPOCH_22_OCT + 6 * DAY + 6 * 3600
+        events = [{"token": USDC, "epoch": EPOCH_22_OCT, "amount": 6_000 * 10**6, "timestamp": launch, "blockNumber": 1}]
+        legacy = {(USDC, EPOCH_22_OCT): 7_000 * 10**6}
+        p, _, _ = self._run(EPOCH_22_OCT + WEEK + 9060, since=launch, events=events, legacy=legacy)   # Thu 29 Oct 02:31
+        self.assertEqual((p["epoch"], p["fundedUSD_human"]), (EPOCH_22_OCT, "7000.0000"))
+
+    def test_a_week_without_funding_falls_back_and_the_next_funding_is_a_catch_up(self):
+        events = self._daily(self.SINCE, self.SINCE + 3 * DAY)              # 22..24 Oct, then an outage
+        resume = self.SINCE + 12 * DAY                                      # Tue 3 Nov: claims 9 days at once
+        events += [{"token": USDC, "epoch": epoch_start(resume), "amount": 9_000 * 10**6, "timestamp": resume,
+                    "blockNumber": 2}] + self._daily(resume + DAY, resume + 5 * DAY)
+        p, _, _ = self._run(self.SINCE + 11 * DAY, events=events)           # Mon 2 Nov: nothing in 7 days
+        self.assertEqual(p["epochSelection"], "last_completed")
+        self.assertNotEqual(p["apyPct"], 0.0)
+        p, _, _ = self._run(resume + 3 * DAY + 3600, events=events)         # Fri 6 Nov: the 9-day claim is left out
+        self.assertEqual(p["apyWindow"]["afterCatchUp"], resume)
+        self.assertAlmostEqual(p["apyPct"], self.APY, places=6)
+
+    def test_rejected_rolling_since_keeps_the_per_epoch_mode(self):
+        now = EPOCH_22_OCT + WEEK + 3 * DAY + 9060
+        for bad in ("not-a-timestamp", "0", "1", "-5", str(EPOCH_22_OCT), str(1792627305),       # before the cutoff
+                    str(self.SINCE * 1000)):                                                    # milliseconds
+            with self.assertLogs("main", "ERROR") as logs:
+                p, _, scanner = self._run(now, since=bad)
+            self.assertNotIn("apyWindow", p, bad)
+            self.assertEqual(p["epochSelection"], "latest_funded", bad)
+            scanner.reward_funded_events.assert_not_called()
+            self.assertTrue(any("ROLLING_SINCE_TS" in m and "rejected" in m for m in logs.output), logs.output)
+        p, _, _ = self._run(now, since=str(1792627306))                     # the cutoff itself is accepted
+        self.assertIn("apyWindow", p)
+        p, _, _ = self._run(now, since=bad, env={"ROLLING_CUTOFF_TS": "1"})  # the cutoff is configurable
+        self.assertNotIn("apyWindow", p)                                    # (ms is still rejected)
 
     def test_scan_failure_publishes_nothing(self):
         p, hist, _ = self._run(EPOCH_22_OCT + WEEK + 3 * DAY, scan_error=RuntimeError("eth_getLogs 429"))
@@ -678,12 +725,46 @@ class RollingModeTest(unittest.TestCase):
         self.assertEqual(last["epoch"], EPOCH_22_OCT + WEEK)
         self.assertAlmostEqual(last["apyPct"], self.APY, places=6)          # 7 harvests in 7 days
         self.assertEqual(last["stakersWeeklyUSD_1e18"], str(7_000 * E18))
-        # the harvester started Tue 3 Nov 12:00: one harvest (4 Nov) in 1.5 days of the epoch
-        _, hist, _ = self._run(now, since=EPOCH_22_OCT + WEEK + 5 * DAY + 12 * 3600)
-        self.assertAlmostEqual(hist["series"][-1]["apyPct"], self.APY / 1.5, places=6)
-        # started Wed 4 Nov 12:00: half a day of the epoch -> no entry
-        _, hist, _ = self._run(now, since=EPOCH_22_OCT + WEEK + 6 * DAY + 12 * 3600)
+        # harvester started Sun 1 Nov 06:00 (a 3-day catch-up): 2..4 Nov over the 3 days after it
+        start = EPOCH_22_OCT + WEEK + 3 * DAY + 6 * 3600
+        events = [dict(e, amount=3_000 * 10**6) if e["timestamp"] == start else e for e in self._daily(start, now)]
+        _, hist, _ = self._run(now, since=start, events=events)
+        self.assertAlmostEqual(hist["series"][-1]["apyPct"], self.APY, places=6)
+        # started Wed 4 Nov 06:00: only the catch-up in the epoch -> no entry
+        _, hist, _ = self._run(now, since=EPOCH_22_OCT + WEEK + 6 * DAY + 6 * 3600)
         self.assertIsNone(hist)
+
+    def test_catch_up_stays_out_when_rolling_since_is_older_than_two_weeks(self):
+        # ROLLING_SINCE_TS 22 Oct 06:00 but the first funding only Thu 29 Oct 06:00, claiming 7 days ($7,000) into the
+        # 29 Oct epoch. On 6 Nov the 29 Oct entry is rewritten; a scan starting 2 weeks back (23 Oct 02:31) saw only
+        # 6.1 quiet days before the catch-up and counted it
+        launch = EPOCH_22_OCT + WEEK + 6 * 3600
+        events = [{"token": USDC, "epoch": EPOCH_22_OCT + WEEK, "amount": 7_000 * 10**6, "timestamp": launch,
+                   "blockNumber": 1}] + self._daily(launch + DAY, launch + 9 * DAY)
+        for now in (EPOCH_22_OCT + 2 * WEEK + 9060, EPOCH_22_OCT + 2 * WEEK + DAY + 9060):
+            _, hist, scanner = self._run(now, events=events)
+            self.assertEqual(hist["series"][-1]["epoch"], EPOCH_22_OCT + WEEK)
+            self.assertAlmostEqual(hist["series"][-1]["apyPct"], self.APY, places=6)
+            self.assertEqual(scanner.reward_funded_events.call_args.args[1], self.SINCE)
+
+
+class RollingHelpersTest(unittest.TestCase):
+    def test_funding_anchors(self):
+        from realized_yield import funding_anchors
+        t = [100, 100, 200 + DAY, 300 + 2 * DAY, 300 + 10 * DAY, 300 + 11 * DAY]
+        self.assertEqual(funding_anchors(t, since=50, scan_from=50), [100, 300 + 10 * DAY])
+        self.assertEqual(funding_anchors(t, since=150, scan_from=150), [200 + DAY, 300 + 10 * DAY])
+        # the scan began after since: its first funding is a catch-up only after 7 days with none
+        self.assertEqual(funding_anchors(t, since=50, scan_from=90), [300 + 10 * DAY])
+        self.assertEqual(funding_anchors([], since=50, scan_from=50), [])
+
+    def test_rolling_bounds(self):
+        from realized_yield import rolling_bounds
+        t = [0, DAY, 2 * DAY, 3 * DAY]
+        self.assertEqual(rolling_bounds(t, [0], 0, 7 * DAY), (1, 3 * DAY + 1))       # after the catch-up
+        self.assertEqual(rolling_bounds(t[:1] + [DAY // 2], [0], 0, 7 * DAY), None)   # under a day after it
+        self.assertEqual(rolling_bounds(t, [0], DAY, 8 * DAY), (DAY, 8 * DAY))        # catch-up before the window
+        self.assertEqual(rolling_bounds(t, [], 10 * DAY, 17 * DAY), None)             # nothing in the window
 
 
 if __name__ == "__main__":

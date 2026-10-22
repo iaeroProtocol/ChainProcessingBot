@@ -9,10 +9,16 @@ rewards keeper funded once a week (Thursday 00:01, into the new epoch). The Aero
 UTC) into the RUNNING epoch, so a running epoch only holds part of a week.
 
 Headline figures (estimated_rewards_usd.json), in one of two modes:
-  rolling        (env ROLLING_SINCE_TS set, unix seconds: the daily harvester's first run)
-                 window = [max(now - 7 d, ROLLING_SINCE_TS), now), used once it spans >= 1 day (before that: per-epoch)
+  rolling        (env ROLLING_SINCE_TS set, unix seconds: the daily harvester's first run; must be at or after
+                 ROLLING_CUTOFF_TS, just after the last Aerodrome-era funding, else it is rejected -> per-epoch)
+                 catch-up       the first funding at or after ROLLING_SINCE_TS (and the first after any 7 days without
+                                funding) pays for accrual from BEFORE it: it is never counted (funding_anchors)
+                 window         [now - 7 d, now) once the latest catch-up is older than that; until then the fundings
+                                after the catch-up, annualised over (last funding - catch-up), once that is >= 1 day
+                 otherwise      (no such funding yet / none in 7 days) the per-epoch figure of the last COMPLETED
+                                epoch without catch-up fundings booked to it; never a rolling 0
                  fundedUSD        = RewardFunded amounts with block time in the window * current USD price
-                 stakersWeeklyUSD = fundedUSD * 7 / spanDays; apyWindow = {from, to, spanDays}
+                 stakersWeeklyUSD = fundedUSD * 7 / spanDays; apyWindow = {from, to, spanDays, afterCatchUp}
   per-epoch      (ROLLING_SINCE_TS unset) epoch E chosen by ESTIMATED_REWARDS_EPOCH:
                  latest_funded  (default) newest epoch with funding in epochs.json; older than 2 weeks -> 0 (stale)
                  last_completed the most recent epoch whose week has ended
@@ -28,8 +34,8 @@ figures and listed in excludedTokens. Not published (main.py logs and keeps the 
 finds anything (apyPct NaN, negative or > 500%; AERO or iAERO unpriced; a zero USD stake).
 
 yield_history.json: one entry per COMPLETED epoch with the same rules (rolling mode: the RewardFunded events inside
-the epoch and >= ROLLING_SINCE_TS, annualised over that part; no entry if it is under a day). Keeper-written entries
-are never touched.
+the epoch, after any catch-up funding in it, annualised over the part they cover; no entry if under a day).
+Keeper-written entries are never touched.
 Readers of estimated_rewards_usd.json: TwitterBot (apyPct), DefiLlama yield-server iaero-protocol
 (apyPct, tvlUSD_1e18), iaero-frontend (stakersWeeklyUSD_1e18, estimatedWeeklyUSD_1e18).
 All legacy fields are kept with the same names and units; new fields are only added.
@@ -62,6 +68,11 @@ MAX_SANE_APY_PCT = 500.0        # above this, don't publish (likely a bad price)
 TRUSTED_DEX_TOKENS = (AERO_ADDRESS.lower(),)   # DEX prices that may count (env TRUSTED_DEX_TOKENS, comma-separated)
 DEX_TRUSTED_DEPTH_USD = 1_000_000.0            # ... when their pool's quote side is this deep (env DEX_TRUSTED_DEPTH_USD)
 MIN_WINDOW_DAYS = 1.0           # a funding window shorter than this is not annualised
+# The rewards keeper's last (Aerodrome-era) weekly funding: one RewardFunded batch of 36 tokens into epoch 1792627200,
+# block 52918979 at 1792627305 (22 Oct 2026 00:01:45 UTC; checked on chain). Rolling mode starts after it.
+AERODROME_LAST_FUNDING_TS = 1792627305
+ROLLING_CUTOFF_TS = AERODROME_LAST_FUNDING_TS + 1   # earliest accepted ROLLING_SINCE_TS (env ROLLING_CUTOFF_TS)
+MAX_UNIX_SECONDS = 10_000_000_000                   # larger values are milliseconds, not seconds
 
 # Split of harvested rewards (RewardsHarvesterV2.processAndDistribute): 80% goes to the
 # EpochStakingDistributor, so the realized funding IS the stakers' share.
@@ -146,6 +157,51 @@ def trusted_dex_tokens() -> set:
     """Tokens whose DEX price may count (env TRUSTED_DEX_TOKENS, comma-separated; blank or unset -> the Aero AERO)."""
     toks = {t.strip().lower() for t in (os.environ.get("TRUSTED_DEX_TOKENS") or "").split(",") if t.strip()}
     return toks or set(TRUSTED_DEX_TOKENS)
+
+
+def funding_anchors(times: Iterable[int], since: int, scan_from: int) -> List[int]:
+    """
+    Block times of catch-up fundings among RewardFunded block `times` (those >= since count): the first funding at or
+    after `since`, and the first after any 7 days without funding (a harvester outage). Each pays for accrual from
+    before it, so it is never annualised. When the scan began after `since` (scan_from > since), the first funding in
+    it is a catch-up only if it came >= 7 days after scan_from.
+    """
+    anchors: List[int] = []
+    prev = int(scan_from) if int(scan_from) > int(since) else None
+    for t in sorted({int(t) for t in times if int(t) >= int(since)}):
+        if prev is None or t - prev >= WEEK:
+            anchors.append(t)
+        prev = t
+    return anchors
+
+
+def rolling_bounds(times: Iterable[int], anchors: List[int], frm: int, to: int) -> Optional[tuple]:
+    """
+    Half-open [from, to) of the fundings to annualise for the nominal window [frm, to): when the latest catch-up before
+    `to` falls inside the window, only the fundings after it, over (last funding - catch-up) (each daily funding pays
+    for the day before it). None when that is under MIN_WINDOW_DAYS, or when the window has no funding at all.
+    """
+    times = sorted({int(t) for t in times})
+    a = max((x for x in anchors if x < to), default=None)
+    if a is not None and a >= frm:
+        later = [t for t in times if a < t < to]
+        if not later or later[-1] - a < MIN_WINDOW_DAYS * DAY:
+            return None
+        return a + 1, later[-1] + 1
+    if not any(frm <= t < to for t in times):
+        return None
+    return int(frm), int(to)
+
+
+def catch_up_raw(events: Iterable[dict], anchors: List[int], epoch: int) -> Dict[str, int]:
+    """{token: raw amount} of the catch-up fundings (at an anchor time) booked to `epoch`."""
+    out: Dict[str, int] = {}
+    anchor_set = set(anchors or [])
+    for e in events or []:
+        if int(e["timestamp"]) in anchor_set and int(e["epoch"]) == int(epoch):
+            t = str(e["token"]).lower()
+            out[t] = out.get(t, 0) + int(e["amount"])
+    return out
 
 
 def _to_1e18(x: Decimal) -> str:
@@ -347,10 +403,12 @@ def build_estimated_rewards(
     aero: str = AERO_ADDRESS,
     iaero: Optional[str] = None,
     epoch_mode: str = "latest_funded",
+    exclude_raw: Optional[Dict[str, int]] = None,
 ) -> dict:
     """
     Per-epoch mode: read funding for the selected epoch (see select_epoch) from the EpochStakingDistributor and price it.
-    Token list per epoch comes from epochs.json (RewardFunded scan); amounts from rewardsForEpoch().
+    Token list per epoch comes from epochs.json (RewardFunded scan); amounts from rewardsForEpoch(), less exclude_raw
+    {token: raw} (the rolling mode's catch-up fundings booked to the epoch).
     """
     now_ts = int(now_ts if now_ts is not None else time.time())
     if epoch_mode not in EPOCH_MODES:
@@ -366,8 +424,9 @@ def build_estimated_rewards(
     ep = (epochs_doc.get("epochs") or {}).get(str(epoch)) or {}
     tokens = [] if stale else sorted({t.lower() for t in (ep.get("tokens") or []) if t})
     funded_raw: Dict[str, int] = {}
+    exclude = {k.lower(): int(v) for k, v in (exclude_raw or {}).items()}
     for t in tokens:
-        amt = int(dist.functions.rewardsForEpoch(cs(t), epoch).call())
+        amt = int(dist.functions.rewardsForEpoch(cs(t), epoch).call()) - exclude.get(t, 0)
         if amt > 0:
             funded_raw[t] = amt
 
@@ -390,6 +449,7 @@ def build_window_rewards(
     aero: str = AERO_ADDRESS,
     iaero: Optional[str] = None,
     label: str = "rolling_7d",
+    window_meta: Optional[dict] = None,
 ) -> dict:
     """
     Funding booked in a time window: RewardFunded events {token, amount, timestamp} with window_from <= block time
@@ -405,7 +465,8 @@ def build_window_rewards(
             funded_raw[t] = funded_raw.get(t, 0) + int(e["amount"])
     out = _price_and_compute(w3, distributor, funded_raw, int(stake_epoch), price_fetcher, decimals_fn, aero, iaero,
                              now_ts, label, False, span_days)
-    out["apyWindow"] = {"from": int(window_from), "to": int(window_to), "spanDays": round(span_days, 6)}
+    out["apyWindow"] = {"from": int(window_from), "to": int(window_to), "spanDays": round(span_days, 6),
+                        **(window_meta or {})}
     _log_payload(out, f"window {int(window_from)}..{int(window_to)} ({span_days:.3f} d, {label})")
     return out
 

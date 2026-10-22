@@ -323,15 +323,30 @@ def _update_staker_rewards(repo, updater: GitHubUpdater) -> bool:
     return _push_if_changed(repo, updater, out_path, payload)
 
 def _rolling_since_ts():
-    """ROLLING_SINCE_TS (unix seconds: the daily harvester's first run), or None for the per-epoch mode."""
+    """ROLLING_SINCE_TS (unix seconds: the daily harvester's first run), or None for the per-epoch mode. Rejected
+    (logged, per-epoch mode) unless it is plausible unix seconds at or after ROLLING_CUTOFF_TS, just after the last
+    Aerodrome-era funding: an earlier or flag-like value (0, 1, ...) would put that week in the rolling window."""
+    from realized_yield import ROLLING_CUTOFF_TS, MAX_UNIX_SECONDS
     raw = (os.environ.get("ROLLING_SINCE_TS") or "").strip()
     if not raw:
         return None
+    cutoff = ROLLING_CUTOFF_TS
+    raw_cut = (os.environ.get("ROLLING_CUTOFF_TS") or "").strip()
+    if raw_cut:
+        try:
+            cutoff = int(float(raw_cut))
+        except ValueError:
+            logger.error(f"[realized_yield] ROLLING_CUTOFF_TS={raw_cut!r} is not unix seconds; using {cutoff}")
     try:
-        return int(float(raw))
-    except ValueError:
-        logger.error(f"[realized_yield] ROLLING_SINCE_TS={raw!r} is not unix seconds; using the per-epoch mode")
+        since = int(float(raw))
+    except (ValueError, OverflowError):
+        since = None
+    if since is None or not cutoff <= since < MAX_UNIX_SECONDS:
+        logger.error(f"[realized_yield] ROLLING_SINCE_TS={raw!r} rejected: it must be unix seconds at or after "
+                     f"{cutoff} (just after the last Aerodrome-era funding); using the per-epoch mode")
+        _log_status({"event": "realized_yield_config", "error": f"ROLLING_SINCE_TS={raw!r} rejected"})
         return None
+    return since
 
 def _update_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner, price_fetcher: PriceFetcher) -> bool:
     """
@@ -353,13 +368,14 @@ def _update_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner, 
         return False
 
     from realized_yield import (build_estimated_rewards, build_window_rewards, sanity_problems, epoch_start,
-                                last_completed_epoch, AERO_ADDRESS, DAY, WEEK, MIN_WINDOW_DAYS)
+                                last_completed_epoch, funding_anchors, rolling_bounds, catch_up_raw, AERO_ADDRESS,
+                                WEEK)
     dec_chunk = int(os.environ.get("DEC_CHUNK_SIZE", "75"))
     decimals_fn = lambda toks: scanner.decimals_map(toks, chunk_size=dec_chunk, default_decimals=18)
     aero = os.environ.get("AERO_ADDRESS") or AERO_ADDRESS
     iaero = os.environ.get("IAERO_ADDRESS")
 
-    def build(epoch=None):
+    def build(epoch=None, exclude_raw=None):
         return build_estimated_rewards(
             w3=scanner.w3,
             distributor=distributor,
@@ -371,35 +387,49 @@ def _update_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner, 
             epoch_mode=("last_completed" if epoch is not None
                         else os.environ.get("ESTIMATED_REWARDS_EPOCH", "latest_funded").lower()),
             epoch=epoch,
+            exclude_raw=exclude_raw,
         )
 
-    def build_window(frm, to, stake_epoch, label):
+    def build_window(bounds, stake_epoch, label, nominal_from):
+        frm, to = bounds
+        meta = {"afterCatchUp": frm - 1} if frm > nominal_from else {"afterCatchUp": None}
         return build_window_rewards(w3=scanner.w3, distributor=distributor, events=events, window_from=frm,
                                     window_to=to, price_fetcher=price_fetcher, decimals_fn=decimals_fn,
-                                    stake_epoch=stake_epoch, aero=aero, iaero=iaero, label=label)
+                                    stake_epoch=stake_epoch, aero=aero, iaero=iaero, label=label, window_meta=meta)
 
     now = int(time.time())
     since = _rolling_since_ts()
-    min_span = MIN_WINDOW_DAYS * DAY
     hist_epoch = last_completed_epoch(now)
-    events, payload = None, None
+    events, anchors, payload, keep_headline = None, [], None, False
     if since is not None:
-        # one scan covers the rolling window and the completed epoch (whose start is never later than now - 7 d)
-        ev_from = max(hist_epoch, since)
-        if now - ev_from >= min_span:
+        if since <= now:
+            # <= 3 weeks: the rolling window, the completed epoch, and the 7 days before it, so a catch-up funding in
+            # either is recognised even when ROLLING_SINCE_TS is older than the scan (funding_anchors' gap rule)
+            scan_from = max(since, hist_epoch - WEEK)
             try:
-                events = scanner.reward_funded_events(distributor, ev_from, now)
+                events = [e for e in scanner.reward_funded_events(distributor, scan_from, now)
+                          if int(e["timestamp"]) >= since]
             except Exception as e:
                 # a gap would understate the funding; the per-epoch figure would be a partial week
                 logger.error(f"[realized_yield] RewardFunded scan failed ({str(e)[:160]}); NOT publishing this run.")
                 _log_status({"event": "realized_yield_blocked", "reasons": ["RewardFunded scan failed"]})
                 return False
-        frm = max(now - WEEK, since)
-        if events is not None and now - frm >= min_span:
-            payload = build_window(frm, now, epoch_start(now), "rolling_7d")
-        else:
-            logger.info(f"[realized_yield] rolling window from {frm} spans under {MIN_WINDOW_DAYS:g} day; "
-                        f"publishing the per-epoch figure")
+            anchors = funding_anchors([e["timestamp"] for e in events], since, scan_from)
+            bounds = rolling_bounds([e["timestamp"] for e in events], anchors, now - WEEK, now)
+            if bounds:
+                payload = build_window(bounds, epoch_start(now), "rolling_7d", now - WEEK)
+        if payload is None:
+            # no funding after the catch-up for a day yet, or none in 7 days: the last completed week, without
+            # catch-up fundings booked to it (never a rolling 0)
+            exclude = catch_up_raw(events, anchors, hist_epoch)
+            logger.info(f"[realized_yield] no rolling figure yet (catch-up fundings at {anchors[-3:]}); publishing "
+                        f"the last completed epoch {hist_epoch}" + (f" less its catch-up {exclude}" if exclude else ""))
+            payload = build(epoch=hist_epoch, exclude_raw=exclude)
+            payload["rollingFallback"] = "no funding after the catch-up for a day yet, or none in the last 7 days"
+            if not payload.get("fundedTokenCount"):
+                logger.warning(f"[realized_yield] epoch {hist_epoch} has no funding either; keeping the previous "
+                               f"headline figures")
+                keep_headline = True
     if payload is None:
         payload = build()
     problems = sanity_problems(payload)
@@ -436,12 +466,14 @@ def _update_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner, 
                 else:
                     logger.info(f"[yield_history] completed epoch {hist_epoch} has no funding; no entry")
             else:
-                frm = max(hist_epoch, since)
-                if events is not None and hist_epoch + WEEK - frm >= min_span:
-                    hist_payload = build_window(frm, hist_epoch + WEEK, hist_epoch, "epoch_window")
+                # the epoch's fundings by block time, after any catch-up funding in it (never counted)
+                bounds = (rolling_bounds([e["timestamp"] for e in events], anchors, hist_epoch, hist_epoch + WEEK)
+                          if events is not None else None)
+                if bounds:
+                    hist_payload = build_window(bounds, hist_epoch, "epoch_window", hist_epoch)
                 else:
-                    logger.info(f"[yield_history] epoch {hist_epoch} has under {MIN_WINDOW_DAYS:g} day since "
-                                f"ROLLING_SINCE_TS; no entry")
+                    logger.info(f"[yield_history] epoch {hist_epoch}: under a day of funding after ROLLING_SINCE_TS "
+                                f"and its catch-up; no entry")
         except Exception as e:
             logger.exception(f"[yield_history] epoch {hist_epoch} read failed; no entry this run: {e}")
         if hist_payload is not None:
@@ -450,6 +482,8 @@ def _update_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner, 
                 logger.error(f"[yield_history] epoch {hist_epoch}: {'; '.join(hist_problems)}; not writing its entry.")
             else:
                 changed = _update_yield_history(repo, updater, hist_payload) or changed
+    if er_enabled and keep_headline:
+        er_enabled = False
     if er_enabled:
         if os.environ.get("LIVE_YIELD_ENABLED", "true").lower() == "true":
             # additional real-time block; apyPct and every legacy field are untouched
