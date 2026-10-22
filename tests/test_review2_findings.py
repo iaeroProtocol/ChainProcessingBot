@@ -2,7 +2,8 @@
 # Second independent review of PR #5 at 37ae513: M-A, the 3x guard locked onto the first low value and froze the feed.
 # The review's RA_* tests, run end to end through main._update_realized_yield (in-memory repo, no network) so they
 # don't depend on the guard's signature; each asserts the SAFE behaviour and failed on 37ae513. Adaptations are noted
-# per test. The review's other tests (Lows) are not here. RD_* covers the follow-up: trusted (deep-pool) DEX prices.
+# per test. The review's other tests (Lows) are not here. RD_* covers the follow-up: trusted (deep-pool) DEX prices
+# (after round 3: an untrusted DEX price is left out of the figures, never a reason to keep them stale).
 # Run: python -m pytest -p no:pytest_ethereum -q tests/test_review2_findings.py
 import base64
 import json
@@ -160,8 +161,9 @@ class RA_GuardLocksAndFreezesSilently(unittest.TestCase):
 
 
 class RD_TrustedDexPrice(unittest.TestCase):
-    """The new AERO has no DefiLlama price and is ~60-70% of the daily harvester's funding by value. A DEX price from a
-    pool at least DEX_TRUSTED_DEPTH_USD ($1M) deep on its quote side counts like DefiLlama's; thinner ones stay guarded."""
+    """The new AERO has no DefiLlama price and is ~60-70% of the daily harvester's funding by value. Its DEX price
+    counts when its pool is at least DEX_TRUSTED_DEPTH_USD ($1M) deep on its quote side; from a thinner pool it is
+    left out of the figures (excludedTokens)."""
     AERO = realized_yield.AERO_ADDRESS.lower()
     PREV = {"apyPct": 15.1, "epoch": E_22_OCT, "updatedAt": "2026-10-28T02:31:00.000Z", "stale": False}
 
@@ -190,13 +192,16 @@ class RD_TrustedDexPrice(unittest.TestCase):
         (tok,) = d["dexPricedTokens"]
         self.assertEqual((tok["address"], tok["trusted"], tok["poolDepthUsd"]), (self.AERO, True, 6_000_000.0))
 
-    def test_aero_from_a_30k_pool_is_blocked_and_flagged(self):
+    def test_aero_from_a_30k_pool_is_left_out(self):
+        # adapted (round 3): this used to keep the previous figures flagged stale; now AERO is left out and listed
+        usdc_only = 3_000 / STAKED_USD * 52 * 100
         d = self._run(30_000)
-        self.assertEqual((d["apyPct"], d["updatedAt"], d["stale"]), (15.1, self.PREV["updatedAt"], True))
-        self.assertIn("70% of the funded", d["staleReason"])
+        self.assertFalse(d["stale"])
+        self.assertAlmostEqual(d["apyPct"], usdc_only, places=6)
+        self.assertEqual([(x["address"], x["reason"]) for x in d["excludedTokens"]], [(self.AERO, "untrusted DEX price")])
         # the threshold is env-overridable: the $6M pool is untrusted under a $10M threshold
         d = self._run(6_000_000, env={"DEX_TRUSTED_DEPTH_USD": "10000000"})
-        self.assertTrue(d["stale"])
+        self.assertAlmostEqual(d["apyPct"], usdc_only, places=6)
 
 
 if __name__ == "__main__":

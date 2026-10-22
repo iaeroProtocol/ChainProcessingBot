@@ -181,7 +181,59 @@ class ChainScanner:
 
         return sorted(epochs), {e: sorted(list(ts)) for e, ts in epoch_tokens.items()}
 
-    
+    def block_at_or_before(self, ts: int) -> int:
+        """A block with timestamp <= ts: estimated at 2 s blocks, then stepped back until true (no block-time
+        assumption is trusted)."""
+        latest = self.w3.eth.get_block("latest")
+        hi, hi_ts = int(latest["number"]), int(latest["timestamp"])
+        if int(ts) >= hi_ts:
+            return hi
+        back = (hi_ts - int(ts)) // 2 + 1_000
+        while True:
+            b = max(0, hi - back)
+            if b == 0 or int(self.w3.eth.get_block(b)["timestamp"]) <= int(ts):
+                return b
+            back *= 2
+
+    def reward_funded_events(self, distributor: str, from_ts: int, to_ts: int, step: int = 10_000) -> List[dict]:
+        """
+        RewardFunded(token, epochId, amount) logs of the distributor with block time in [from_ts, to_ts], as
+        [{"token", "epoch", "amount", "timestamp", "blockNumber"}]. Raises if a block range can't be read (a gap
+        would understate the funding), unlike _get_logs_chunked.
+        """
+        distributor = self.w3.to_checksum_address(distributor)
+        fb, tb = self.block_at_or_before(from_ts), int(self.w3.eth.block_number)
+        logs, retries = [], 0
+        while fb <= tb:
+            end = min(tb, fb + step - 1)
+            try:
+                logs.extend(self.w3.eth.get_logs({"address": distributor, "fromBlock": fb, "toBlock": end,
+                                                  "topics": [REWARDFUNDED_TOPIC]}))
+                fb, retries = end + 1, 0
+            except Exception as e:
+                if ("429" in str(e) or "Too Many" in str(e)) and retries < 4:   # rate limited: wait, same range
+                    retries += 1
+                    time.sleep(2 ** retries)
+                    continue
+                if step <= 500:
+                    raise
+                step //= 2
+        ts_of: Dict[int, int] = {}
+        out = []
+        for lg in logs:
+            bn = int(lg["blockNumber"])
+            if bn not in ts_of:
+                ts_of[bn] = int(self.w3.eth.get_block(bn)["timestamp"])
+            if not int(from_ts) <= ts_of[bn] <= int(to_ts):
+                continue
+            data = lg["data"]
+            out.append({"token": "0x" + lg["topics"][1].hex()[-40:],
+                        "epoch": _topic_to_uint256(lg["topics"][2].hex()),
+                        "amount": int(data.hex() if hasattr(data, "hex") else data, 16),
+                        "timestamp": ts_of[bn], "blockNumber": bn})
+        return out
+
+
     def _get_logs_chunked(self, address: str, topics: list, from_block: int, to_block: int, step: int = 50_000):
         """
         Yield logs in chunks to avoid provider limits.

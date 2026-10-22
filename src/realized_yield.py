@@ -3,21 +3,33 @@
 Realized staking yield for data/estimated_rewards_usd.json and data/yield_history.json
 (replaces the legacy EnhancedOptimizedVotesKeeper estimate and the rewards keeper's yield snapshot).
 
-Epoch E (weeks start Thursday 00:00 UTC, E = ts // WEEK * WEEK) is chosen by mode:
-  latest_funded  (default) newest epoch with funding in epochs.json: the current epoch once the
-                 Thursday 00:01 funding has landed, else the previous one. Older than 2 weeks -> 0.
-  last_completed the most recent epoch whose week has ended.
-  fundedUSD      = sum over tokens of rewardsForEpoch(token, E) * current USD price
-  stakedUSD      = staked iAERO at E's start (the distributor's payout denominator) * iAERO price
-  weeklyYieldPct = fundedUSD / stakedUSD * 100
+Funding: the EpochStakingDistributor receives the stakers' 80% of each harvest and books it to an epoch (weeks start
+Thursday 00:00 UTC, E = ts // WEEK * WEEK), emitting RewardFunded(token, epochId, amount). Until 22 Oct 2026 the
+rewards keeper funded once a week (Thursday 00:01, into the new epoch). The Aero-era harvester funds every day (06:00
+UTC) into the RUNNING epoch, so a running epoch only holds part of a week.
+
+Headline figures (estimated_rewards_usd.json), in one of two modes:
+  rolling        (env ROLLING_SINCE_TS set, unix seconds: the daily harvester's first run)
+                 window = [max(now - 7 d, ROLLING_SINCE_TS), now), used once it spans >= 1 day (before that: per-epoch)
+                 fundedUSD        = RewardFunded amounts with block time in the window * current USD price
+                 stakersWeeklyUSD = fundedUSD * 7 / spanDays; apyWindow = {from, to, spanDays}
+  per-epoch      (ROLLING_SINCE_TS unset) epoch E chosen by ESTIMATED_REWARDS_EPOCH:
+                 latest_funded  (default) newest epoch with funding in epochs.json; older than 2 weeks -> 0 (stale)
+                 last_completed the most recent epoch whose week has ended
+                 fundedUSD = stakersWeeklyUSD = sum over tokens of rewardsForEpoch(token, E) * current USD price
+  stakedUSD      = staked iAERO at the epoch's start (the distributor's payout denominator) * iAERO price
+  weeklyYieldPct = stakersWeeklyUSD / stakedUSD * 100
   apyPct         = weeklyYieldPct * 52            (simple annualisation, no compounding)
 
-Prices are CURRENT prices from PriceFetcher, not prices at funding time.
-Not published (main.py logs and keeps the previous files) when sanity_problems() finds anything (apyPct NaN,
-negative or > 500%; AERO or iAERO unpriced; a zero USD stake). When dex_guard_problem() finds DEX-priced funded
-tokens (priced from pools thinner than DEX_TRUSTED_DEPTH_USD) inflating apyPct, main.py keeps the previous figures
-flagged stale (live and yield_history still update).
-yield_history gets an epoch's entry only once that epoch has ended (main.py), so partial weeks never become references.
+Prices are CURRENT prices from PriceFetcher, not prices at funding time. A token priced by PriceFetcher's on-chain DEX
+fallback counts only when trusted: listed in TRUSTED_DEX_TOKENS (env, comma-separated; default the Aero AERO) and
+priced from a pool holding >= DEX_TRUSTED_DEPTH_USD on its quote side. Other DEX-priced tokens are left out of the
+figures and listed in excludedTokens. Not published (main.py logs and keeps the previous file) when sanity_problems()
+finds anything (apyPct NaN, negative or > 500%; AERO or iAERO unpriced; a zero USD stake).
+
+yield_history.json: one entry per COMPLETED epoch with the same rules (rolling mode: the RewardFunded events inside
+the epoch and >= ROLLING_SINCE_TS, annualised over that part; no entry if it is under a day). Keeper-written entries
+are never touched.
 Readers of estimated_rewards_usd.json: TwitterBot (apyPct), DefiLlama yield-server iaero-protocol
 (apyPct, tvlUSD_1e18), iaero-frontend (stakersWeeklyUSD_1e18, estimatedWeeklyUSD_1e18).
 All legacy fields are kept with the same names and units; new fields are only added.
@@ -25,18 +37,18 @@ All legacy fields are kept with the same names and units; new fields are only ad
 import json
 import math
 import os
-import statistics
 import time
 import logging
 from datetime import datetime, timezone
 from decimal import Decimal, getcontext
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict, Iterable, List, Optional
 
 getcontext().prec = 60
 
 logger = logging.getLogger(__name__)
 
-WEEK = 7 * 24 * 60 * 60
+DAY = 24 * 60 * 60
+WEEK = 7 * DAY
 WEEKS_PER_YEAR = 52
 E18 = 10 ** 18
 ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
@@ -47,11 +59,9 @@ IAERO_ADDRESS = "0x81034Fb34009115F215f5d5F564AAc9FfA46a1Dc"
 EPOCH_MODES = ("latest_funded", "last_completed")
 STALE_AFTER_SEC = 2 * WEEK      # latest funded epoch older than this -> publish 0, not a stale figure
 MAX_SANE_APY_PCT = 500.0        # above this, don't publish (likely a bad price), log and skip
-MAX_APY_RISE = 3.0              # apyPct above 3x the reference only because of DEX-priced tokens -> keep the previous figures
-DEX_MAX_FUNDED_SHARE = 0.5      # untrusted DEX-priced tokens above half of the funded USD -> keep the previous figures
-DEX_TRUSTED_DEPTH_USD = 1_000_000.0   # a DEX price from a pool this deep on its quote side counts like DefiLlama's
-                                      # (env DEX_TRUSTED_DEPTH_USD); thinner pools are "untrusted" for the guard
-REFERENCE_EPOCHS = 4            # reference apyPct = median of the newest <= 4 earlier-epoch yield_history entries
+TRUSTED_DEX_TOKENS = (AERO_ADDRESS.lower(),)   # DEX prices that may count (env TRUSTED_DEX_TOKENS, comma-separated)
+DEX_TRUSTED_DEPTH_USD = 1_000_000.0            # ... when their pool's quote side is this deep (env DEX_TRUSTED_DEPTH_USD)
+MIN_WINDOW_DAYS = 1.0           # a funding window shorter than this is not annualised
 
 # Split of harvested rewards (RewardsHarvesterV2.processAndDistribute): 80% goes to the
 # EpochStakingDistributor, so the realized funding IS the stakers' share.
@@ -132,53 +142,10 @@ def is_sane_apy(payload: dict) -> bool:
     return not sanity_problems(payload)
 
 
-def _positive(x) -> bool:
-    return isinstance(x, (int, float)) and math.isfinite(x) and x > 0
-
-
-def reference_apy(history_doc: Optional[dict], epoch: int) -> Optional[tuple]:
-    """(median apyPct, [epochs]) of the newest REFERENCE_EPOCHS yield_history entries for epochs before `epoch` with
-    apyPct > 0, or None. yield_history only gets completed epochs, so a partial week is never part of it."""
-    series = history_doc.get("series") if isinstance(history_doc, dict) else None
-    older = sorted((x for x in (series if isinstance(series, list) else [])
-                    if isinstance(x, dict) and _int(x.get("epoch")) < int(epoch) and _positive(x.get("apyPct"))),
-                   key=lambda x: _int(x.get("epoch")))[-REFERENCE_EPOCHS:]
-    if not older:
-        return None
-    return float(statistics.median(float(x["apyPct"]) for x in older)), [_int(x.get("epoch")) for x in older]
-
-
-def dex_guard_problem(payload: dict, history_doc: Optional[dict], max_rise: float = MAX_APY_RISE) -> Optional[str]:
-    """
-    Reason to keep the previous figures because untrusted DEX-priced funded tokens (PriceFetcher's on-chain fallback
-    from a pool thinner than DEX_TRUSTED_DEPTH_USD: the H-1 risk) look like they inflate payload's apyPct, else None:
-      - their funded value is more than DEX_MAX_FUNDED_SHARE of the funded USD; or
-      - apyPct is above max_rise x the reference (reference_apy) while apyPct without them is not.
-    A rise that is there without them is published; no reference -> no ratio check. Trusted DEX prices count like
-    DefiLlama's. max_rise <= 0 disables both checks.
-    """
-    if not max_rise or max_rise <= 0:
-        return None
-    funded = _int(payload.get("fundedUSD_1e18")) / E18
-    dex = _int(payload.get("untrustedDexFundedUSD_1e18")) / E18
-    tokens = [t.get("address") for t in payload.get("dexPricedTokens") or [] if isinstance(t, dict) and not t.get("trusted")]
-    pools = f"pools under ${float(payload.get('dexTrustedDepthUsd') or DEX_TRUSTED_DEPTH_USD):,.0f}"
-    if funded > 0 and dex > DEX_MAX_FUNDED_SHARE * funded:
-        return (f"DEX-priced tokens {tokens} ({pools}) are {dex / funded:.0%} of the funded ${funded:,.2f} "
-                f"(more than {DEX_MAX_FUNDED_SHARE:.0%})")
-    ref = reference_apy(history_doc, _int(payload.get("epoch")))
-    apy = payload.get("apyPct")
-    if ref is None or not isinstance(apy, (int, float)):
-        return None
-    limit = max_rise * ref[0]
-    if not apy > limit:
-        return None
-    apy_without_dex = apy * (funded - dex) / funded if funded > 0 else apy
-    if apy_without_dex > limit:
-        return None                     # the rise is there without DEX-priced tokens: not a DEX price artefact
-    return (f"apyPct {apy:.2f}% is above {max_rise:g}x the reference {ref[0]:.2f}% (median of yield_history epochs "
-            f"{ref[1]}) only because of DEX-priced tokens {tokens} ({pools}; ${dex:,.2f}; apyPct without them "
-            f"{apy_without_dex:.2f}%)")
+def trusted_dex_tokens() -> set:
+    """Tokens whose DEX price may count (env TRUSTED_DEX_TOKENS, comma-separated; blank or unset -> the Aero AERO)."""
+    toks = {t.strip().lower() for t in (os.environ.get("TRUSTED_DEX_TOKENS") or "").split(",") if t.strip()}
+    return toks or set(TRUSTED_DEX_TOKENS)
 
 
 def _to_1e18(x: Decimal) -> str:
@@ -201,15 +168,21 @@ def compute_realized(
     epoch_mode: str = "latest_funded",
     stale: bool = False,
     dex_trusted_depth_usd: Optional[float] = None,
+    trusted_tokens: Optional[Iterable[str]] = None,
+    span_days: float = 7.0,
 ) -> dict:
     """
     Pure computation of the estimated_rewards_usd.json payload.
-    funded: [{"address", "amount" (raw int), "decimals", "priceUsd", optional "source" and "dexDepthUsd"}] for `epoch`.
+    funded: [{"address", "amount" (raw int), "decimals", "priceUsd", optional "source" and "dexDepthUsd"}]: the
+    funding of `epoch`, or of a window of `span_days` days (stakersWeeklyUSD = fundedUSD * 7 / span_days).
     stale=True publishes 0 for `epoch` (its funding is too old to be a current yield).
-    dex_trusted_depth_usd: default env DEX_TRUSTED_DEPTH_USD, else DEX_TRUSTED_DEPTH_USD.
+    A "dex"-sourced price counts only if the token is in trusted_tokens (default trusted_dex_tokens()) and its pool
+    depth is >= dex_trusted_depth_usd (default env DEX_TRUSTED_DEPTH_USD, else DEX_TRUSTED_DEPTH_USD); other
+    DEX-priced tokens are left out and listed in excludedTokens.
     """
     if dex_trusted_depth_usd is None:
         dex_trusted_depth_usd = float(os.environ.get("DEX_TRUSTED_DEPTH_USD") or DEX_TRUSTED_DEPTH_USD)
+    trusted_tokens = {t.lower() for t in (trusted_tokens if trusted_tokens is not None else trusted_dex_tokens())}
     if stale:
         funded = []
     now_ts = int(now_ts if now_ts is not None else time.time())
@@ -222,9 +195,10 @@ def compute_realized(
         iaero_px = aero_px
         used_fallback = True
 
-    funded_usd = untrusted_usd = Decimal(0)
+    funded_usd = Decimal(0)
     unpriced: List[str] = []
     dex_priced: List[dict] = []
+    excluded: List[dict] = []
     for f in funded:
         amt = int(f["amount"])
         if amt <= 0:
@@ -234,23 +208,27 @@ def compute_realized(
             unpriced.append(f["address"].lower())
             continue
         usd = Decimal(amt) / (Decimal(10) ** int(f.get("decimals", 18))) * px
-        funded_usd += usd
-        if f.get("source") == "dex":     # priced by PriceFetcher's on-chain fallback (see dex_guard_problem)
+        if f.get("source") == "dex":     # priced by PriceFetcher's on-chain fallback
             depth = f.get("dexDepthUsd")
-            trusted = isinstance(depth, (int, float)) and depth >= dex_trusted_depth_usd
+            trusted = (f["address"].lower() in trusted_tokens and isinstance(depth, (int, float))
+                       and depth >= dex_trusted_depth_usd)
             dex_priced.append({"address": f["address"].lower(), "fundedUSD": round(float(usd), 4),
                                "poolDepthUsd": depth, "trusted": trusted})
             if not trusted:
-                untrusted_usd += usd
+                excluded.append({"address": f["address"].lower(), "fundedUSD": round(float(usd), 4),
+                                 "poolDepthUsd": depth, "reason": "untrusted DEX price"})
+                continue
+        funded_usd += usd
 
+    weekly_usd = funded_usd * 7 / Decimal(str(span_days)) if span_days and span_days > 0 else funded_usd
     staked_at_start = Decimal(int(staked_at_start_raw)) / E18
     staked_usd = staked_at_start * iaero_px
-    weekly = (funded_usd / staked_usd) if staked_usd > 0 else Decimal(0)
+    weekly = (weekly_usd / staked_usd) if staked_usd > 0 else Decimal(0)
     weekly_pct = float(weekly * 100)
     apy_pct = weekly_pct * WEEKS_PER_YEAR
 
     # legacy "estimated*" fields describe the gross harvest; the distributor receives the stakers' 80%
-    gross = funded_usd * SPLIT_DENOM / SPLIT_BPS["stakers"]
+    gross = weekly_usd * SPLIT_DENOM / SPLIT_BPS["stakers"]
     tvl_usd = Decimal(int(total_staked_raw)) / E18 * iaero_px
     ratio = (iaero_px / aero_px) if aero_px > 0 else Decimal(1)
 
@@ -262,8 +240,8 @@ def compute_realized(
         "pegWeeklyUSD_1e18": _to_1e18(gross * SPLIT_BPS["peg"] / SPLIT_DENOM),
         "estimatedWeeklyUSD_1e18": _to_1e18(gross),
         "estimatedWeeklyUSD_human": _human(gross),
-        "stakersWeeklyUSD_1e18": _to_1e18(funded_usd),
-        "stakersWeeklyUSD_human": _human(funded_usd),
+        "stakersWeeklyUSD_1e18": _to_1e18(weekly_usd),
+        "stakersWeeklyUSD_human": _human(weekly_usd),
         "estimatedAnnualUSD_1e18": _to_1e18(gross * WEEKS_PER_YEAR),
         "estimatedAnnualUSD_human": _human(gross * WEEKS_PER_YEAR),
         "totalStaked_1e18": str(int(total_staked_raw)),
@@ -293,47 +271,17 @@ def compute_realized(
         "fundedTokenCount": sum(1 for f in funded if int(f["amount"]) > 0),
         "unpricedTokens": sorted(unpriced),
         "dexPricedTokens": sorted(dex_priced, key=lambda x: x["address"]),
-        "dexTrustedDepthUsd": float(dex_trusted_depth_usd),
-        "untrustedDexFundedUSD_1e18": _to_1e18(untrusted_usd),
+        "excludedTokens": sorted(excluded, key=lambda x: x["address"]),
         **({"staleReason": f"no funding newer than epoch {int(epoch)} for over 2 weeks"} if stale else {}),
     }
 
 
-def build_estimated_rewards(
-    w3,
-    distributor: str,
-    epochs_doc: dict,
-    price_fetcher,
-    decimals_fn: Callable[[List[str]], Dict[str, int]],
-    now_ts: Optional[int] = None,
-    epoch: Optional[int] = None,
-    aero: str = AERO_ADDRESS,
-    iaero: Optional[str] = None,
-    epoch_mode: str = "latest_funded",
-) -> dict:
-    """
-    Read funding for the selected epoch (see select_epoch) from the EpochStakingDistributor and price it.
-    Token list per epoch comes from epochs.json (RewardFunded scan); amounts from rewardsForEpoch().
-    """
-    now_ts = int(now_ts if now_ts is not None else time.time())
-    if epoch_mode not in EPOCH_MODES:
-        logger.warning(f"[realized_yield] unknown epoch mode {epoch_mode!r}; using latest_funded")
-        epoch_mode = "latest_funded"
-    if epoch is not None:
-        epoch, stale = int(epoch), False
-    else:
-        epoch, stale = select_epoch(epochs_doc, now_ts, epoch_mode)
+def _price_and_compute(w3, distributor: str, funded_raw: Dict[str, int], epoch: int, price_fetcher,
+                       decimals_fn: Callable[[List[str]], Dict[str, int]], aero: str, iaero: Optional[str],
+                       now_ts: int, epoch_mode: str, stale: bool, span_days: float) -> dict:
+    """Price `funded_raw` {token: raw amount} and compute the payload against the stake at `epoch`'s start."""
     cs = w3.to_checksum_address
     dist = w3.eth.contract(cs(distributor), abi=DIST_ABI)
-
-    ep = (epochs_doc.get("epochs") or {}).get(str(epoch)) or {}
-    tokens = [] if stale else sorted({t.lower() for t in (ep.get("tokens") or []) if t})
-    funded_raw: Dict[str, int] = {}
-    for t in tokens:
-        amt = int(dist.functions.rewardsForEpoch(cs(t), epoch).call())
-        if amt > 0:
-            funded_raw[t] = amt
-
     # same denominator the distributor pays out with (previewClaim)
     staked_at_start = int(dist.functions.supplySnapshotAtEpochStart(epoch).call())
     if staked_at_start == 0:
@@ -365,7 +313,7 @@ def build_estimated_rewards(
         "dexDepthUsd": depth(price_addr[t]),
     } for t, amt in sorted(funded_raw.items())]
 
-    out = compute_realized(
+    return compute_realized(
         epoch=epoch,
         funded=funded,
         staked_at_start_raw=staked_at_start,
@@ -376,12 +324,89 @@ def build_estimated_rewards(
         now_ts=now_ts,
         epoch_mode=epoch_mode,
         stale=stale,
+        span_days=span_days,
     )
+
+
+def _log_payload(out: dict, label: str) -> None:
     logger.info(
-        f"[realized_yield] epoch={epoch} ({epoch_mode}{', STALE' if stale else ''}) tokens={out['fundedTokenCount']} "
-        f"funded=${out['fundedUSD_human']} staked=${out['stakedUSD_human']} weekly={out['weeklyYieldPct']:.4f}% "
-        f"apy={out['apyPct']:.2f}% unpriced={len(out['unpricedTokens'])}"
+        f"[realized_yield] {label} tokens={out['fundedTokenCount']} funded=${out['fundedUSD_human']} "
+        f"weekly=${out['stakersWeeklyUSD_human']} staked=${out['stakedUSD_human']} weekly={out['weeklyYieldPct']:.4f}% "
+        f"apy={out['apyPct']:.2f}% unpriced={len(out['unpricedTokens'])} excluded={len(out['excludedTokens'])}"
     )
+
+
+def build_estimated_rewards(
+    w3,
+    distributor: str,
+    epochs_doc: dict,
+    price_fetcher,
+    decimals_fn: Callable[[List[str]], Dict[str, int]],
+    now_ts: Optional[int] = None,
+    epoch: Optional[int] = None,
+    aero: str = AERO_ADDRESS,
+    iaero: Optional[str] = None,
+    epoch_mode: str = "latest_funded",
+) -> dict:
+    """
+    Per-epoch mode: read funding for the selected epoch (see select_epoch) from the EpochStakingDistributor and price it.
+    Token list per epoch comes from epochs.json (RewardFunded scan); amounts from rewardsForEpoch().
+    """
+    now_ts = int(now_ts if now_ts is not None else time.time())
+    if epoch_mode not in EPOCH_MODES:
+        logger.warning(f"[realized_yield] unknown epoch mode {epoch_mode!r}; using latest_funded")
+        epoch_mode = "latest_funded"
+    if epoch is not None:
+        epoch, stale = int(epoch), False
+    else:
+        epoch, stale = select_epoch(epochs_doc, now_ts, epoch_mode)
+    cs = w3.to_checksum_address
+    dist = w3.eth.contract(cs(distributor), abi=DIST_ABI)
+
+    ep = (epochs_doc.get("epochs") or {}).get(str(epoch)) or {}
+    tokens = [] if stale else sorted({t.lower() for t in (ep.get("tokens") or []) if t})
+    funded_raw: Dict[str, int] = {}
+    for t in tokens:
+        amt = int(dist.functions.rewardsForEpoch(cs(t), epoch).call())
+        if amt > 0:
+            funded_raw[t] = amt
+
+    out = _price_and_compute(w3, distributor, funded_raw, epoch, price_fetcher, decimals_fn, aero, iaero, now_ts,
+                             epoch_mode, stale, 7.0)
+    _log_payload(out, f"epoch={epoch} ({epoch_mode}{', STALE' if stale else ''})")
+    return out
+
+
+def build_window_rewards(
+    w3,
+    distributor: str,
+    events: Iterable[dict],
+    window_from: int,
+    window_to: int,
+    price_fetcher,
+    decimals_fn: Callable[[List[str]], Dict[str, int]],
+    stake_epoch: int,
+    now_ts: Optional[int] = None,
+    aero: str = AERO_ADDRESS,
+    iaero: Optional[str] = None,
+    label: str = "rolling_7d",
+) -> dict:
+    """
+    Funding booked in a time window: RewardFunded events {token, amount, timestamp} with window_from <= block time
+    < window_to, whatever epoch they were booked to, annualised over the window (stakersWeeklyUSD = funded * 7 /
+    spanDays). The stake denominator is the one at `stake_epoch`'s start. Adds apyWindow {from, to, spanDays}.
+    """
+    now_ts = int(now_ts if now_ts is not None else time.time())
+    span_days = (int(window_to) - int(window_from)) / DAY
+    funded_raw: Dict[str, int] = {}
+    for e in events or []:
+        if int(window_from) <= int(e["timestamp"]) < int(window_to) and int(e["amount"]) > 0:
+            t = str(e["token"]).lower()
+            funded_raw[t] = funded_raw.get(t, 0) + int(e["amount"])
+    out = _price_and_compute(w3, distributor, funded_raw, int(stake_epoch), price_fetcher, decimals_fn, aero, iaero,
+                             now_ts, label, False, span_days)
+    out["apyWindow"] = {"from": int(window_from), "to": int(window_to), "spanDays": round(span_days, 6)}
+    _log_payload(out, f"window {int(window_from)}..{int(window_to)} ({span_days:.3f} d, {label})")
     return out
 
 
@@ -389,7 +414,8 @@ def build_estimated_rewards(
 # Same schema as the rewards keeper's pushYieldHistoryToGitHub (ultimate-keeper.mjs):
 #   {updatedAt, latest: {epoch, apyPct, tvlUSD_1e18, stakersWeeklyUSD_1e18},
 #    series: [{epoch, timestamp, apyPct, tvlUSD_1e18, stakersWeeklyUSD_1e18}] sorted by epoch}
-# Entry for epoch E = rewards funded INTO E (the keeper wrote it at E + ~1 min, right after funding).
+# Entry for epoch E = rewards funded INTO E (the keeper wrote it at E + ~1 min, right after funding); ours are written
+# once E has ended (main.py), from rewardsForEpoch or, in rolling mode, from the RewardFunded events inside E.
 # Our entries carry "method": "realized"; entries without it were published by the keeper and are never touched.
 
 def yield_history_entry(payload: dict, now_ts: int) -> dict:
@@ -398,7 +424,8 @@ def yield_history_entry(payload: dict, now_ts: int) -> dict:
         "timestamp": int(now_ts),
         "apyPct": payload["apyPct"],
         "tvlUSD_1e18": payload["stakedUSD_1e18"],             # staked iAERO at epoch start x iAERO price
-        "stakersWeeklyUSD_1e18": payload["fundedUSD_1e18"],   # realized funding to stakers for the epoch
+        # realized funding to stakers for the epoch (per week: rolling mode may cover part of the epoch)
+        "stakersWeeklyUSD_1e18": payload.get("stakersWeeklyUSD_1e18", payload["fundedUSD_1e18"]),
         "method": "realized",
     }
 

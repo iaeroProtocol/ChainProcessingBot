@@ -16,12 +16,13 @@ from web3 import Web3  # noqa: E402
 
 import realized_yield  # noqa: E402
 from realized_yield import (  # noqa: E402
+    DAY,
     WEEK,
     ZERO_ADDRESS,
     WETH_ADDRESS,
     build_estimated_rewards,
+    build_window_rewards,
     compute_realized,
-    dex_guard_problem,
     dump_yield_history,
     epoch_start,
     is_sane_apy,
@@ -29,8 +30,8 @@ from realized_yield import (  # noqa: E402
     latest_funded_epoch,
     merge_yield_history,
     sanity_problems,
-    reference_apy,
     select_epoch,
+    trusted_dex_tokens,
 )
 
 E18 = 10 ** 18
@@ -111,44 +112,6 @@ class EpochMathTest(unittest.TestCase):
         # an empty stake is not a pricing failure
         self.assertEqual(sanity_problems(compute_realized(EPOCH_22_OCT, funded, 0, 0, 0.6656, 0.802)), [])
 
-    def test_reference_is_the_median_of_up_to_4_earlier_epochs(self):
-        hist = {"series": [{"epoch": EPOCH_15_OCT - 3 * WEEK, "apyPct": 99.0}, {"epoch": EPOCH_15_OCT - 2 * WEEK, "apyPct": 0.0},
-                           {"epoch": EPOCH_15_OCT - WEEK, "apyPct": 8.0}, {"epoch": EPOCH_15_OCT, "apyPct": 10.0},
-                           {"epoch": EPOCH_22_OCT, "apyPct": 12.0}, {"epoch": EPOCH_22_OCT + WEEK, "apyPct": 1.0}]}
-        # epochs before 29 Oct with apyPct > 0, newest 4: 99, 8, 10, 12 -> median 11 (the 0% entry is skipped)
-        self.assertEqual(reference_apy(hist, EPOCH_22_OCT + WEEK),
-                         (11.0, [EPOCH_15_OCT - 3 * WEEK, EPOCH_15_OCT - WEEK, EPOCH_15_OCT, EPOCH_22_OCT]))
-        self.assertEqual(reference_apy(hist, EPOCH_15_OCT), (53.5, [EPOCH_15_OCT - 3 * WEEK, EPOCH_15_OCT - WEEK]))
-        self.assertIsNone(reference_apy({"series": []}, EPOCH_22_OCT))
-        self.assertIsNone(reference_apy({}, EPOCH_22_OCT))
-
-    def test_dex_guard(self):
-        hist = {"series": [{"epoch": EPOCH_15_OCT, "apyPct": 10.0}, {"epoch": EPOCH_22_OCT, "apyPct": 12.0}]}   # ref 11
-
-        def p(apy, funded=1_000.0, dex=0.0, ep=EPOCH_22_OCT + WEEK):      # dex: untrusted DEX-priced funded USD
-            return {"epoch": ep, "apyPct": apy, "fundedUSD_1e18": str(int(funded * E18)),
-                    "untrustedDexFundedUSD_1e18": str(int(dex * E18)), "dexTrustedDepthUsd": 1e6,
-                    "dexPricedTokens": [{"address": "0xdex", "trusted": False}] if dex else []}
-        self.assertIsNone(dex_guard_problem(p(33.0, dex=400.0), hist))          # within 3x 11 = 33
-        # 40% with 30% of the funding DEX-priced: 28% without it -> the DEX tokens push it over -> blocked
-        self.assertIn("only because of DEX-priced tokens ['0xdex']", dex_guard_problem(p(40.0, dex=300.0), hist))
-        # 60% with 30% DEX-priced: 42% without them is still above 33% -> a real rise, published
-        self.assertIsNone(dex_guard_problem(p(60.0, dex=300.0), hist))
-        self.assertIsNone(dex_guard_problem(p(300.0), hist))                     # any rise without DEX-priced tokens
-        # more than half of the funded value DEX-priced: blocked whatever the level, even with no reference
-        self.assertIn("['0xdex'] (pools under $1,000,000) are 51% of the funded $1,000.00",
-                      dex_guard_problem(p(5.0, dex=510.0), hist))
-        self.assertIsNotNone(dex_guard_problem(p(5.0, dex=510.0), {}))
-        self.assertIsNone(dex_guard_problem(p(5.0, dex=500.0), {}))
-        # no usable reference -> no ratio check
-        self.assertIsNone(dex_guard_problem(p(400.0, dex=400.0), {"series": [{"epoch": EPOCH_15_OCT, "apyPct": 0.0}]}))
-        # a low previous figure or a partial in-progress entry is not a reference: only earlier epochs count
-        self.assertIsNone(dex_guard_problem(p(30.0, dex=400.0), dict(hist, series=hist["series"] + [
-            {"epoch": EPOCH_22_OCT + WEEK, "apyPct": 1.0}])))
-        # override
-        self.assertIsNone(dex_guard_problem(p(40.0, dex=300.0), hist, max_rise=0))
-        self.assertIsNone(dex_guard_problem(p(5.0, dex=900.0), hist, max_rise=0))
-
 
 class ComputeRealizedTest(unittest.TestCase):
     def test_apy_is_weekly_return_times_52(self):
@@ -208,29 +171,47 @@ class ComputeRealizedTest(unittest.TestCase):
         self.assertTrue(p["usedFallbackPrice"])
         self.assertEqual(p["iaeroPrice_1e18"], p["aeroPrice_1e18"])
 
-    def test_dex_priced_funding_is_reported(self):
+    def test_only_trusted_dex_prices_count(self):
         THIN = "0x" + "66" * 20
         funded = [{"address": USDC, "amount": 3_000 * 10**6, "decimals": 6, "priceUsd": 1.0, "source": "llama"},
+                  {"address": AERO, "amount": 1_000 * E18, "decimals": 18, "priceUsd": 0.8, "source": "dex",
+                   "dexDepthUsd": 6_000_000.0},                          # listed and deep: counts
                   {"address": OLD_AERO, "amount": 1_000 * E18, "decimals": 18, "priceUsd": 0.8, "source": "dex",
-                   "dexDepthUsd": 6_000_000.0},
+                   "dexDepthUsd": 6_000_000.0},                          # deep but not listed: left out
                   {"address": THIN, "amount": 100 * E18, "decimals": 18, "priceUsd": 2.0, "source": "dex",
-                   "dexDepthUsd": 30_000.0},
+                   "dexDepthUsd": 30_000.0},                             # neither: left out
                   {"address": "0x" + "77" * 20, "amount": E18, "decimals": 18, "priceUsd": 0.0, "source": "none"}]
         p = compute_realized(EPOCH_15_OCT, funded, 4_000_000 * E18, 4_000_000 * E18, 0.7, 0.8)
-        self.assertEqual(p["dexPricedTokens"], [
-            {"address": THIN, "fundedUSD": 200.0, "poolDepthUsd": 30_000.0, "trusted": False},
-            {"address": OLD_AERO, "fundedUSD": 800.0, "poolDepthUsd": 6_000_000.0, "trusted": True}])
-        self.assertEqual((p["untrustedDexFundedUSD_1e18"], p["dexTrustedDepthUsd"]), (str(200 * E18), 1_000_000.0))
-        # threshold from the env; a DEX price with no recorded depth (old cache entry) is untrusted
+        self.assertEqual(p["fundedUSD_human"], "3800.0000")                  # USDC + trusted AERO
+        self.assertEqual(p["stakersWeeklyUSD_human"], "3800.0000")
+        self.assertAlmostEqual(p["apyPct"], 3_800 / (4_000_000 * 0.7) * 52 * 100, places=9)
+        self.assertEqual(p["excludedTokens"], [
+            {"address": THIN, "fundedUSD": 200.0, "poolDepthUsd": 30_000.0, "reason": "untrusted DEX price"},
+            {"address": OLD_AERO, "fundedUSD": 800.0, "poolDepthUsd": 6_000_000.0, "reason": "untrusted DEX price"}])
+        self.assertEqual([(x["address"], x["trusted"]) for x in p["dexPricedTokens"]],
+                         [(AERO, True), (THIN, False), (OLD_AERO, False)])
+        # a thinner pool than DEX_TRUSTED_DEPTH_USD, or no recorded depth (an older cache entry): AERO left out too
         with mock.patch.dict(os.environ, {"DEX_TRUSTED_DEPTH_USD": "10000000"}):
-            p = compute_realized(EPOCH_15_OCT, funded, 4_000_000 * E18, 4_000_000 * E18, 0.7, 0.8)
-        self.assertEqual(p["untrustedDexFundedUSD_1e18"], str(1_000 * E18))
+            self.assertEqual(compute_realized(EPOCH_15_OCT, funded, 1, 1, 0.7, 0.8)["fundedUSD_human"], "3000.0000")
         funded[1].pop("dexDepthUsd")
-        p = compute_realized(EPOCH_15_OCT, funded, 4_000_000 * E18, 4_000_000 * E18, 0.7, 0.8)
-        self.assertEqual(p["untrustedDexFundedUSD_1e18"], str(1_000 * E18))
+        self.assertEqual(compute_realized(EPOCH_15_OCT, funded, 1, 1, 0.7, 0.8)["fundedUSD_human"], "3000.0000")
+        # the list comes from TRUSTED_DEX_TOKENS
+        funded[1]["dexDepthUsd"] = 6_000_000.0
+        with mock.patch.dict(os.environ, {"TRUSTED_DEX_TOKENS": f" 0x{OLD_AERO[2:].upper()} , {AERO},"}):
+            self.assertEqual(trusted_dex_tokens(), {OLD_AERO, AERO})
+            self.assertEqual(compute_realized(EPOCH_15_OCT, funded, 1, 1, 0.7, 0.8)["fundedUSD_human"], "4600.0000")
+        with mock.patch.dict(os.environ, {"TRUSTED_DEX_TOKENS": ""}):
+            self.assertEqual(trusted_dex_tokens(), {AERO})
         self.assertNotIn("staleReason", p)
         stale = compute_realized(EPOCH_15_OCT, funded, 4_000_000 * E18, 4_000_000 * E18, 0.7, 0.8, stale=True)
         self.assertIn(str(EPOCH_15_OCT), stale["staleReason"])
+
+    def test_a_shorter_window_is_scaled_to_a_week(self):
+        funded = [{"address": USDC, "amount": 2_000 * 10**6, "decimals": 6, "priceUsd": 1.0}]
+        p = compute_realized(EPOCH_15_OCT, funded, 4_000_000 * E18, 4_000_000 * E18, 0.7, 0.8, span_days=2.0)
+        self.assertEqual((p["fundedUSD_human"], p["stakersWeeklyUSD_human"]), ("2000.0000", "7000.0000"))
+        self.assertEqual(p["estimatedWeeklyUSD_1e18"], str(8_750 * E18))
+        self.assertAlmostEqual(p["apyPct"], 7_000 / (4_000_000 * 0.7) * 52 * 100, places=9)
 
     def test_no_stake_gives_zero_apy(self):
         funded = [{"address": USDC, "amount": 10**6, "decimals": 6, "priceUsd": 1.0}]
@@ -316,9 +297,25 @@ class BuildEstimatedRewardsTest(unittest.TestCase):
                                                  "source": "dex" if a == USDC else "llama", "dexDepthUsd": 40_000.0}
                                              for a in addrs}
         p = self.build(EPOCH_22_OCT + 9060)
-        self.assertEqual(p["dexPricedTokens"], [{"address": USDC, "fundedUSD": 99_999.0, "poolDepthUsd": 40_000.0,
-                                                 "trusted": False}])
-        self.assertEqual(p["untrustedDexFundedUSD_1e18"], str(99_999 * E18))
+        self.assertEqual(p["excludedTokens"], [{"address": USDC, "fundedUSD": 99_999.0, "poolDepthUsd": 40_000.0,
+                                                "reason": "untrusted DEX price"}])
+        self.assertEqual(p["fundedUSD_human"], "0.0000")
+
+    def test_window_counts_funding_by_block_time(self):
+        # RewardFunded events, whatever epoch they were booked to: the late 15 Oct booking at 22 Oct 05:00 counts
+        events = [{"token": USDC, "epoch": EPOCH_15_OCT, "amount": 500 * 10**6, "timestamp": EPOCH_22_OCT - 60},
+                  {"token": USDC.upper().replace("0X", "0x"), "epoch": EPOCH_15_OCT, "amount": 1_000 * 10**6,
+                   "timestamp": EPOCH_22_OCT + 5 * 3600},
+                  {"token": ZERO_ADDRESS, "epoch": EPOCH_22_OCT, "amount": E18 // 4, "timestamp": EPOCH_22_OCT + DAY},
+                  {"token": USDC, "epoch": EPOCH_22_OCT, "amount": 2_000 * 10**6, "timestamp": EPOCH_22_OCT + 2 * DAY}]
+        p = build_window_rewards(self.w3, DIST, events, EPOCH_22_OCT, EPOCH_22_OCT + 2 * DAY, self.pf, self.decimals,
+                                 stake_epoch=EPOCH_15_OCT, now_ts=EPOCH_22_OCT + 2 * DAY)
+        # $1,000 + 0.25 ETH ($1,000) in 2 days -> $7,000 a week; the event AT window_to is the next window's
+        self.assertEqual((p["fundedUSD_human"], p["stakersWeeklyUSD_human"]), ("2000.0000", "7000.0000"))
+        self.assertEqual(p["apyWindow"], {"from": EPOCH_22_OCT, "to": EPOCH_22_OCT + 2 * DAY, "spanDays": 2.0})
+        self.assertEqual((p["epoch"], p["epochSelection"], p["stale"]), (EPOCH_15_OCT, "rolling_7d", False))
+        self.assertEqual(p["stakedAtEpochStart_1e18"], str(4_000_000 * E18))   # stake at stake_epoch's start
+        self.assertAlmostEqual(p["apyPct"], 7_000 / (4_000_000 * 0.66) * 52 * 100, places=9)
 
     def test_last_completed_mode_and_snapshot_denominator(self):
         p = self.build(EPOCH_22_OCT + 9060, epoch_mode="last_completed")
@@ -424,6 +421,23 @@ class YieldHistoryTest(unittest.TestCase):
         self.assertEqual(dump_yield_history(json.loads(raw)), raw)
 
 
+def _mock_repo(epochs_doc, history=None, estimated=None):
+    repo = mock.Mock()
+
+    def get_contents(path, ref=None):
+        if path == "data/epochs.json" and epochs_doc is not None:
+            return mock.Mock(content=base64.b64encode(json.dumps(epochs_doc).encode()).decode())
+        if path == "data/yield_history.json" and history is not None:
+            return mock.Mock(content=base64.b64encode(dump_yield_history(history).encode()).decode())
+        if path == "data/estimated_rewards_usd.json" and estimated is not None:
+            if isinstance(estimated, Exception):
+                raise estimated
+            return mock.Mock(content=base64.b64encode(json.dumps(estimated).encode()).decode())
+        raise FileNotFoundError(path)
+    repo.get_contents.side_effect = get_contents
+    return repo
+
+
 class MainHookTest(unittest.TestCase):
     """main._update_realized_yield: publishes via the updater; never publishes 0% on a bad epochs.json or a spike."""
 
@@ -433,20 +447,7 @@ class MainHookTest(unittest.TestCase):
         cls.main = main
 
     def _repo(self, epochs_doc, history=None, estimated=None):
-        repo = mock.Mock()
-
-        def get_contents(path, ref=None):
-            if path == "data/epochs.json" and epochs_doc is not None:
-                return mock.Mock(content=base64.b64encode(json.dumps(epochs_doc).encode()).decode())
-            if path == "data/yield_history.json" and history is not None:
-                return mock.Mock(content=base64.b64encode(dump_yield_history(history).encode()).decode())
-            if path == "data/estimated_rewards_usd.json" and estimated is not None:
-                if isinstance(estimated, Exception):
-                    raise estimated
-                return mock.Mock(content=base64.b64encode(json.dumps(estimated).encode()).decode())
-            raise FileNotFoundError(path)
-        repo.get_contents.side_effect = get_contents
-        return repo
+        return _mock_repo(epochs_doc, history, estimated)
 
     def _run(self, payload, env=None, epochs_doc=None, history=None, estimated=None, now=None, hist_payload=None):
         """now defaults to a week after payload's epoch, so payload's epoch is the last completed one; build() with an
@@ -501,64 +502,6 @@ class MainHookTest(unittest.TestCase):
         updater.update_json.assert_not_called()
         updater.update_file.assert_not_called()
 
-    def _dex_payload(self, apy, dex_share, epoch=EPOCH_22_OCT + WEEK):
-        return dict(_payload(epoch, apy=apy, funded=10_000 * E18), dexPricedTokens=[{"address": "0xdex", "trusted": False}],
-                    untrustedDexFundedUSD_1e18=str(int(10_000 * dex_share) * E18), aeroPrice_1e18=str(8 * 10**17),
-                    stakedUSD_1e18=str(3 * 10**24))
-
-    PREV = {"apyPct": 13.0, "epoch": EPOCH_22_OCT, "stakersWeeklyUSD_1e18": "7", "updatedAt": "2026-10-23T02:31:00.000Z",
-            "updateTimestamp": 1792722660, "lastUpdated": "2026-10-23T02:31:00", "stale": False,
-            "live": {"stakeId": 1584, "history": [{"asOf": 1}]}}
-
-    def test_dex_inflated_apy_keeps_previous_figures_flagged_stale(self):
-        # reference = median(10.30, 12.59) = 11.45 -> limit 34.3; 60% falls to 30% without the DEX-priced half
-        payload = self._dex_payload(60.0, 0.5)
-        fresh_live = {"method": "live_position", "stale": False, "stakeId": 1584, "history": [{"asOf": 2}]}
-        with mock.patch.object(self.main, "_build_live_block", return_value=fresh_live) as bl:
-            changed, updater, _ = self._run(payload, env={"LIVE_YIELD_ENABLED": "true"}, history=_keeper_history(),
-                                            estimated=self.PREV)
-        self.assertTrue(changed)
-        updater.update_json.assert_not_called()                       # update_json would refresh the timestamps
-        (path, content), kw = updater.update_file.call_args
-        self.assertEqual(path, "data/estimated_rewards_usd.json")     # yield_history.json not written (same epoch)
-        self.assertEqual(updater.update_file.call_count, 1)
-        written = json.loads(content)
-        self.assertEqual({k: written[k] for k in ("apyPct", "epoch", "stakersWeeklyUSD_1e18", "updatedAt",
-                                                  "updateTimestamp", "lastUpdated")},
-                         {k: self.PREV[k] for k in ("apyPct", "epoch", "stakersWeeklyUSD_1e18", "updatedAt",
-                                                    "updateTimestamp", "lastUpdated")})
-        self.assertTrue(written["stale"])
-        self.assertIn("only because of DEX-priced tokens", written["staleReason"])
-        self.assertEqual(written["live"], fresh_live)                 # live still measured, from the fresh payload
-        self.assertEqual(bl.call_args.args[2], payload)
-        self.assertEqual(bl.call_args.args[3], self.PREV["live"])
-        # the next good run publishes fresh figures and drops the flag
-        good = self._dex_payload(14.0, 0.1)
-        changed, updater, _ = self._run(good, history=_keeper_history(), estimated=written)
-        self.assertEqual(updater.update_json.call_args.args[1], good)
-
-    def test_dex_majority_is_blocked_and_not_written_to_history(self):
-        changed, updater, _ = self._run(self._dex_payload(12.0, 0.6), history=_keeper_history(), estimated=self.PREV)
-        written = json.loads(updater.update_file.call_args.args[1])
-        self.assertIn("60% of the funded", written["staleReason"])
-        self.assertEqual(updater.update_file.call_count, 1)           # no yield_history.json entry for it
-        updater.update_json.assert_not_called()
-
-    def test_blocked_without_previous_figures_writes_nothing(self):
-        changed, updater, _ = self._run(self._dex_payload(12.0, 0.6), env={"YIELD_HISTORY_ENABLED": "false"})
-        self.assertFalse(changed)
-        updater.update_json.assert_not_called()
-        updater.update_file.assert_not_called()
-
-    def test_rises_without_dex_prices_are_published_and_override_works(self):
-        for prev in (self.PREV, {"apyPct": 0.0, "stale": True}, {"apyPct": 0.0024}):   # low previous figures
-            changed, updater, _ = self._run(_payload(EPOCH_22_OCT + WEEK, apy=60.0), history=_keeper_history(),
-                                            estimated=prev, env={"YIELD_HISTORY_ENABLED": "false"})
-            updater.update_json.assert_called_once()
-        changed, updater, _ = self._run(self._dex_payload(60.0, 0.6), history=_keeper_history(), estimated=self.PREV,
-                                        env={"APY_MAX_RISE": "0"})                     # owner override
-        updater.update_json.assert_called_once()
-
     def test_in_progress_epoch_is_never_written_to_yield_history(self):
         cur = EPOCH_22_OCT + 2 * WEEK                                  # 5 Nov, funding partial so far
         done = dict(_payload(EPOCH_22_OCT + WEEK, apy=14.2), method="realized")
@@ -576,9 +519,9 @@ class MainHookTest(unittest.TestCase):
                                         epochs_doc={"epochs": {str(cur): {"tokens": [USDC]}}})
         self.assertEqual(b.call_count, 1)
         updater.update_file.assert_not_called()
-        # a blocked completed-epoch figure is not written
+        # a completed-epoch figure failing the sanity guard is not written
         changed, updater, _ = self._run(_payload(cur, apy=3.0), now=cur + 9060, epochs_doc=epochs,
-                                        history=_keeper_history(), hist_payload=self._dex_payload(14.0, 0.6))
+                                        history=_keeper_history(), hist_payload=_payload(EPOCH_22_OCT + WEEK, apy=812.0))
         updater.update_file.assert_not_called()
         updater.update_json.assert_called_once()
 
@@ -648,6 +591,99 @@ class MainHookTest(unittest.TestCase):
         with mock.patch.object(self.main, "_build_live_block") as bl:
             self._run(_payload(EPOCH_22_OCT + WEEK), env={"LIVE_YIELD_ENABLED": "false", "YIELD_HISTORY_ENABLED": "false"})
         bl.assert_not_called()
+
+
+
+class RollingModeTest(unittest.TestCase):
+    """ROLLING_SINCE_TS: the headline is the RewardFunded events of the last 7 days (block time) annualised over the
+    window; yield_history gets each completed epoch from the events inside it. The daily harvester funds $1,000 of
+    USDC at 06:00 UTC into the running epoch; 4M iAERO staked at $0.66 -> 13.79%."""
+    SINCE = EPOCH_22_OCT + 6 * 3600                       # first daily harvest, Thu 22 Oct 06:00
+    STAKED = 4_000_000 * E18
+    APY = 7_000 / (4_000_000 * 0.66) * 52 * 100
+
+    @classmethod
+    def setUpClass(cls):
+        import main  # noqa: F401
+        cls.main = main
+
+    def _events(self, until, start=SINCE):
+        out, ts = [], start
+        while ts < until:
+            out.append({"token": USDC, "epoch": epoch_start(ts), "amount": 1_000 * 10**6, "timestamp": ts,
+                        "blockNumber": ts // 2})
+            ts += DAY
+        return out
+
+    def _run(self, now, since=SINCE, history=None, scan_error=None, env=None):
+        events = self._events(now)
+        rewards = {}
+        for e in events:
+            rewards[(USDC, e["epoch"])] = rewards.get((USDC, e["epoch"]), 0) + e["amount"]
+        w3 = FakeDistributorWeb3(rewards=rewards, snapshot={EPOCH_22_OCT + k * WEEK: self.STAKED for k in range(-2, 4)},
+                                 supply_at_start={}, total_staked=self.STAKED)
+        scanner = mock.Mock(w3=w3)
+        scanner.decimals_map.side_effect = lambda toks, **k: {USDC: 6}
+        scanner.reward_funded_events.side_effect = scan_error or (
+            lambda dist, frm, to: [e for e in events if frm <= e["timestamp"] <= to])
+        repo = _mock_repo({"epochs": {str(ep): {"tokens": [USDC]} for (_, ep) in rewards}},
+                          history if history is not None else _keeper_history())
+        updater = mock.Mock(branch="main")
+        envs = {"EPOCH_STAKING_DISTRIBUTOR": DIST, "LIVE_YIELD_ENABLED": "false",
+                "ROLLING_SINCE_TS": "" if since is None else str(since)}
+        envs.update(env or {})
+        with mock.patch.dict(os.environ, envs), mock.patch("time.time", return_value=now):
+            self.main._update_realized_yield(repo, updater, scanner,
+                                             FakePriceFetcher({USDC: 1.0, AERO: 0.81, IAERO: 0.66}))
+        written = updater.update_json.call_args.args[1] if updater.update_json.called else None
+        hist = json.loads(updater.update_file.call_args.args[1]) if updater.update_file.called else None
+        return written, hist, scanner
+
+    def test_headline_is_the_last_7_days(self):
+        now = EPOCH_22_OCT + WEEK + 3 * DAY + 9060          # Sun 1 Nov 02:31: 3 harvests so far in the 29 Oct epoch
+        p, _, scanner = self._run(now)
+        self.assertAlmostEqual(p["apyPct"], self.APY, places=6)
+        self.assertEqual(p["stakersWeeklyUSD_human"], "7000.0000")
+        self.assertEqual(p["apyWindow"], {"from": now - WEEK, "to": now, "spanDays": 7.0})
+        self.assertEqual((p["epochSelection"], p["epoch"]), ("rolling_7d", EPOCH_22_OCT + WEEK))
+        self.assertEqual(scanner.reward_funded_events.call_args.args, (DIST, self.SINCE, now))
+        # the per-epoch mode shows the partial week
+        p, _, scanner = self._run(now, since=None)
+        self.assertAlmostEqual(p["apyPct"], self.APY * 3 / 7, places=6)
+        scanner.reward_funded_events.assert_not_called()
+        self.assertNotIn("apyWindow", p)
+
+    def test_window_starts_at_rolling_since(self):
+        now = self.SINCE + 2 * DAY + 12 * 3600                  # 3 harvests in 2.5 days
+        p, _, _ = self._run(now)
+        self.assertEqual(p["apyWindow"], {"from": self.SINCE, "to": now, "spanDays": 2.5})
+        self.assertAlmostEqual(p["apyPct"], self.APY * 3 / 2.5, places=6)
+
+    def test_under_a_day_keeps_the_per_epoch_figure(self):
+        p, _, scanner = self._run(self.SINCE + 12 * 3600)
+        scanner.reward_funded_events.assert_not_called()
+        self.assertNotIn("apyWindow", p)
+        self.assertEqual(p["epochSelection"], "latest_funded")
+        p, _, _ = self._run(self.SINCE + 12 * 3600, since="not-a-timestamp")   # unparseable -> per-epoch
+        self.assertNotIn("apyWindow", p)
+
+    def test_scan_failure_publishes_nothing(self):
+        p, hist, _ = self._run(EPOCH_22_OCT + WEEK + 3 * DAY, scan_error=RuntimeError("eth_getLogs 429"))
+        self.assertEqual((p, hist), (None, None))
+
+    def test_yield_history_entry_per_completed_epoch(self):
+        now = EPOCH_22_OCT + 2 * WEEK + 9060                   # Thu 5 Nov 02:31: the 29 Oct epoch is complete
+        _, hist, _ = self._run(now)
+        last = hist["series"][-1]
+        self.assertEqual(last["epoch"], EPOCH_22_OCT + WEEK)
+        self.assertAlmostEqual(last["apyPct"], self.APY, places=6)          # 7 harvests in 7 days
+        self.assertEqual(last["stakersWeeklyUSD_1e18"], str(7_000 * E18))
+        # the harvester started Tue 3 Nov 12:00: one harvest (4 Nov) in 1.5 days of the epoch
+        _, hist, _ = self._run(now, since=EPOCH_22_OCT + WEEK + 5 * DAY + 12 * 3600)
+        self.assertAlmostEqual(hist["series"][-1]["apyPct"], self.APY / 1.5, places=6)
+        # started Wed 4 Nov 12:00: half a day of the epoch -> no entry
+        _, hist, _ = self._run(now, since=EPOCH_22_OCT + WEEK + 6 * DAY + 12 * 3600)
+        self.assertIsNone(hist)
 
 
 if __name__ == "__main__":
