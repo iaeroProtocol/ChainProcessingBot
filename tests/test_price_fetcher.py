@@ -1,6 +1,7 @@
 # test_price_fetcher.py
-# Unit tests for the on-chain DEX fallback in PriceFetcher (Aero first, then Aerodrome).
+# Unit tests for the on-chain DEX fallback in PriceFetcher (deepest Aero / Aerodrome pool, ~$10 quote).
 # Uses a fake in-memory web3; no network. Run: python -m unittest discover -s tests
+import json
 import os
 import sys
 import tempfile
@@ -70,6 +71,9 @@ class FakeChain:
             if name != "getPool" or len(args) != 3:
                 raise Reverted("execution reverted")
             return self.aerodrome[address].get((frozenset((cs(args[0]), cs(args[1]))), bool(args[2])), zero)
+        if address in self.pools and name in ("token0", "getReserves"):
+            t0, t1 = sorted(self.pools[address], key=str.lower)        # pools order their tokens by address
+            return t0 if name == "token0" else [self.pools[address][t0], self.pools[address][t1], 0]
         if address in self.pools and name == "getAmountOut":
             amount_in, token_in = args
             reserves = self.pools[address]
@@ -161,11 +165,52 @@ class PriceFetcherDexTest(unittest.TestCase):
         self.assertEqual(e["source"], "dex")
         self.assertAlmostEqual(e["priceUsd"], 0.02, places=4)  # 1/200000 WETH * $4000
 
-    def test_aero_preferred_over_aerodrome(self):
-        self.chain.add_aero_pool(AERO_VOLATILE_FACTORY, LIQ, 1_000_000 * 10**18, USDC, 20_000 * 10**6)
+    def test_deepest_pool_wins_across_dexes(self):
+        # a shallower Aero pool no longer beats a deeper Aerodrome pool (and vice versa)
+        self.chain.add_aero_pool(AERO_VOLATILE_FACTORY, LIQ, 1_000_000 * 10**18, USDC, 30_000 * 10**6)
         self.chain.add_aerodrome_pool(False, LIQ, 1_000_000 * 10**18, USDC, 50_000 * 10**6)
         e = self.price(self.make_pf(aerodrome_factory=AERODROME_FACTORY), LIQ)
+        self.assertAlmostEqual(e["priceUsd"], 0.05, places=4)
+        self.chain.add_aero_pool(AERO_STABLE_FACTORY, LIQ, 1_000_000 * 10**18, USDC, 90_000 * 10**6)
+        self.assertAlmostEqual(self.price(self.make_pf(), LIQ)["priceUsd"], 0.09, places=4)
+
+    def test_pool_below_min_depth_is_not_used(self):
+        # $20k of USDC on the quote side < $25k: unpriced rather than priced from a thin pool
+        self.chain.add_aero_pool(AERO_VOLATILE_FACTORY, LIQ, 1_000_000 * 10**18, USDC, 20_000 * 10**6)
+        self.assertEqual(self.price(self.make_pf(), LIQ)["source"], "none")
+        self.assertAlmostEqual(self.price(self.make_pf(dex_min_quote_usd=10_000), LIQ)["priceUsd"], 0.02, places=4)
+
+    def test_weth_route_wins_when_deeper_than_usdc(self):
+        # thin LIQ/USDC pool at a skewed $1.00; deep LIQ/WETH pool ($400k of WETH) at $0.02
+        self.chain.add_aero_pool(AERO_VOLATILE_FACTORY, LIQ, 30_000 * 10**18, USDC, 30_000 * 10**6)
+        self.chain.add_aerodrome_pool(False, LIQ, 20_000_000 * 10**18, WETH, 100 * 10**18)
+        e = self.price(self.make_pf(), LIQ)
         self.assertAlmostEqual(e["priceUsd"], 0.02, places=4)
+
+    def test_high_price_token_quoted_with_small_notional(self):
+        # a whole BTC swapped into a $128k pool would read ~$50k; a ~$10 swap reads the pool price
+        BTC = cs("0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf")
+        self.chain.decimals[BTC] = 8
+        self.chain.add_aerodrome_pool(False, BTC, 157_511_593, USDC, 128_827_784_341)
+        e = self.price(self.make_pf(), BTC)
+        self.assertAlmostEqual(e["priceUsd"], 128_827.784341 / 1.57511593, delta=10)
+
+    def test_zero_price_is_never_cached(self):
+        pf = self.make_pf()
+        self.assertEqual(self.price(pf, AERO)["source"], "none")
+        self.assertNotIn(f"base:{AERO.lower()}", pf.mem)
+        with open(pf.cache_file) as f:
+            self.assertNotIn(f"base:{AERO.lower()}", json.load(f))
+        # a stale cache file holding a 0.0 entry is ignored
+        with open(pf.cache_file, "w") as f:
+            json.dump({f"base:{AERO.lower()}": {"priceUsd": 0.0, "updatedAt": price_fetcher._now(), "source": "none"}}, f)
+        pf2 = PriceFetcher(cache_file=pf.cache_file)
+        self.assertEqual(pf2.mem, {})
+        self.chain.add_aero_pool(AERO_VOLATILE_FACTORY, AERO, 6_500_000 * 10**18, USDC, 5_265_000 * 10**6)
+        self.assertEqual(self.price(pf, AERO)["source"], "dex")       # retried on the next call
+
+    def test_default_cap_keeps_btc_prices(self):
+        self.assertGreaterEqual(PriceFetcher(cache_file=os.path.join(self.tmp.name, "c.json")).max_price_usd, 1_000_000)
 
     def test_falls_back_to_aerodrome_for_legacy_tokens(self):
         # old AERO has no Aero pools; Aerodrome uses getPool(a,b,bool) (getPair would revert)
@@ -175,7 +220,7 @@ class PriceFetcherDexTest(unittest.TestCase):
         self.assertAlmostEqual(e["priceUsd"], 0.81, places=4)
 
     def test_aerodrome_weth_hop(self):
-        self.chain.add_aerodrome_pool(True, OLD_AERO, 4_000 * 10**18, WETH, 1 * 10**18)
+        self.chain.add_aerodrome_pool(True, OLD_AERO, 40_000 * 10**18, WETH, 10 * 10**18)   # $40k of WETH
         e = self.price(self.make_pf(aerodrome_factory=AERODROME_FACTORY), OLD_AERO)
         self.assertGreater(e["priceUsd"], 0.99)
         self.assertLess(e["priceUsd"], 1.01)

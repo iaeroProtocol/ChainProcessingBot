@@ -143,6 +143,7 @@ def read_chain_position(reader, token_id: int, leaf_voter: str = LEAF_VOTER, reg
         vrm = vrm_r if vrm_r and vrm_r != ZERO else vrm_g
         rows.append({"gauge": g, "vrm": (vrm or "").lower(), "pool": (pool or lp or "").lower(),
                      "allocation": int(alloc or 0), "active": g in allocated})
+    unread = [r["gauge"] for r in rows if not r["vrm"] or r["vrm"] == ZERO]    # no VRM resolved: earnings unknown
     rows = [r for r in rows if r["vrm"] and r["vrm"] != ZERO]
 
     # VRM token order (= earnedFees order); earned fees twice (maxCheckpoints and 2x at the same block:
@@ -161,8 +162,9 @@ def read_chain_position(reader, token_id: int, leaf_voter: str = LEAF_VOTER, reg
         t0, t1, f1, f2, n, ts = res[i * 6:i * 6 + 6]
         r["token0"], r["token1"] = (t0 or "").lower(), (t1 or "").lower()
         r["truncated"] = bool(f1 is not None and f2 is not None and tuple(f1) != tuple(f2))
-        fees = f2 if r["truncated"] else (f1 or (0, 0))
-        r["fees"] = {r["token0"]: int(fees[0]), r["token1"]: int(fees[1])} if r["token0"] and r["token1"] else {}
+        fees = f2 if (r["truncated"] or f1 is None) else f1
+        r["fees"] = {r["token0"]: int(fees[0]), r["token1"]: int(fees[1])} if fees and r["token0"] and r["token1"] else {}
+        r["readOk"] = bool(fees is not None and r["token0"] and r["token1"] and n is not None)   # every read answered
         r["kind"] = f"CL{ts}" if ts is not None else "v2"
         r["incentives"] = []
         progs += [(r, pid) for pid in range(1, int(n or 0) + 1)]
@@ -176,17 +178,20 @@ def read_chain_position(reader, token_id: int, leaf_voter: str = LEAF_VOTER, reg
     for j, (r, pid) in enumerate(progs):
         inc, e1, e2 = res[j * 3:j * 3 + 3]
         if not inc:
+            r["readOk"] = False
             continue
         trunc = e1 is not None and e2 is not None and e1 != e2
+        amount = e2 if (trunc or e1 is None) else e1
+        r["readOk"] = r["readOk"] and amount is not None
         r["truncated"] = r["truncated"] or trunc
-        r["incentives"].append({"programId": pid, "token": inc[0].lower(), "amount": int((e2 if trunc else e1) or 0),
+        r["incentives"].append({"programId": pid, "token": inc[0].lower(), "amount": int(amount or 0),
                                 "start": int(inc[3]), "end": int(inc[4])})
 
     # claims so far (cumulative = claimed + unclaimed)
     first = first_allocation if first_allocation is not None else FIRST_ALLOCATION.get(token_id)
     last_alloc = int(state[1]) if state else 0
     since = min(x for x in (last_alloc, first) if x) if (last_alloc or first) else reader.block_ts
-    claims = None
+    claims = []                                      # no VRM -> nothing to scan
     if rows:
         tid_topic = "0x" + int(token_id).to_bytes(32, "big").hex()
         claims = reader.logs([r["vrm"] for r in rows], [[CLAIM_FEES_TOPIC, CLAIM_INCENTIVES_TOPIC], tid_topic],
@@ -217,7 +222,8 @@ def read_chain_position(reader, token_id: int, leaf_voter: str = LEAF_VOTER, reg
 
     return {"chainId": reader.chain_id, "block": reader.block, "blockTimestamp": reader.block_ts,
             "lastAllocated": last_alloc, "since": int(since), "chainAllocation": int(state[3]) if state else 0,
-            "claimsScanned": claims is not None, "gauges": rows}
+            "claimsScanned": claims is not None, "gaugeListRead": gauges is not None,
+            "unreadGauges": unread + [r["gauge"] for r in rows if not r["readOk"]], "gauges": rows}
 
 
 def token_meta(reader, tokens: List[str]) -> Dict[str, dict]:
@@ -241,6 +247,10 @@ def _sane(name: str, v: Optional[float]) -> Optional[float]:
 # keyed "chainId:gauge" (gauge addresses can repeat across chains). Deltas are valued at the CURRENT run's prices,
 # so price moves on the accumulated stock don't leak into the rate; claims are inside the cumulative, so they never
 # show up as negative deltas.
+# A point lists only chains whose claims were scanned and whose gauge list was read ("chains"); on those chains it
+# holds every gauge read in full, and lists the ones whose reads failed in "unread". A point with no such chain is
+# not recorded. So an end of a window never lacks claims, and a gauge missing from the older point counts from zero
+# only if the stake re-allocated on that chain after that point (otherwise it is left out and the window is partial).
 DAY_SEC = 86400
 WINDOWS = {"24h": (20 * 3600, 36 * 3600, 24 * 3600),          # (min age, max age, target age) of the snapshot used
            "7d": (6 * DAY_SEC, 8 * DAY_SEC, 7 * DAY_SEC)}
@@ -261,18 +271,33 @@ def pick_snapshot(history: List[dict], now_ts: int, window: str) -> Optional[dic
     return min(cands, key=lambda h: abs(now_ts - int(h["asOf"]) - target)) if cands else None
 
 
-def window_delta(cur: dict, snap: dict, price: Callable[[int, str], float]) -> dict:
-    """USD earned between `snap` and `cur` (both history points), per gauge and in total, fees apart."""
+def window_delta(cur: dict, snap: dict, price: Callable[[int, str], float],
+                 last_allocated: Optional[Dict[int, int]] = None) -> Optional[dict]:
+    """USD earned between `snap` and `cur` (both history points), per gauge and in total, fees apart.
+    last_allocated: {chainId: the stake's latest allocation time} at `cur`. None if the points share no chain."""
     days = (int(cur["asOf"]) - int(snap["asOf"])) / 86400.0
     per_gauge, total, fees, negative = {}, 0.0, 0.0, []
-    snap_chains = set(snap.get("chains") or {int(k.split(":")[0]) for k in (snap.get("gauges") or {})})
+    snap_g = snap.get("gauges") or {}
+    snap_chains = set(snap.get("chains") or {int(k.split(":")[0]) for k in snap_g})
     cur_chains = set(cur.get("chains") or {int(k.split(":")[0]) for k in cur["gauges"]})
+    common = snap_chains & cur_chains
+    if not common:
+        return None
     partial = snap_chains != cur_chains          # a chain measured in only one of the two points is left out
+    snap_unread = set(snap.get("unread") or [])
+    for key in snap_g:                           # in the older point but not read now: its earnings are missing
+        if int(key.split(":")[0]) in common and key not in cur["gauges"]:
+            partial = True
     for key, g in cur["gauges"].items():
-        old = (snap.get("gauges") or {}).get(key) or {}
         cid = int(key.split(":")[0])
-        if cid not in snap_chains:
+        if cid not in common:
             continue
+        if key not in snap_g and (key in snap_unread or
+                                  int((last_allocated or {}).get(cid, 0)) <= int(snap["asOf"])):
+            # read failed then, or the stake has not re-allocated since: its whole cumulative would count as earned
+            partial = True
+            continue
+        old = snap_g.get(key) or {}
         g_usd = g_fee = 0.0
         moved_unpriced = False
         for kind in ("fees", "incentives"):
@@ -319,8 +344,11 @@ def value_live(chains: List[dict], meta: Dict[int, Dict[str, dict]], prices: Dic
     split_total = {"feesUSD": 0.0, "incentivesUSD": 0.0, "claimedUSD": 0.0}
     measured_alloc = 0
     fees_day_total = 0.0
-    point = {"asOf": now_ts, "chains": sorted(c["chainId"] for c in chains), "accruedUSD": 0.0, "feesCumUSD": 0.0,
-             "gauges": {}}
+    # history point: chains whose claims were scanned and gauge list read; gauges read in full on them
+    recorded = {c["chainId"] for c in chains if c["claimsScanned"] and c.get("gaugeListRead", True)}
+    point = {"asOf": now_ts, "chains": sorted(recorded), "accruedUSD": 0.0, "feesCumUSD": 0.0, "gauges": {},
+             "unread": sorted(f"{c['chainId']}:{g}" for c in chains if c["chainId"] in recorded
+                              for g in c.get("unreadGauges", []))}
 
     for ch in chains:
         cid = ch["chainId"]
@@ -363,12 +391,13 @@ def value_live(chains: List[dict], meta: Dict[int, Dict[str, dict]], prices: Dic
                 cum_i[t] = cum_i.get(t, 0.0) + int(a) / 10 ** dec(t)
             fees_cum_usd = sum(a * float(prices.get(cid, {}).get(t, 0.0) or 0.0) for t, a in cum_f.items())
             fees_day_total += fees_cum_usd / elapsed_days if elapsed_days > 0 else 0.0
-            point["gauges"][f"{cid}:{r['gauge']}"] = {
-                "usd": _sig(usd),
-                "fees": {t: _sig(a) for t, a in cum_f.items() if a > 0},
-                "incentives": {t: _sig(a) for t, a in cum_i.items() if a > 0}}
-            point["accruedUSD"] += usd
-            point["feesCumUSD"] += fees_cum_usd
+            if cid in recorded and r.get("readOk", True):
+                point["gauges"][f"{cid}:{r['gauge']}"] = {
+                    "usd": _sig(usd),
+                    "fees": {t: _sig(a) for t, a in cum_f.items() if a > 0},
+                    "incentives": {t: _sig(a) for t, a in cum_i.items() if a > 0}}
+                point["accruedUSD"] += usd
+                point["feesCumUSD"] += fees_cum_usd
             per_day = usd / elapsed_days if elapsed_days > 0 else 0.0
             accrued_total += usd
             usd_day_total += per_day
@@ -391,6 +420,7 @@ def value_live(chains: List[dict], meta: Dict[int, Dict[str, dict]], prices: Dic
     since = min((c["since"] for c in chains), default=now_ts)
     out = {
         "method": "live_position",
+        "stale": False,
         "stakeId": int(token_id),
         "asOf": now_ts,
         "since": int(since),
@@ -408,7 +438,9 @@ def value_live(chains: List[dict], meta: Dict[int, Dict[str, dict]], prices: Dic
         "unmeasuredChains": sorted(set(UNMEASURED_CHAINS if unmeasured is None else unmeasured)),
         "chains": [{"chainId": c["chainId"], "block": c["block"], "blockTimestamp": c["blockTimestamp"],
                     "since": c["since"], "lastAllocated": c["lastAllocated"],
-                    "allocationAero": c["chainAllocation"] / 1e18, "claimsScanned": c["claimsScanned"]} for c in chains],
+                    "allocationAero": c["chainAllocation"] / 1e18, "claimsScanned": c["claimsScanned"],
+                    "gaugeListRead": c.get("gaugeListRead", True), "unreadGauges": sorted(c.get("unreadGauges", []))}
+                   for c in chains],
         "gauges": gauges_out,
         "unpricedTokens": sorted(unpriced),
         "priceBasis": "current",
@@ -432,12 +464,13 @@ def value_live(chains: List[dict], meta: Dict[int, Dict[str, dict]], prices: Dic
     price = lambda cid, t: float(prices.get(cid, {}).get(t, 0.0) or 0.0)
     trailing, fees_trailing, deltas, alerts = {}, {}, {}, []
     claims_ok = all(c["claimsScanned"] for c in chains)
+    last_allocated = {c["chainId"]: int(c.get("lastAllocated") or 0) for c in chains}
     for w in WINDOWS:
         snap = pick_snapshot(history, now_ts, w)
-        if not snap:
+        d = window_delta(point, snap, price, last_allocated) if snap else None
+        if not d:
             trailing[w] = fees_trailing[w] = None
             continue
-        d = window_delta(point, snap, price)
         deltas[w] = d
         meta_w = {"snapshotAsOf": int(snap["asOf"]), "snapshotAgeHours": round((now_ts - int(snap["asOf"])) / 3600.0, 2),
                   "claimsComplete": claims_ok, "partial": d["partial"]}
@@ -467,10 +500,13 @@ def value_live(chains: List[dict], meta: Dict[int, Dict[str, dict]], prices: Dic
     for a in alerts:
         logger.warning(f"[position] ALERT {a['type']}: {a['message']}")
 
-    # keep ~daily points for ~10 days; a run within 12 h of the newest point replaces it
-    if history and now_ts - int(history[-1]["asOf"]) < HISTORY_MIN_SPACING:
-        history = history[:-1]
-    history = [h for h in history + [point] if now_ts - int(h["asOf"]) <= HISTORY_MAX_AGE][-HISTORY_MAX_POINTS:]
+    # keep ~daily points for ~10 days; a run within 12 h of the newest point replaces it. A run with no chain
+    # fully measured (claims refused) records nothing and keeps the newest point.
+    if point["chains"]:
+        if history and now_ts - int(history[-1]["asOf"]) < HISTORY_MIN_SPACING:
+            history = history[:-1]
+        history = history + [point]
+    history = [h for h in history if now_ts - int(h["asOf"]) <= HISTORY_MAX_AGE][-HISTORY_MAX_POINTS:]
 
     out["trailing"] = trailing
     out["feesOnly"] = {**_rates(fees_day_total, stake_usd, staked_iaero_usd, stakers_bps, "feesOnly"),
@@ -479,9 +515,12 @@ def value_live(chains: List[dict], meta: Dict[int, Dict[str, dict]], prices: Dic
     out["history"] = history
     out["definitions"].update({
         "trailing": "24h / 7d rates from the change in per-gauge cumulative earnings since the history point closest to "
-                    "24 h (20-36 h old) / 7 d (6-8 d old) before this run, valued at current prices; null until such a point exists",
+                    "24 h (20-36 h old) / 7 d (6-8 d old) before this run, valued at current prices; null until such a point "
+                    "exists or when the two points share no fully measured chain; partial when a chain or gauge is left out",
         "feesOnly": "same figures counting trading fees only (no incentive programs)",
-        "history": "~daily points (<= 10.5 d): per-gauge cumulative token amounts keyed chainId:gauge, claimed + unclaimed",
+        "history": "~daily points (<= 10.5 d): per-gauge cumulative token amounts keyed chainId:gauge, claimed + unclaimed; "
+                   "only chains whose claims were scanned, only gauges read in full (failed reads listed in unread)",
+        "stale": "true when this block could not be rebuilt and the previous one was kept as is",
         "alerts": "gauge_no_earnings_24h (allocated gauge < $1/day over 24h), rate_drop / fees_rate_drop "
                   "(24h < 50% of 7d), negative_delta (cumulative fell: claims not scanned?)",
     })

@@ -19,6 +19,7 @@ from realized_yield import (  # noqa: E402
     WEEK,
     ZERO_ADDRESS,
     WETH_ADDRESS,
+    apy_jump_problem,
     build_estimated_rewards,
     compute_realized,
     dump_yield_history,
@@ -27,6 +28,7 @@ from realized_yield import (  # noqa: E402
     last_completed_epoch,
     latest_funded_epoch,
     merge_yield_history,
+    sanity_problems,
     select_epoch,
 )
 
@@ -92,6 +94,37 @@ class EpochMathTest(unittest.TestCase):
         self.assertFalse(is_sane_apy({"apyPct": 500.01}))
         self.assertFalse(is_sane_apy({"apyPct": float("nan")}))
         self.assertFalse(is_sane_apy({"apyPct": -1.0}))
+
+    def test_unpriced_core_tokens_are_not_sane(self):
+        funded = [{"address": USDC, "amount": 8_300 * 10**6, "decimals": 6, "priceUsd": 1.0}]
+        ok = compute_realized(EPOCH_22_OCT, funded, 4_710_927 * E18, 4_710_930 * E18, 0.6656, 0.802)
+        self.assertEqual(sanity_problems(ok), [])
+        both = compute_realized(EPOCH_22_OCT, funded, 4_710_927 * E18, 4_710_930 * E18, 0.0, 0.0)
+        self.assertEqual((both["apyPct"], both["tvlUSD_1e18"]), (0.0, "0"))     # what would have been published
+        self.assertEqual(sanity_problems(both), ["AERO is unpriced", "iAERO is unpriced",
+                                                 "stakedUSD is 0 with a non-zero stake", "tvlUSD is 0 with a non-zero stake"])
+        self.assertFalse(is_sane_apy(both))
+        st = 4_710_927 * E18
+        self.assertEqual(sanity_problems(compute_realized(EPOCH_22_OCT, funded, st, st, 0.0, 0.802)), ["iAERO is unpriced"])
+        self.assertEqual(sanity_problems(compute_realized(EPOCH_22_OCT, funded, st, st, 0.6656, 0.0)), ["AERO is unpriced"])
+        # an empty stake is not a pricing failure
+        self.assertEqual(sanity_problems(compute_realized(EPOCH_22_OCT, funded, 0, 0, 0.6656, 0.802)), [])
+
+    def test_apy_jump_guard(self):
+        p = lambda apy, ep=EPOCH_22_OCT: {"epoch": ep, "apyPct": apy}
+        hist = {"series": [{"epoch": EPOCH_15_OCT, "apyPct": 10.0}, {"epoch": EPOCH_22_OCT, "apyPct": 40.0}]}
+        self.assertIsNone(apy_jump_problem(p(44.0), {"apyPct": 15.0}, None))
+        self.assertIn("3x the previously published apyPct (15.00%)", apy_jump_problem(p(46.0), {"apyPct": 15.0}, None))
+        # the previous epoch's history entry is frozen for the week: raising 3x per run can't ratchet past it
+        self.assertIsNone(apy_jump_problem(p(29.0), {"apyPct": 15.0}, hist))
+        self.assertIn(f"yield_history epoch {EPOCH_15_OCT}", apy_jump_problem(p(31.0), {"apyPct": 15.0}, hist))
+        self.assertIn(f"yield_history epoch {EPOCH_15_OCT}", apy_jump_problem(p(31.0), {"apyPct": 30.0}, hist))
+        # no positive reference: first run, or 0% published while funding was stale
+        self.assertIsNone(apy_jump_problem(p(300.0), {}, {}))
+        self.assertIsNone(apy_jump_problem(p(300.0), {"apyPct": 0.0}, {"series": []}))
+        self.assertIsNotNone(apy_jump_problem(p(31.0), {"apyPct": 0.0}, hist))
+        # disabled
+        self.assertIsNone(apy_jump_problem(p(300.0), {"apyPct": 15.0}, hist, max_rise=0))
 
 
 class ComputeRealizedTest(unittest.TestCase):
@@ -343,7 +376,7 @@ class MainHookTest(unittest.TestCase):
         import main  # noqa: F401  (imports github/dotenv; no network at import)
         cls.main = main
 
-    def _repo(self, epochs_doc, history=None):
+    def _repo(self, epochs_doc, history=None, estimated=None):
         repo = mock.Mock()
 
         def get_contents(path, ref=None):
@@ -351,18 +384,23 @@ class MainHookTest(unittest.TestCase):
                 return mock.Mock(content=base64.b64encode(json.dumps(epochs_doc).encode()).decode())
             if path == "data/yield_history.json" and history is not None:
                 return mock.Mock(content=base64.b64encode(dump_yield_history(history).encode()).decode())
+            if path == "data/estimated_rewards_usd.json" and estimated is not None:
+                if isinstance(estimated, Exception):
+                    raise estimated
+                return mock.Mock(content=base64.b64encode(json.dumps(estimated).encode()).decode())
             raise FileNotFoundError(path)
         repo.get_contents.side_effect = get_contents
         return repo
 
-    def _run(self, payload, env=None, epochs_doc=None, history=None):
+    def _run(self, payload, env=None, epochs_doc=None, history=None, estimated=None):
         updater = mock.Mock(branch="main")
         envs = {"EPOCH_STAKING_DISTRIBUTOR": DIST, "LIVE_YIELD_ENABLED": "false"}
         envs.update(env or {})
         with mock.patch.dict(os.environ, envs), \
              mock.patch.object(realized_yield, "build_estimated_rewards", return_value=payload) as b:
             changed = self.main._update_realized_yield(
-                self._repo(epochs_doc if epochs_doc is not None else {"epochs": {"1": {"tokens": [USDC]}}}, history),
+                self._repo(epochs_doc if epochs_doc is not None else {"epochs": {"1": {"tokens": [USDC]}}}, history,
+                           estimated),
                 updater, mock.Mock(), mock.Mock())
         return changed, updater, b
 
@@ -394,6 +432,49 @@ class MainHookTest(unittest.TestCase):
         self.assertFalse(changed)
         updater.update_json.assert_not_called()
         updater.update_file.assert_not_called()
+
+    def test_unpriced_core_tokens_are_not_published(self):
+        payload = dict(_payload(EPOCH_22_OCT + WEEK, apy=0.0), aeroPrice_1e18="0", iaeroPrice_1e18="0",
+                       stakedAtEpochStart_1e18=str(4 * 10**24), stakedUSD_1e18="0")
+        changed, updater, _ = self._run(payload, history=_keeper_history())
+        self.assertFalse(changed)
+        updater.update_json.assert_not_called()
+        updater.update_file.assert_not_called()
+
+    def test_apy_jump_is_not_published(self):
+        prev = {"apyPct": 13.0, "live": {"stakeId": 1584}}
+        changed, updater, _ = self._run(_payload(EPOCH_22_OCT + WEEK, apy=13.0 * 3 + 1), history=_keeper_history(),
+                                        estimated=prev)
+        self.assertFalse(changed)
+        updater.update_json.assert_not_called()
+        updater.update_file.assert_not_called()
+        with mock.patch.object(self.main, "_build_live_block", return_value={"stale": False}):
+            changed, updater, _ = self._run(_payload(EPOCH_22_OCT + WEEK, apy=36.0), history=_keeper_history(),
+                                            estimated=prev, env={"APY_MAX_RISE": "3"})
+        self.assertTrue(changed)
+        changed, _, _ = self._run(_payload(EPOCH_22_OCT + WEEK, apy=60.0), history=_keeper_history(), estimated=prev,
+                                  env={"APY_MAX_RISE": "0"})                     # owner override
+        self.assertTrue(changed)
+
+    def test_unreadable_previous_file_is_not_overwritten(self):
+        err = Exception('503 {"message": "Service Unavailable"}')
+        with mock.patch.object(self.main, "_build_live_block") as bl:
+            changed, updater, _ = self._run(_payload(EPOCH_22_OCT + WEEK), env={"LIVE_YIELD_ENABLED": "true"},
+                                            history=_keeper_history(), estimated=err)
+        self.assertFalse(changed)
+        bl.assert_not_called()
+        updater.update_json.assert_not_called()
+        updater.update_file.assert_not_called()
+
+    def test_live_failure_keeps_previous_block_flagged_stale(self):
+        prev_live = {"method": "live_position", "stale": False, "stakeId": 1584, "history": [{"asOf": 1}],
+                     "gauges": [{"chainId": 8453, "gauge": "0x" + "a3" * 20}]}
+        with mock.patch.object(self.main, "_build_live_block", side_effect=RuntimeError("429 Too Many Requests")) as bl:
+            changed, updater, _ = self._run(_payload(EPOCH_22_OCT + WEEK), env={"LIVE_YIELD_ENABLED": "true"},
+                                            history=_keeper_history(), estimated={"apyPct": 13.0, "live": prev_live})
+        self.assertTrue(changed)
+        self.assertEqual(bl.call_args.args[3], prev_live)
+        self.assertEqual(updater.update_json.call_args.args[1]["live"], dict(prev_live, stale=True))
 
     def test_skips_when_epochs_json_unavailable(self):
         updater = mock.Mock(branch="main")

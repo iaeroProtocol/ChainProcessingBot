@@ -13,6 +13,8 @@ Epoch E (weeks start Thursday 00:00 UTC, E = ts // WEEK * WEEK) is chosen by mod
   apyPct         = weeklyYieldPct * 52            (simple annualisation, no compounding)
 
 Prices are CURRENT prices from PriceFetcher, not prices at funding time.
+Not published (main.py logs and keeps the previous files) when sanity_problems() finds anything (apyPct NaN,
+negative or > 500%; AERO or iAERO unpriced; a zero USD stake) or apy_jump_problem() sees apyPct above 3x its reference.
 Readers of estimated_rewards_usd.json: TwitterBot (apyPct), DefiLlama yield-server iaero-protocol
 (apyPct, tvlUSD_1e18), iaero-frontend (stakersWeeklyUSD_1e18, estimatedWeeklyUSD_1e18).
 All legacy fields are kept with the same names and units; new fields are only added.
@@ -40,6 +42,7 @@ IAERO_ADDRESS = "0x81034Fb34009115F215f5d5F564AAc9FfA46a1Dc"
 EPOCH_MODES = ("latest_funded", "last_completed")
 STALE_AFTER_SEC = 2 * WEEK      # latest funded epoch older than this -> publish 0, not a stale figure
 MAX_SANE_APY_PCT = 500.0        # above this, don't publish (likely a bad price), log and skip
+MAX_APY_RISE = 3.0              # apyPct above 3x the reference (see apy_jump_problem) -> don't publish, log and skip
 
 # Split of harvested rewards (RewardsHarvesterV2.processAndDistribute): 80% goes to the
 # EpochStakingDistributor, so the realized funding IS the stakers' share.
@@ -91,9 +94,68 @@ def select_epoch(epochs_doc: dict, now_ts: int, mode: str = "latest_funded") -> 
     return ep, (int(now_ts) - ep) > STALE_AFTER_SEC
 
 
-def is_sane_apy(payload: dict) -> bool:
+def _int(x) -> int:
+    try:
+        return int(x)
+    except (TypeError, ValueError):
+        return 0
+
+
+def sanity_problems(payload: dict) -> List[str]:
+    """Reasons not to publish `payload` (empty -> publishable). Fields missing from `payload` aren't checked."""
+    out = []
     apy = payload.get("apyPct")
-    return isinstance(apy, (int, float)) and math.isfinite(apy) and 0 <= apy <= MAX_SANE_APY_PCT
+    if not (isinstance(apy, (int, float)) and math.isfinite(apy) and 0 <= apy <= MAX_SANE_APY_PCT):
+        out.append(f"apyPct={apy} is NaN, negative or above {MAX_SANE_APY_PCT}%")
+    # core prices: a failed AERO / iAERO price would publish apyPct 0 and tvlUSD 0
+    if "aeroPrice_1e18" in payload and _int(payload["aeroPrice_1e18"]) <= 0:
+        out.append("AERO is unpriced")
+    if payload.get("usedFallbackPrice") or ("iaeroPrice_1e18" in payload and _int(payload["iaeroPrice_1e18"]) <= 0):
+        out.append("iAERO is unpriced")
+    if _int(payload.get("stakedAtEpochStart_1e18")) > 0 and _int(payload.get("stakedUSD_1e18", 1)) <= 0:
+        out.append("stakedUSD is 0 with a non-zero stake")
+    if _int(payload.get("totalStaked_1e18")) > 0 and _int(payload.get("tvlUSD_1e18", 1)) <= 0:
+        out.append("tvlUSD is 0 with a non-zero stake")
+    return out
+
+
+def is_sane_apy(payload: dict) -> bool:
+    return not sanity_problems(payload)
+
+
+def _positive(x) -> bool:
+    return isinstance(x, (int, float)) and math.isfinite(x) and x > 0
+
+
+def apy_jump_problem(payload: dict, prev_doc: Optional[dict], history_doc: Optional[dict],
+                     max_rise: float = MAX_APY_RISE) -> Optional[str]:
+    """
+    Reason not to publish when payload's apyPct is more than `max_rise` x the reference, else None.
+    Reference = the lower of the previously published apyPct (prev_doc) and the newest yield_history entry for
+    an EARLIER epoch than payload's: that entry is frozen for the week, so repeated small raises can't ratchet
+    past the guard. No positive reference (first run, or 0% published while funding was stale) -> no check.
+    max_rise <= 0 disables the check.
+    """
+    if not max_rise or max_rise <= 0:
+        return None
+    refs = []
+    prev = (prev_doc or {}).get("apyPct") if isinstance(prev_doc, dict) else None
+    if _positive(prev):
+        refs.append((float(prev), "the previously published apyPct"))
+    series = (history_doc or {}).get("series") if isinstance(history_doc, dict) else None
+    ep = _int(payload.get("epoch"))
+    older = [x for x in (series if isinstance(series, list) else [])
+             if isinstance(x, dict) and _int(x.get("epoch")) < ep and _positive(x.get("apyPct"))]
+    if older:
+        last = max(older, key=lambda x: _int(x.get("epoch")))
+        refs.append((float(last["apyPct"]), f"yield_history epoch {_int(last.get('epoch'))}"))
+    apy = payload.get("apyPct")
+    if not refs or not isinstance(apy, (int, float)):
+        return None
+    ref, name = min(refs)
+    if apy > max_rise * ref:
+        return f"apyPct {apy:.2f}% is more than {max_rise:g}x {name} ({ref:.2f}%)"
+    return None
 
 
 def _to_1e18(x: Decimal) -> str:
@@ -129,7 +191,7 @@ def compute_realized(
     iaero_px = Decimal(str(iaero_price or 0.0))
     used_fallback = False
     if iaero_px <= 0 and aero_px > 0:
-        # same fallback as the legacy keeper: iAERO ~= AERO (1:1)
+        # same fallback as the legacy keeper: iAERO ~= AERO (1:1); flagged, and sanity_problems() won't publish it
         iaero_px = aero_px
         used_fallback = True
 

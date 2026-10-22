@@ -119,6 +119,34 @@ class ReadChainPositionTest(unittest.TestCase):
         self.assertFalse(ch["claimsScanned"])
         self.assertTrue(all(g["claimed"] == {} for g in ch["gauges"]))
 
+    def test_failed_reads_are_reported(self):
+        a = base_answers()
+        del a[(VRM_V2, "earnedFees(uint256,uint256)", (1584, 10_000))]
+        del a[(VRM_V2, "earnedFees(uint256,uint256)", (1584, 20_000))]        # v2 fees unknown
+        ch = pe.read_chain_position(FakeReader(a, logs=[]), 1584, registry=pe.FACTORY_REGISTRY_BASE, extra_gauges=(G_OLD,))
+        self.assertEqual(sorted(ch["unreadGauges"]), sorted([G_OLD, G_V2]))   # G_OLD: no VRM; G_V2: fees failed
+        self.assertTrue(ch["gaugeListRead"])
+        self.assertEqual([g["readOk"] for g in ch["gauges"]], [True, False])
+        # only the 2x-checkpoint read answered: it is used (it was read as 0 before)
+        del a[(VRM_CL, "earnedFees(uint256,uint256)", (1584, 10_000))]
+        cl = pe.read_chain_position(FakeReader(a, logs=[]), 1584, registry=pe.FACTORY_REGISTRY_BASE)["gauges"][0]
+        self.assertEqual((cl["fees"][USDC], cl["readOk"]), (30 * 10**6, True))
+        # a failed incentive read
+        a = base_answers()
+        del a[(VRM_V2, "earnedIncentives(uint256,uint256,uint256)", (1584, 2, 10_000))]
+        del a[(VRM_V2, "earnedIncentives(uint256,uint256,uint256)", (1584, 2, 20_000))]
+        ch = pe.read_chain_position(FakeReader(a, logs=[]), 1584, registry=pe.FACTORY_REGISTRY_BASE)
+        self.assertEqual(ch["unreadGauges"], [G_V2])
+        # allocatedGauges itself failed
+        del a[(LV, "allocatedGauges(uint256)", (1584,))]
+        self.assertFalse(pe.read_chain_position(FakeReader(a, logs=[]), 1584)["gaugeListRead"])
+
+    def test_no_gauges_means_claims_complete(self):
+        a = {(LV, "allocatedGauges(uint256)", (1584,)): [], (LV, "tokenStates(uint256)", (1584,)): (pe.ZERO, T0, False, 0)}
+        r = FakeReader(a, logs=None)
+        ch = pe.read_chain_position(r, 1584)
+        self.assertEqual((ch["claimsScanned"], ch["gaugeListRead"], ch["gauges"], r.log_calls), (True, True, [], []))
+
     def test_revote_keeps_first_allocation_and_previous_gauges(self):
         a = base_answers()
         a[(LV, "tokenStates(uint256)", (1584,))] = (pe.ZERO, T0 + 2 * DAY, False, 900 * E18)  # re-voted Sat
@@ -316,6 +344,69 @@ class TrailingTest(unittest.TestCase):
         self.assertTrue(live["trailing"]["24h"]["partial"])
         self.assertAlmostEqual(live["trailing"]["24h"]["usdPerDay"], 10.0)   # Base only
         self.assertIn(f"1:{'0x' + 'dd' * 20}", live["history"][-1]["gauges"])
+
+    def _chain_at(self, now, gauges, cid=8453, claims=True, last_alloc=T0, unread=(), gauge_list=True):
+        c = _chain(cid, T0, now, 1, gauges)
+        c.update(claimsScanned=claims, lastAllocated=last_alloc, unreadGauges=list(unread), gaugeListRead=gauge_list)
+        return c
+
+    def _value(self, chains, now, history=None):
+        return pe.value_live(chains, META, PRICES, 1584, 1_000_000 * E18, 0.8, 600_000.0, now_ts=now, prev_history=history)
+
+    def test_run_without_claims_records_no_point(self):
+        hist = [self.point(DAY, 90, 0)]
+        live = self._value([self._chain_at(self.NOW, [_g2(G_CL, fees={USDC: 5 * 10**6})], claims=False)], self.NOW, hist)
+        self.assertEqual(live["history"], hist)                      # newest point kept, nothing appended
+        self.assertIsNone(live["trailing"]["24h"])                   # no chain with claims at both ends
+        # 3 h after a good point: a run without claims does not replace it
+        recent = [self.point(3 * 3600, 90, 0)]
+        live = self._value([self._chain_at(self.NOW, [_g2(G_CL)], claims=False)], self.NOW, recent)
+        self.assertEqual(live["history"], recent)
+        live = self._value([self._chain_at(self.NOW, [_g2(G_CL)], gauge_list=False)], self.NOW, recent)
+        self.assertEqual(live["history"], recent)
+
+    def test_chain_without_claims_is_left_out_of_the_point(self):
+        G_E = "0x" + "dd" * 20
+        live = self._value([self._chain_at(self.NOW, [_g2(G_CL, fees={USDC: 5 * 10**6})]),
+                            self._chain_at(self.NOW, [_g2(G_E, fees={"0xusdt": 7 * 10**6})], cid=1, claims=False)], self.NOW)
+        (pt,) = live["history"]
+        self.assertEqual((pt["chains"], list(pt["gauges"])), ([8453], [f"8453:{G_CL}"]))
+        self.assertAlmostEqual(live["accruedUSD"], 12.0)             # the since-allocation figures still count it
+
+    def test_unread_gauge_is_not_recorded_and_not_counted_later(self):
+        bad = _g2(G_V2, fees={USDC: 1 * 10**6})
+        bad["readOk"] = False
+        day9 = self._value([self._chain_at(self.NOW - DAY, [_g2(G_CL, fees={USDC: 10 * 10**6}), bad],
+                                           unread=[G_V2])], self.NOW - DAY)
+        (pt,) = day9["history"]
+        self.assertEqual((list(pt["gauges"]), pt["unread"]), ([f"8453:{G_CL}"], [f"8453:{G_V2}"]))
+        # today both read in full, and the stake re-voted after yesterday's point: G_V2 still isn't "new"
+        live = self._value([self._chain_at(self.NOW, [_g2(G_CL, fees={USDC: 20 * 10**6}), _g2(G_V2, fees={USDC: 500 * 10**6})],
+                                           last_alloc=self.NOW - 3600)], self.NOW, day9["history"])
+        t24 = live["trailing"]["24h"]
+        self.assertTrue(t24["partial"])
+        self.assertAlmostEqual(t24["usdPerDay"], 10.0)
+        self.assertIsNone(live["gauges"][1]["usdPerDay24h"])
+
+    def test_gauge_missing_from_snapshot_counts_only_after_a_reallocation(self):
+        G2 = "0x" + "a9" * 20
+        hist = [self.point(DAY, 90, 0)]                              # G2 not in yesterday's point
+        gauges = [_g2(G_CL, fees={USDC: 100 * 10**6}), _g2(G2, fees={USDC: 30 * 10**6})]
+        # no re-vote since yesterday: G2 should have been there -> left out, partial
+        live = self._value([self._chain_at(self.NOW, gauges, last_alloc=self.NOW - 3 * DAY)], self.NOW, hist)
+        self.assertTrue(live["trailing"]["24h"]["partial"])
+        self.assertAlmostEqual(live["trailing"]["24h"]["usdPerDay"], 10.0)
+        # re-voted onto G2 after yesterday's point: it is new, and all of it was earned since
+        live = self._value([self._chain_at(self.NOW, gauges, last_alloc=self.NOW - 6 * 3600)], self.NOW, hist)
+        self.assertFalse(live["trailing"]["24h"]["partial"])
+        self.assertAlmostEqual(live["trailing"]["24h"]["usdPerDay"], 40.0)
+
+    def test_gauge_missing_now_flags_partial(self):
+        G2 = "0x" + "a9" * 20
+        hist = [self.point(DAY, 90, 0, extra={f"8453:{G2}": {"fees": {USDC: 5.0}, "incentives": {}}})]
+        live = self._value([self._chain_at(self.NOW, [_g2(G_CL, fees={USDC: 100 * 10**6})])], self.NOW, hist)
+        self.assertTrue(live["trailing"]["24h"]["partial"])
+        self.assertAlmostEqual(live["trailing"]["24h"]["usdPerDay"], 10.0)
 
     def test_spikes_in_trailing_rates_are_omitted(self):
         hist = [self.point(DAY, 0, 0)]

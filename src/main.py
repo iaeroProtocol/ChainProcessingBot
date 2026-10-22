@@ -97,6 +97,25 @@ def _load_json(repo, branch: str, path: str) -> dict:
     except Exception:
         return {}
 
+def _is_not_found(e: Exception) -> bool:
+    # PyGithub raises UnknownObjectException (status 404, str "404 {...}") for a missing file
+    return isinstance(e, FileNotFoundError) or getattr(e, "status", None) == 404 or str(e).startswith("404")
+
+def _load_json_strict(repo, branch: str, path: str) -> dict:
+    """Like _load_json, but only a missing (404) or unparseable file reads as {}; any other read error raises."""
+    try:
+        f = repo.get_contents(path, ref=branch)
+    except Exception as e:
+        if _is_not_found(e):
+            return {}
+        raise
+    try:
+        doc = json.loads(base64.b64decode(f.content).decode("utf-8"))
+    except Exception as e:
+        logger.warning(f"[GitHub] {path} is not valid JSON ({e}); treating it as empty")
+        return {}
+    return doc if isinstance(doc, dict) else {}
+
 def _update_stakers(repo, updater: GitHubUpdater, scanner: ChainScanner) -> bool:
     """
     Incrementally track stiAERO holders via Transfer logs and publish balances.
@@ -280,7 +299,7 @@ def _update_staker_rewards(repo, updater: GitHubUpdater) -> bool:
     aerodrome_factory = os.environ.get("AERODROME_FACTORY")
     usdc_addr = os.environ.get("USDC_ADDRESS") or "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
     weth_addr = os.environ.get("WETH_ADDRESS") or "0x4200000000000000000000000000000000000006"
-    max_price_usd = float(os.environ.get("MAX_PRICE_USD", "50000"))
+    max_price_usd = float(os.environ.get("MAX_PRICE_USD", "10000000"))
 
     from staker_rewards import build_staker_rewards
     payload = build_staker_rewards(
@@ -320,7 +339,7 @@ def _update_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner, 
         logger.warning("[realized_yield] epochs.json missing/empty; skipping.")
         return False
 
-    from realized_yield import build_estimated_rewards, is_sane_apy, AERO_ADDRESS
+    from realized_yield import build_estimated_rewards, sanity_problems, apy_jump_problem, AERO_ADDRESS
     payload = build_estimated_rewards(
         w3=scanner.w3,
         distributor=distributor,
@@ -331,25 +350,51 @@ def _update_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner, 
         iaero=os.environ.get("IAERO_ADDRESS"),
         epoch_mode=os.environ.get("ESTIMATED_REWARDS_EPOCH", "latest_funded").lower(),
     )
-    if not is_sane_apy(payload):
+    problems = sanity_problems(payload)
+    if problems:
         logger.error(
-            f"[realized_yield] apyPct={payload.get('apyPct')} for epoch {payload.get('epoch')} fails the sanity guard "
-            f"(funded ${payload.get('fundedUSD_human')}, staked ${payload.get('stakedUSD_human')}); NOT publishing."
+            f"[realized_yield] epoch {payload.get('epoch')} fails the sanity guard ({'; '.join(problems)}; apyPct="
+            f"{payload.get('apyPct')}, funded ${payload.get('fundedUSD_human')}, staked ${payload.get('stakedUSD_human')}); "
+            f"NOT publishing."
         )
+        _log_status({"event": "realized_yield_blocked", "reasons": problems})
+        return False
+
+    path = os.environ.get("ESTIMATED_REWARDS_JSON_PATH", "data/estimated_rewards_usd.json")
+    try:
+        prev_doc = _load_json_strict(repo, updater.branch, path)
+    except Exception as e:
+        # publishing now could drop the live block (and its history) and skips the jump guard below
+        logger.error(f"[realized_yield] could not read {path} ({str(e)[:160]}); NOT publishing this run.")
+        _log_status({"event": "realized_yield_blocked", "reasons": [f"{path} unreadable"]})
+        return False
+    history_doc = _load_json(repo, updater.branch, os.environ.get("YIELD_HISTORY_JSON_PATH", "data/yield_history.json"))
+    jump = apy_jump_problem(payload, prev_doc, history_doc, float(os.environ.get("APY_MAX_RISE", "3")))
+    if jump:
+        logger.error(
+            f"[realized_yield] epoch {payload.get('epoch')}: {jump} (funded ${payload.get('fundedUSD_human')}, "
+            f"staked ${payload.get('stakedUSD_human')}, unpriced {payload.get('unpricedTokens')}); likely a bad price. "
+            f"NOT publishing; the previous files stay. Set APY_MAX_RISE to override after checking."
+        )
+        _log_status({"event": "realized_yield_blocked", "reasons": [jump]})
         return False
 
     changed = False
     if yh_enabled:
         changed = _update_yield_history(repo, updater, payload) or changed
     if er_enabled:
-        path = os.environ.get("ESTIMATED_REWARDS_JSON_PATH", "data/estimated_rewards_usd.json")
         if os.environ.get("LIVE_YIELD_ENABLED", "true").lower() == "true":
             # additional real-time block; apyPct and every legacy field are untouched
+            prev_live = prev_doc.get("live")
             try:
-                prev_live = _load_json(repo, updater.branch, path).get("live")
-                payload = dict(payload, live=_build_live_block(scanner, price_fetcher, payload, prev_live))
+                live = _build_live_block(scanner, price_fetcher, payload, prev_live)
             except Exception as e:
-                logger.exception(f"[position] live block failed; publishing without it: {e}")
+                # keep the previous block (its history and gauge list) rather than publishing without it
+                live = dict(prev_live, stale=True) if isinstance(prev_live, dict) else None
+                logger.exception(f"[position] live block failed; "
+                                 f"{'keeping the previous block, flagged stale' if live else 'publishing without it'}: {e}")
+            if live is not None:
+                payload = dict(payload, live=live)
         changed = _push_if_changed(repo, updater, path, payload) or changed
     return changed
 
@@ -477,7 +522,7 @@ def _run_once() -> bool:
     aerodrome_factory = os.environ.get("AERODROME_FACTORY")
     usdc_addr = os.environ.get("USDC_ADDRESS") or "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
     weth_addr = os.environ.get("WETH_ADDRESS") or "0x4200000000000000000000000000000000000006"
-    max_price_usd = float(os.environ.get("MAX_PRICE_USD", "50000"))
+    max_price_usd = float(os.environ.get("MAX_PRICE_USD", "10000000"))   # BTC wrappers trade above $50k
 
     # Behavior / filters
     force_update = os.environ.get("FORCE_UPDATE", "false").lower() == "true"
