@@ -303,6 +303,36 @@ def _update_staker_rewards(repo, updater: GitHubUpdater) -> bool:
     # push only if changed
     return _push_if_changed(repo, updater, out_path, payload)
 
+def _update_estimated_rewards(repo, updater: GitHubUpdater, scanner: ChainScanner, price_fetcher: PriceFetcher) -> bool:
+    """
+    Publish realized staking APY (last completed epoch) to data/estimated_rewards_usd.json.
+    Replaces the estimate from the legacy EnhancedOptimizedVotesKeeper; same schema plus new fields.
+    """
+    if os.environ.get("ESTIMATED_REWARDS_ENABLED", "true").lower() != "true":
+        return False
+    path = os.environ.get("ESTIMATED_REWARDS_JSON_PATH", "data/estimated_rewards_usd.json")
+    distributor = os.environ.get("EPOCH_STAKING_DISTRIBUTOR")
+    if not distributor:
+        return False
+
+    epochs_doc = _load_json(repo, updater.branch, os.environ.get("EPOCHS_JSON_PATH", "data/epochs.json"))
+    if not epochs_doc.get("epochs"):
+        # never publish a 0% APY because epochs.json failed to load
+        logger.warning("[estimated_rewards] epochs.json missing/empty; skipping.")
+        return False
+
+    from realized_yield import build_estimated_rewards, AERO_ADDRESS
+    payload = build_estimated_rewards(
+        w3=scanner.w3,
+        distributor=distributor,
+        epochs_doc=epochs_doc,
+        price_fetcher=price_fetcher,
+        decimals_fn=lambda toks: scanner.decimals_map(toks, chunk_size=int(os.environ.get("DEC_CHUNK_SIZE", "75")), default_decimals=18),
+        aero=os.environ.get("AERO_ADDRESS") or AERO_ADDRESS,
+        iaero=os.environ.get("IAERO_ADDRESS"),
+    )
+    return _push_if_changed(repo, updater, path, payload)
+
 def _stable_json_bytes(obj) -> bytes:
     # stable formatting ensures reproducible hashes
     return json.dumps(obj, sort_keys=True, separators=(",", ":")).encode("utf-8")
@@ -668,8 +698,31 @@ def _run_once() -> bool:
         logger.exception(f"[staker_rewards] failed: {e}")
         _log_status({"event": "staker_rewards", "error": str(e), "triggers": sr_triggers})
 
-    _log_status({"event": "run_end", "any_changed": bool(changed_rewards or st_changed or epochs_changed or sr_changed)})
-    return changed_rewards or st_changed or epochs_changed or sr_changed
+    # === realized APY -> data/estimated_rewards_usd.json (daily) ===
+    er_changed = False
+    try:
+        er_pf = PriceFetcher(
+            chain_slug="base",
+            cache_file="price_cache.json",
+            ttl_sec=300,
+            rpc_url=rpc_url,
+            aerodrome_factory=aerodrome_factory,
+            usdc=usdc_addr,
+            weth=weth_addr,
+            max_price_usd=max_price_usd,
+        )
+        er_changed = _update_estimated_rewards(repo, updater, scanner, er_pf)
+        if er_changed:
+            logger.info("[estimated_rewards] Published realized APY to estimated_rewards_usd.json")
+        else:
+            logger.info("[estimated_rewards] No change; skipped commit.")
+        _log_status({"event": "estimated_rewards", "changed": er_changed})
+    except Exception as e:
+        logger.exception(f"[estimated_rewards] failed: {e}")
+        _log_status({"event": "estimated_rewards", "error": str(e)})
+
+    _log_status({"event": "run_end", "any_changed": bool(changed_rewards or st_changed or epochs_changed or sr_changed or er_changed)})
+    return changed_rewards or st_changed or epochs_changed or sr_changed or er_changed
 
 
 
