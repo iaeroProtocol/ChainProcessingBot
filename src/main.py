@@ -350,7 +350,7 @@ def _claims_state_due(old: dict, new: dict) -> bool:
         return True
     for cid, n in nc.items():
         o = oc.get(cid) or {}
-        if o.get("since") != n.get("since") or o.get("vrms") != n.get("vrms") or o.get("gauges") != n.get("gauges"):
+        if any(o.get(k) != n.get(k) for k in ("since", "vrms", "gauges", "unverified", "anyFrom")):
             return True
         if int(n.get("blockTimestamp") or 0) - int(o.get("blockTimestamp") or 0) >= LIVE_STATE_REWRITE_SEC:
             return True

@@ -159,6 +159,9 @@ class SimReader:
     def block_at(self, ts):
         return max(0, min(self.block, self.sim.block_of(ts)))
 
+    def call_one(self, target, sig, args, out_types, gas=300_000):
+        return self.many([(target, sig, args, out_types)])[0]
+
     def logs(self, addresses, topics, from_block, to_block=None, **kw):
         """addresses None: any contract (the discovery scan); the sim's claims all come from its VRM."""
         self.sim.log_calls.append(int(from_block))

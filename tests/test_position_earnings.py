@@ -41,6 +41,9 @@ class FakeReader:
     def block_at(self, ts):
         return 1
 
+    def call_one(self, target, sig, args, out_types, gas=300_000):
+        return self.many([(target, sig, args, out_types)])[0]
+
     def logs(self, addresses, topics, from_block, to_block=None, step=10_000):
         """addresses None: any contract (the discovery scan), recorded as None."""
         self.log_calls.append((None if addresses is None else sorted(a.lower() for a in addresses), topics, from_block))
@@ -528,6 +531,19 @@ class ChainReaderTest(unittest.TestCase):
         self.assertIsNone(out[3])                              # empty return data -> None
         self.assertEqual((r.block, r.block_ts), (123, NOW))
 
+    def test_call_one_is_a_single_gas_capped_call(self):
+        w3, _ = self._w3(lambda t, d: b"")
+        codec = Web3().codec
+        w3.eth.call.return_value = codec.encode(["address"], [Web3.to_checksum_address(G_CL)])
+        r = pe.ChainReader(w3, 8453, block=77)
+        self.assertEqual(r.call_one(VRM_CL, "gauge()", [], ["address"], gas=300_000).lower(), G_CL)
+        tx, = w3.eth.call.call_args.args
+        self.assertEqual((tx["gas"], tx["to"].lower(), bytes(tx["data"]), w3.eth.call.call_args.kwargs),
+                         (300_000, VRM_CL, keccak(text="gauge()")[:4], {"block_identifier": 77}))
+        w3.eth.call.side_effect = ValueError("out of gas")
+        with self.assertRaises(ValueError):
+            r.call_one(VRM_CL, "gauge()", [], ["address"])
+
     def test_rate_limit_is_retried(self):
         w3, calls = self._w3(lambda t, d: Web3().codec.encode(["uint256"], [7]), fail_first=2)
         with mock.patch.object(pe.time, "sleep") as sl:
@@ -550,12 +566,14 @@ class BlockLogsReader(FakeReader):
         return self.since_block
 
     def logs(self, addresses, topics, from_block, to_block=None, step=10_000):
-        self.log_calls.append((None if addresses is None else sorted(a.lower() for a in addresses), topics, from_block))
+        self.log_calls.append((None if addresses is None else sorted(a.lower() for a in addresses), topics, from_block,
+                               to_block))
         if self.fail or (addresses is None and self.need_address):
             return None
         want = None if addresses is None else {a.lower() for a in addresses}
         tb = self.block if to_block is None else min(to_block, self.block)
-        return [lg for b, lg in self.block_logs if from_block <= b <= tb and (want is None or lg["address"].lower() in want)]
+        return [dict(lg, blockNumber=b) for b, lg in self.block_logs
+                if from_block <= b <= tb and (want is None or lg["address"].lower() in want)]
 
 
 FEE_USDC = lambda amt: _log(VRM_V2, pe.CLAIM_FEES_TOPIC, bytes(12) + bytes.fromhex(USDC[2:]), amt)
@@ -570,18 +588,22 @@ class IncrementalClaimsTest(unittest.TestCase):
     def read(self, reader, state):
         return pe.read_chain_position(reader, 1584, registry=pe.FACTORY_REGISTRY_BASE, claims_state=state)
 
+    SEEN = {G_CL: {"firstSeen": NOW - 3600, "firstActive": True}, G_V2: {"firstSeen": NOW - 3600, "firstActive": True}}
+
     def state(self, block=900, v2_fees=None, cl=True):
         vrms = {VRM_V2: {"fees": dict(v2_fees or {USDC: 2 * 10**6}), "incentives": {AERO: 4 * E18}}}
         if cl:
             vrms[VRM_CL] = {"fees": {}, "incentives": {}}
-        return {"since": T0, "block": block, "blockTimestamp": NOW - 3600, "gauges": sorted([G_CL, G_V2]), "vrms": vrms}
+        return {"since": T0, "sinceBlock": 10, "block": block, "blockTimestamp": NOW - 3600, "anyFrom": 10,
+                "gauges": dict(self.SEEN), "unverified": {}, "vrms": vrms}
 
     def test_first_run_scans_from_the_allocation_and_records_every_vrm(self):
         r = BlockLogsReader(base_answers(), [(500, FEE_USDC(2 * 10**6)), (600, INC_AERO(4 * E18))])
         ch = self.read(r, None)
         self.assertEqual([(c[0], c[2]) for c in r.log_calls], [(None, 10)])      # once, from block_at(since)
-        self.assertEqual(ch["claimsState"], {"since": T0, "block": 1000, "blockTimestamp": NOW,
-                                             "gauges": sorted([G_CL, G_V2]), "vrms": {
+        seen = {"firstSeen": NOW, "firstActive": True}
+        self.assertEqual(ch["claimsState"], {"since": T0, "sinceBlock": 10, "block": 1000, "blockTimestamp": NOW,
+                                             "anyFrom": 10, "gauges": {G_CL: seen, G_V2: seen}, "unverified": {}, "vrms": {
             VRM_V2: {"fees": {USDC: 2 * 10**6}, "incentives": {AERO: 4 * E18}},
             VRM_CL: {"fees": {}, "incentives": {}}}})                   # scanned, no claims: not rescanned later
         self.assertEqual(ch["gauges"][1]["claimed"], {USDC: 2 * 10**6, AERO: 4 * E18})
@@ -635,17 +657,38 @@ class IncrementalClaimsTest(unittest.TestCase):
             self.assertEqual([(c[0], c[2]) for c in r.log_calls], [(None, 10)], state)
             self.assertEqual(ch["claimsState"]["vrms"][VRM_V2]["fees"], {USDC: 3 * 10**6})
 
-    def test_a_new_vrm_is_scanned_from_the_allocation(self):
-        state = self.state(cl=False)
-        state["vrms"][VRM_V2] = {"fees": {USDC: 2 * 10**6}, "incentives": {}}
+    def test_a_new_vrm_is_rescanned_only_where_address_less_scans_did_not_cover_it(self):
         cl_fee = _log(VRM_CL, pe.CLAIM_FEES_TOPIC, bytes(12) + bytes.fromhex(USDC[2:]), 5 * 10**6)
         cl_fee2 = _log(VRM_CL, pe.CLAIM_FEES_TOPIC, bytes(12) + bytes.fromhex(USDC[2:]), 1 * 10**6)
-        r = BlockLogsReader(base_answers(), [(500, FEE_USDC(2 * 10**6)), (300, cl_fee), (990, cl_fee2)])
-        ch = self.read(r, state)
-        # known from 901 (any contract), the new VRM's earlier history from block_at(since) up to 900
-        self.assertEqual([(c[0], c[2]) for c in r.log_calls], [(None, 901), ([VRM_CL], 10)])
+        logs = [(500, FEE_USDC(2 * 10**6)), (300, cl_fee), (990, cl_fee2)]
+
+        def run(any_from, logs=logs):
+            state = self.state(cl=False)
+            state["vrms"][VRM_V2] = {"fees": {USDC: 2 * 10**6}, "incentives": {}}
+            state["anyFrom"] = any_from
+            r = BlockLogsReader(base_answers(), logs)
+            return r, self.read(r, state)
+        # no address-less coverage on record (per-VRM scans so far): from block_at(since) up to 900
+        r, ch = run(None)
+        self.assertEqual([(c[0], c[2], c[3]) for c in r.log_calls], [(None, 901, None), ([VRM_CL], 10, 900)])
         self.assertEqual(ch["gauges"][0]["claimedFees"], {USDC: 6 * 10**6})       # 5 (block 300) + 1 (block 990)
         self.assertEqual(ch["gauges"][1]["claimedFees"], {USDC: 2 * 10**6})
+        self.assertEqual(ch["claimsState"]["anyFrom"], 901)                      # covered from here on
+        # address-less scans since block 400: only the range before it (review 9 L-3)
+        r, ch = run(400)
+        self.assertEqual([(c[0], c[2], c[3]) for c in r.log_calls], [(None, 901, None), ([VRM_CL], 10, 399)])
+        self.assertEqual(ch["gauges"][0]["claimedFees"], {USDC: 6 * 10**6})
+        # covered since the first allocation: no rescan at all (any claim before would have been seen)
+        r, ch = run(10, logs=[(500, FEE_USDC(2 * 10**6)), (990, cl_fee2)])
+        self.assertEqual([(c[0], c[2]) for c in r.log_calls], [(None, 901)])
+        self.assertEqual(ch["gauges"][0]["claimedFees"], {USDC: 1 * 10**6})
+        self.assertEqual(ch["claimsState"]["anyFrom"], 10)
+
+    def test_per_vrm_fallback_breaks_the_coverage(self):
+        r = BlockLogsReader(base_answers(), [(950, FEE_USDC(1 * 10**6))])
+        r.need_address = True
+        ch = self.read(r, self.state())
+        self.assertIsNone(ch["claimsState"]["anyFrom"])
 
     def test_rpc_behind_the_state_means_claims_unknown(self):
         state = self.state(block=2000)
@@ -658,7 +701,8 @@ class IncrementalClaimsTest(unittest.TestCase):
         r = BlockLogsReader(base_answers(), [(500, FEE_USDC(2 * 10**6)), (600, unknown)])
         ch = self.read(r, None)
         self.assertFalse(ch["claimsScanned"])
-        self.assertEqual(ch["claimsState"], {"gauges": sorted([G_CL, G_V2])})    # no block: scanned again from since
+        seen = {"firstSeen": NOW, "firstActive": True}
+        self.assertEqual(ch["claimsState"], {"gauges": {G_CL: seen, G_V2: seen}, "unverified": {}})  # no block: rescan
         self.assertEqual(ch["gauges"][1]["claimed"], {})
 
 
@@ -730,20 +774,101 @@ class GaugeDiscoveryTest(unittest.TestCase):
             self.assertNotIn(fake_vrm, ch["claimsState"]["vrms"], variant)
             self.assertTrue(ch["claimsScanned"], variant)                    # never a reason to stall the feed
 
+    def test_emitters_are_checked_one_by_one_and_never_fail_the_read(self):
+        # review 9 L-1: a contract whose gauge() burns all gas (or reverts) is rejected in its own gas-capped call;
+        # it never joins a batch, never fails the chain's read, and is never checked again
+        spoof = "0x" + "e1" * 20
+        calls = []
+
+        class R(BlockLogsReader):
+            def many(self, cs):
+                assert not any(sig == "gauge()" for _, sig, _, _ in cs), "an emitter's gauge() inside a batch"
+                return super().many(cs)
+
+            def call_one(self, target, sig, args, out_types, gas=0):
+                calls.append((target, sig, gas))
+                if target == spoof:
+                    raise ValueError("{'code': -32003, 'message': 'out of gas'}")
+                return super().call_one(target, sig, args, out_types)
+        log = (700, _log(spoof, pe.CLAIM_FEES_TOPIC, bytes(12) + bytes.fromhex(USDC[2:]), 10**12))
+        ch = pe.read_chain_position(R(base_answers(), [log]), 1584, registry=pe.FACTORY_REGISTRY_BASE)
+        self.assertTrue(ch["claimsScanned"])
+        self.assertEqual(calls, [(spoof, "gauge()", pe.VERIFY_GAS)])
+        self.assertEqual(ch["claimsState"]["unverified"], {spoof: {"from": 700, "status": "rejected"}})
+        calls.clear()
+        ch2 = pe.read_chain_position(R(base_answers(), [log], block=1100), 1584, registry=pe.FACTORY_REGISTRY_BASE,
+                                     claims_state=ch["claimsState"])
+        self.assertEqual((calls, ch2["claimsScanned"]), ([], True))               # not checked again
+
+    def test_at_most_50_checks_a_run_the_rest_wait(self):
+        spoofs = ["0x" + format(0xe0000 + i, "040x") for i in range(60)]
+        logs = [(600 + i, _log(v, pe.CLAIM_FEES_TOPIC, bytes(12) + bytes.fromhex(USDC[2:]), 1)) for i, v in enumerate(spoofs)]
+        n = []
+
+        class R(BlockLogsReader):
+            def call_one(self, target, sig, args, out_types, gas=0):
+                n.append(target)
+                return pe.ZERO                                            # not a VRM
+        ch = pe.read_chain_position(R(base_answers(), logs), 1584, registry=pe.FACTORY_REGISTRY_BASE)
+        st = ch["claimsState"]["unverified"]
+        self.assertEqual((len(n), ch["claimsScanned"]), (pe.MAX_VERIFY_PER_RUN, True))
+        self.assertEqual(sorted(u["status"] for u in st.values()).count("pending"), 10)
+        n.clear()
+        ch = pe.read_chain_position(R(base_answers(), logs, block=1100), 1584, registry=pe.FACTORY_REGISTRY_BASE,
+                                    claims_state=ch["claimsState"])
+        self.assertEqual(len(n), 10)                                      # only the 10 left
+        self.assertTrue(all(u["status"] == "rejected" for u in ch["claimsState"]["unverified"].values()))
+
+    def test_a_vrm_confirmed_later_is_rescanned_from_its_first_unchecked_claim(self):
+        # the RPC failed on the check (transient): pending, its claims not counted; confirmed next run, its claims
+        # since it was first seen are rescanned by address
+        import requests
+        a = _registered(base_answers(), G_OLD, VRM_OLD)
+        f1 = _log(VRM_OLD, pe.CLAIM_FEES_TOPIC, bytes(12) + bytes.fromhex(USDC[2:]), 3 * 10**6)
+        f2 = _log(VRM_OLD, pe.CLAIM_FEES_TOPIC, bytes(12) + bytes.fromhex(USDC[2:]), 2 * 10**6)
+        down = [True]
+
+        class R(BlockLogsReader):
+            def call_one(self, target, sig, args, out_types, gas=0):
+                if down[0]:
+                    raise requests.exceptions.ConnectionError("connection reset")
+                return super().call_one(target, sig, args, out_types)
+        r = R(a, [(700, f1), (1050, f2)])
+        ch = pe.read_chain_position(r, 1584, registry=pe.FACTORY_REGISTRY_BASE)
+        self.assertEqual(ch["claimsState"]["unverified"], {VRM_OLD: {"from": 700, "status": "pending"}})
+        self.assertNotIn(G_OLD, [g["gauge"] for g in ch["gauges"]])
+        self.assertTrue(ch["claimsScanned"])
+        down[0] = False
+        r2 = R(a, [(700, f1), (1050, f2)], block=1100)
+        ch2 = pe.read_chain_position(r2, 1584, registry=pe.FACTORY_REGISTRY_BASE, claims_state=ch["claimsState"])
+        self.assertEqual(ch2["discoveredGauges"], [G_OLD])
+        self.assertEqual([(c[0], c[2], c[3]) for c in r2.log_calls], [(None, 1001, None), ([VRM_OLD], 700, 1000)])
+        old = [g for g in ch2["gauges"] if g["gauge"] == G_OLD][0]
+        self.assertEqual(old["claimedFees"], {USDC: 5 * 10**6})                 # 3 (rescanned) + 2 (this run)
+        self.assertEqual(ch2["claimsState"]["unverified"], {})
+
     def test_a_gauge_first_read_while_not_allocated_never_counts_from_zero(self):
-        # a window whose older point lacks a gauge counts it from zero only if the stake re-allocated since AND it is
-        # allocated now: a gauge first read later (found from a claim) may hold earnings from before the window
+        # a window whose older point lacks a gauge counts it from zero only if it was first seen after that point
+        # while allocated (review 9 L-2): a gauge first read unallocated (found from a claim, or from config) may hold
+        # earnings from before the window
         snap = {"asOf": NOW - DAY, "chains": [8453], "complete": True, "unread": [],
                 "gauges": {f"8453:{G_CL}": {"fees": {USDC: 10.0}, "incentives": {}}}}
         cur = {"asOf": NOW, "chains": [8453], "gauges": {
             f"8453:{G_CL}": {"active": True, "fees": {USDC: 20.0}, "incentives": {}},
-            f"8453:{G_OLD}": {"active": False, "fees": {USDC: 500.0}, "incentives": {}}}}
+            f"8453:{G_OLD}": {"active": False, "firstSeen": NOW, "firstActive": False, "fees": {USDC: 500.0},
+                              "incentives": {}}}}
         price = lambda cid, t: 1.0
         d = pe.window_delta(cur, snap, price, {8453: NOW - 3600})               # re-voted after the snapshot
         self.assertTrue(d["partial"])
         self.assertAlmostEqual(d["usdPerDay"], 10.0)                            # G_OLD's 500 left out
-        cur["gauges"][f"8453:{G_OLD}"]["active"] = True                          # newly allocated: counted from zero
-        self.assertAlmostEqual(pe.window_delta(cur, snap, price, {8453: NOW - 3600})["usdPerDay"], 510.0)
+        # first seen after the snapshot while allocated (joined at a re-vote), left again since: counted from zero
+        cur["gauges"][f"8453:{G_OLD}"].update(firstSeen=NOW - 3600, firstActive=True)
+        d = pe.window_delta(cur, snap, price, {8453: NOW - 3600})
+        self.assertFalse(d["partial"])
+        self.assertAlmostEqual(d["usdPerDay"], 510.0)
+        # first seen while allocated, but at (or before) the snapshot: it should have been in it -> partial
+        cur["gauges"][f"8453:{G_OLD}"].update(firstSeen=NOW - DAY)
+        self.assertTrue(pe.window_delta(cur, snap, price, {8453: NOW - 3600})["partial"])
 
 
 class BlockAtTest(unittest.TestCase):

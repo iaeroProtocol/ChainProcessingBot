@@ -117,6 +117,18 @@ class ChainReader:
                         pass
         return out
 
+    def call_one(self, target: str, sig: str, args: list, out_types: List[str], gas: int = 300_000):
+        """One eth_call at the pinned block with a gas limit (for untrusted contracts: never batched); the decoded
+        value (single output unwrapped), None for empty data; raises on revert, out of gas or an RPC failure."""
+        in_types = [t for t in sig[sig.index("(") + 1:-1].split(",") if t]
+        data = keccak(text=sig)[:4] + (self.w3.codec.encode(in_types, list(args)) if in_types else b"")
+        raw = self._retry(lambda: self.w3.eth.call({"to": self.w3.to_checksum_address(target), "data": data,
+                                                    "gas": int(gas)}, block_identifier=self.block))
+        if not raw:
+            return None
+        dec = self.w3.codec.decode(out_types, bytes(raw))
+        return dec[0] if len(out_types) == 1 else tuple(dec)
+
     def _ts(self, block: int) -> int:
         return int(self._retry(lambda: self.w3.eth.get_block(int(block)))["timestamp"])
 
@@ -195,25 +207,50 @@ def _gauge_rows(reader, token_id: int, leaf_voter: str, registry: Optional[str],
     return [r for r in rows if r["vrm"] and r["vrm"] != ZERO], unread
 
 
-def _registered_vrms(reader, leaf_voter: str, registry: Optional[str], vrms: List[str]) -> Dict[str, str]:
-    """{vrm: gauge} for the contracts in `vrms` that are the voting-rewards manager of a gauge the LeafVoter
-    registered (VRM.gauge() -> gauge, whose VRM (registry on Base, else its own pointer) is that contract). Anything
-    else that emitted a claim event for the stake (a spoof, another protocol) is left out."""
-    gs = reader.many([(v, "gauge()", [], ["address"]) for v in vrms])
-    cand = {v: g.lower() for v, g in zip(vrms, gs) if g and g != ZERO}
-    per = []
-    for v, g in cand.items():
-        per += [(g, "votingRewardsManager()", [], ["address"]),
-                (registry or "", "gaugeToRewards(address)", [g], ["address"]),
-                (leaf_voter, "gaugeStates(address)", [g], GAUGE_STATE_OUT)]
-    res = reader.many(per)
-    out = {}
-    for i, (v, g) in enumerate(cand.items()):
-        own, reg, st = res[i * 3:i * 3 + 3]
-        vrm = reg if reg and reg != ZERO else own
-        if vrm and vrm.lower() == v and st and st[3]:              # st[3]: isRegistered
-            out[v] = g
-    return out
+VERIFY_GAS = 300_000          # gas for one emitter.gauge() check (an emitter is untrusted: never inside a multicall)
+MAX_VERIFY_PER_RUN = 50       # unknown claim emitters checked per run and chain; the rest wait for the next run
+
+
+def _transient(e: Exception) -> bool:
+    """An RPC / network failure (retry later), as opposed to the call itself failing (revert, out of gas, garbage)."""
+    import requests
+    msg = str(e)
+    return isinstance(e, (requests.exceptions.RequestException, TimeoutError, ConnectionError)) or any(
+        s in msg for s in ("429", "Too Many", "timed out", "Timeout", "502", "503", "504"))
+
+
+def _registered_vrms(reader, leaf_voter: str, registry: Optional[str], vrms: List[str]) -> tuple:
+    """(found {vrm: gauge}, rejected [vrm], pending [vrm]) for unknown claim emitters: found are the voting-rewards
+    managers of a gauge the LeafVoter registered (VRM.gauge() -> gauge, whose VRM (registry on Base, else its own
+    pointer) is that contract). Each emitter's gauge() is its own gas-capped eth_call (a contract that burns gas or
+    reverts is rejected, never fails the read); pending: the RPC failed, checked again next run. Only the LeafVoter,
+    the registry and registered gauges are read in batches."""
+    gauge_of, rejected, pending = {}, [], []
+    for v in vrms:
+        try:
+            g = reader.call_one(v, "gauge()", [], ["address"], gas=VERIFY_GAS)
+        except Exception as e:
+            (pending if _transient(e) else rejected).append(v)
+            continue
+        if isinstance(g, str) and g.lower() != ZERO:
+            gauge_of[v] = g.lower()
+        else:
+            rejected.append(v)
+    cand = list(gauge_of.items())
+    res = reader.many([c for v, g in cand for c in (
+        (leaf_voter, "gaugeStates(address)", [g], GAUGE_STATE_OUT),
+        (registry or "", "gaugeToRewards(address)", [g], ["address"]))])
+    registered = [(v, g, res[i * 2 + 1]) for i, (v, g) in enumerate(cand) if res[i * 2] and res[i * 2][3]]  # isRegistered
+    rejected += [v for i, (v, g) in enumerate(cand) if not (res[i * 2] and res[i * 2][3])]
+    own = reader.many([(g, "votingRewardsManager()", [], ["address"]) for v, g, _ in registered])  # registered gauges only
+    found = {}
+    for (v, g, reg), o in zip(registered, own):
+        vrm = reg if reg and reg != ZERO else o
+        if vrm and vrm.lower() == v:
+            found[v] = g
+        else:
+            rejected.append(v)
+    return found, sorted(rejected), sorted(pending)
 
 
 def read_chain_position(reader, token_id: int, leaf_voter: str = LEAF_VOTER, registry: Optional[str] = None,
@@ -221,19 +258,35 @@ def read_chain_position(reader, token_id: int, leaf_voter: str = LEAF_VOTER, reg
                         first_allocation: Optional[int] = None, claims_state: Optional[dict] = None) -> dict:
     """Raw on-chain earnings of `token_id` on one chain (no prices).
     Gauges read: allocatedGauges now, extra_gauges (the previous live block's, the first-allocation ones from
-    config) and every gauge this chain's claims state remembers, so a gauge the stake left keeps being measured.
-    claims_state: this chain's {"since", "block", "blockTimestamp", "gauges": [gauge], "vrms": {vrm: {"fees":
-    {token: raw}, "incentives": {token: raw}}}} from the previous run: claims are scanned only after its block (a VRM
-    new to it: from `since`). The scan is address-less where the RPC allows it, so a registered gauge's VRM that paid
-    the stake a claim joins the gauges read (discovery). The result's claimsState is the updated one, or the given
-    one (plus the gauges seen) if a scan failed (claimsScanned False)."""
+    config) and every gauge this chain's claims state remembers, so a gauge the stake left keeps being measured. Each
+    gauge carries when it was first seen and whether it was allocated then (firstSeen / firstActive: window_delta
+    counts a gauge missing from a window's older point from zero only if it was first seen later while allocated).
+    claims_state: this chain's {"since", "sinceBlock", "block", "blockTimestamp", "anyFrom", "gauges": {gauge:
+    {"firstSeen", "firstActive"}}, "unverified": {emitter: {"from", "status"}}, "vrms": {vrm: {"fees": {token: raw},
+    "incentives": {token: raw}}}} from the previous run: claims are scanned only after its block. The scan is
+    address-less where the RPC allows it (anyFrom: the first block of the unbroken address-less scans), so a
+    registered gauge's VRM that paid the stake a claim joins the gauges read (discovery; unknown emitters are checked
+    one by one, at most MAX_VERIFY_PER_RUN a run; rejected ones are never checked again). A VRM new to the state is
+    rescanned by address only where address-less scans didn't cover it (before anyFrom, or since it was first seen
+    while unchecked). The result's claimsState is the updated one, or the given one (plus the gauges and emitters
+    learnt) if a scan failed (claimsScanned False)."""
     gauges, state = reader.many([
         (leaf_voter, "allocatedGauges(uint256)", [token_id], ["address[]"]),
         (leaf_voter, "tokenStates(uint256)", [token_id], ["address", "uint48", "bool", "uint128"]),
     ])
     allocated = [g.lower() for g in (gauges or [])]
-    remembered = (claims_state.get("gauges") or []) if isinstance(claims_state, dict) else []
-    all_gauges = list(dict.fromkeys(allocated + [str(g).lower() for g in list(extra_gauges) + list(remembered)]))
+    cs_in = claims_state if isinstance(claims_state, dict) else {}
+    remembered = cs_in.get("gauges") or {}
+    if isinstance(remembered, list):                    # 6aefe5c's list form: first-seen unknown
+        remembered = {str(g).lower(): {"firstSeen": None, "firstActive": None} for g in remembered}
+    seen = {str(g).lower(): dict(v) for g, v in remembered.items() if isinstance(v, dict)}
+    all_gauges = list(dict.fromkeys(allocated + [str(g).lower() for g in list(extra_gauges)] + list(seen)))
+
+    def note_seen(gs):
+        for g in gs:
+            seen.setdefault(g, {"firstSeen": int(reader.block_ts), "firstActive": g in allocated})
+
+    note_seen(all_gauges)
     rows, unread = _gauge_rows(reader, token_id, leaf_voter, registry, all_gauges, allocated)
 
     # claims so far (cumulative = claimed + unclaimed), scanned incrementally
@@ -245,6 +298,15 @@ def read_chain_position(reader, token_id: int, leaf_voter: str = LEAF_VOTER, reg
     cum = {v: {"fees": dict((d or {}).get("fees") or {}), "incentives": dict((d or {}).get("incentives") or {})}
            for v, d in ((prev or {}).get("vrms") or {}).items()}
     known = sorted(cum)
+    unverified = {str(k).lower(): dict(v) for k, v in (cs_in.get("unverified") or {}).items() if isinstance(v, dict)}
+    since_block_cache = [prev.get("sinceBlock") if prev and isinstance(prev.get("sinceBlock"), int) else None]
+
+    def since_block() -> int:
+        if since_block_cache[0] is None:
+            since_block_cache[0] = int(reader.block_at(since))
+        return since_block_cache[0]
+
+    any_from = prev.get("anyFrom") if prev and isinstance(prev.get("anyFrom"), int) else None
     tid_topic = "0x" + int(token_id).to_bytes(32, "big").hex()
     topics = [[CLAIM_FEES_TOPIC, CLAIM_INCENTIVES_TOPIC], tid_topic]
     emitter = lambda lg: str(lg["address"]).lower()
@@ -256,36 +318,65 @@ def read_chain_position(reader, token_id: int, leaf_voter: str = LEAF_VOTER, reg
                        f"({prev['block']}); claims unknown this run")
         claims = None
     else:
-        lo = prev["block"] + 1 if prev else reader.block_at(since)
+        lo = prev["block"] + 1 if prev else since_block()
         anylogs = reader.logs(None, topics, lo) if lo <= reader.block else []
+        rescan_from: Dict[str, int] = {}               # confirmed emitters: first block of their unchecked claims
         if anylogs:
-            # claims for the stake from VRMs not read: a registered gauge's VRM joins (the stake earned there)
-            unknown = sorted({emitter(lg) for lg in anylogs} - set(known) - {r["vrm"] for r in rows})
-            found = _registered_vrms(reader, leaf_voter, registry, unknown) if unknown else {}
-            for v in unknown:
-                if v not in found:
-                    logger.info(f"[position] chain {reader.chain_id}: claim event from {v} (not a registered "
-                                f"gauge's VRM) ignored")
+            # claims for the stake from VRMs not read: checked one by one; a registered gauge's VRM joins
+            row_vrms = {r["vrm"] for r in rows}
+            for lg in anylogs:
+                v = emitter(lg)
+                if v in cum or v in row_vrms:
+                    continue
+                u = unverified.setdefault(v, {"from": int(lg.get("blockNumber", lo)), "status": "pending"})
+                u["from"] = min(int(u.get("from", lo)), int(lg.get("blockNumber", lo)))
+        todo = sorted(v for v, u in unverified.items() if u.get("status") == "pending")
+        if todo:
+            check = todo[:MAX_VERIFY_PER_RUN]
+            if len(todo) > len(check):
+                logger.warning(f"[position] chain {reader.chain_id}: {len(todo)} unknown claim emitters; checking "
+                               f"{len(check)} this run")
+            found, rejected, _ = _registered_vrms(reader, leaf_voter, registry, check)
+            for v in rejected:
+                unverified[v]["status"] = "rejected"
+                logger.info(f"[position] chain {reader.chain_id}: claim event from {v} (not a registered gauge's "
+                            f"VRM) ignored")
+            for v in found:
+                rescan_from[v] = int(unverified.pop(v)["from"])
             add = [g for g in dict.fromkeys(found.values()) if g not in all_gauges]
             if add:
                 logger.warning(f"[position] chain {reader.chain_id}: gauges found from the stake's claims, now "
                                f"measured: {add}")
+                note_seen(add)
                 more, more_unread = _gauge_rows(reader, token_id, leaf_voter, registry, add, allocated)
                 rows, unread, all_gauges, discovered = rows + more, unread + more_unread, all_gauges + add, add
         new = sorted({r["vrm"] for r in rows} - set(known))
+        for v in new:                                   # read now but excluded while unchecked / rejected
+            if v in unverified:
+                rescan_from.setdefault(v, int(unverified.pop(v).get("from", lo)))
         if anylogs is not None:
-            # every claim from lo on is in anylogs: known VRMs from it; new ones also need [since, lo)
+            # every claim from lo on is in anylogs: known and new VRMs from it. A new VRM's claims before lo were
+            # seen by earlier address-less scans (from anyFrom on) unless it was then waiting to be checked
             claims = [lg for lg in anylogs if emitter(lg) in set(known) | set(new)]
-            if new and prev:
-                got = reader.logs(new, topics, reader.block_at(since), to_block=lo - 1)
+            any_from = any_from if prev and any_from is not None else (lo if not prev else None)
+            for v in new:
+                start = since_block() if any_from is None or any_from > since_block() else rescan_from.get(v)
+                end = lo - 1 if (any_from is None or v in rescan_from) else min(lo - 1, any_from - 1)
+                if start is None or start > end or claims is None:
+                    continue
+                got = reader.logs([v], topics, start, to_block=end)
                 claims = None if got is None else claims + got
+            if any_from is None:
+                any_from = lo                           # address-less coverage starts here
         else:
-            # the RPC wants an address (e.g. publicnode on Ethereum): the VRMs read, no discovery
+            # the RPC wants an address (e.g. publicnode on Ethereum): the VRMs read, no discovery; a new VRM from
+            # the stake's first allocation
+            any_from = None
             if known and lo <= reader.block:
                 got = reader.logs(known, topics, lo)
                 claims = None if got is None else got
             if new and claims is not None:
-                got = reader.logs(new, topics, reader.block_at(since))
+                got = reader.logs(new, topics, since_block())
                 claims = None if got is None else claims + got
 
     # VRM token order (= earnedFees order); earned fees twice (maxCheckpoints and 2x at the same block:
@@ -363,16 +454,20 @@ def read_chain_position(reader, token_id: int, leaf_voter: str = LEAF_VOTER, reg
         r["claimed"] = {}
         for t, a in list(r["claimedFees"].items()) + list(r["claimedIncentives"].items()):
             r["claimed"][t] = r["claimed"].get(t, 0) + a
-    seen = sorted(set(all_gauges))
+    for r in rows:
+        r["firstSeen"], r["firstActive"] = seen[r["gauge"]].get("firstSeen"), seen[r["gauge"]].get("firstActive")
+    gauges_state = {g: seen[g] for g in sorted(seen)}
     if claims is not None:
         for r in rows:                                  # scanned: recorded even without claims (not rescanned)
             cum.setdefault(r["vrm"], {"fees": {}, "incentives": {}})
         new_state = {"since": int(since), "block": int(reader.block), "blockTimestamp": int(reader.block_ts),
-                     "gauges": seen,
+                     **({"sinceBlock": since_block_cache[0]} if since_block_cache[0] is not None else {}),
+                     "anyFrom": any_from, "gauges": gauges_state, "unverified": unverified,
                      "vrms": {v: {"fees": {t: int(a) for t, a in d["fees"].items()},
                                   "incentives": {t: int(a) for t, a in d["incentives"].items()}} for v, d in cum.items()}}
     else:
-        new_state = dict(prev or {}, gauges=seen)       # the claims are retried; the gauges seen are remembered
+        # the claims are retried from the same block; the gauges seen and the emitters checked are remembered
+        new_state = dict(prev or {}, gauges=gauges_state, unverified=unverified)
 
     return {"chainId": reader.chain_id, "block": reader.block, "blockTimestamp": reader.block_ts,
             "lastAllocated": last_alloc, "since": int(since), "chainAllocation": int(state[3]) if state else 0,
@@ -451,13 +546,19 @@ def window_delta(cur: dict, snap: dict, price: Callable[[int, str], float],
         cid = int(key.split(":")[0])
         if cid not in common:
             continue
-        if key not in snap_g and (key in snap_unread or not g.get("active", True) or
-                                  int((last_allocated or {}).get(cid, 0)) <= int(snap["asOf"])):
-            # read failed then, the stake has not re-allocated since, or it isn't allocated there now (a gauge first
-            # read now, e.g. found from a claim, may hold earnings from before the snapshot): its whole cumulative
-            # would count as earned
-            partial = True
-            continue
+        if key not in snap_g:
+            if g.get("firstSeen") is not None:
+                # counted from zero only if first seen after the older point while allocated (joined then; it may
+                # have been left since). A gauge first seen unallocated (from config or a claim) may hold earnings
+                # from before the older point
+                fresh = int(g["firstSeen"]) > int(snap["asOf"]) and bool(g.get("firstActive"))
+            else:
+                # no first-seen record: only if the stake re-allocated on that chain after the older point
+                fresh = int((last_allocated or {}).get(cid, 0)) > int(snap["asOf"])
+            if key in snap_unread or not fresh:
+                # read failed then, or it may hold earnings from before: its whole cumulative would count as earned
+                partial = True
+                continue
         old = snap_g.get(key) or {}
         g_usd = g_fee = 0.0
         moved_unpriced = False
@@ -556,6 +657,8 @@ def value_live(chains: List[dict], meta: Dict[int, Dict[str, dict]], prices: Dic
             if cid in recorded and r.get("readOk", True):
                 point["gauges"][f"{cid}:{r['gauge']}"] = {
                     "active": bool(r.get("active", True)),
+                    **({"firstSeen": int(r["firstSeen"]), "firstActive": bool(r.get("firstActive"))}
+                       if r.get("firstSeen") is not None else {}),
                     "usd": _sig(usd),
                     "fees": {t: _sig(a) for t, a in cum_f.items() if a > 0},
                     "incentives": {t: _sig(a) for t, a in cum_i.items() if a > 0}}
@@ -697,7 +800,9 @@ def value_live(chains: List[dict], meta: Dict[int, Dict[str, dict]], prices: Dic
                     "gauge is left out",
         "feesOnly": "same figures counting trading fees only (no incentive programs)",
         "history": "points >= 12 h apart (<= 10.5 d; plus the first of each epoch): per-gauge cumulative token amounts "
-                   "keyed chainId:gauge, claimed + unclaimed; "
+                   "keyed chainId:gauge, claimed + unclaimed, with when the gauge was first seen and whether it was "
+                   "allocated then (a gauge missing from a window's older point counts from zero only if first seen "
+                   "later while allocated); "
                    "only chains whose claims were scanned, only gauges read in full (failed reads listed in unread); "
                    "complete when that run's read was",
         "readComplete": "every chain read (claims scanned, gauge list and every gauge read) and every earned token priced",
