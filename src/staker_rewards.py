@@ -54,7 +54,7 @@ def build_staker_rewards(
     aerodrome_factory: str | None = None,
     usdc_addr: str = "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
     weth_addr: str = "0x4200000000000000000000000000000000000006",
-    max_price_usd: float = 50000.0,
+    max_price_usd: float = 10_000_000.0,
 ):
     w3 = Web3(Web3.HTTPProvider(rpc, request_kwargs={"timeout": 30}))
     try:

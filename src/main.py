@@ -97,6 +97,25 @@ def _load_json(repo, branch: str, path: str) -> dict:
     except Exception:
         return {}
 
+def _is_not_found(e: Exception) -> bool:
+    # PyGithub raises UnknownObjectException (status 404, str "404 {...}") for a missing file
+    return isinstance(e, FileNotFoundError) or getattr(e, "status", None) == 404 or str(e).startswith("404")
+
+def _load_json_strict(repo, branch: str, path: str) -> dict:
+    """Like _load_json, but only a missing (404) or unparseable file reads as {}; any other read error raises."""
+    try:
+        f = repo.get_contents(path, ref=branch)
+    except Exception as e:
+        if _is_not_found(e):
+            return {}
+        raise
+    try:
+        doc = json.loads(base64.b64decode(f.content).decode("utf-8"))
+    except Exception as e:
+        logger.warning(f"[GitHub] {path} is not valid JSON ({e}); treating it as empty")
+        return {}
+    return doc if isinstance(doc, dict) else {}
+
 def _update_stakers(repo, updater: GitHubUpdater, scanner: ChainScanner) -> bool:
     """
     Incrementally track stiAERO holders via Transfer logs and publish balances.
@@ -280,7 +299,7 @@ def _update_staker_rewards(repo, updater: GitHubUpdater) -> bool:
     aerodrome_factory = os.environ.get("AERODROME_FACTORY")
     usdc_addr = os.environ.get("USDC_ADDRESS") or "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
     weth_addr = os.environ.get("WETH_ADDRESS") or "0x4200000000000000000000000000000000000006"
-    max_price_usd = float(os.environ.get("MAX_PRICE_USD", "50000"))
+    max_price_usd = float(os.environ.get("MAX_PRICE_USD", "10000000"))
 
     from staker_rewards import build_staker_rewards
     payload = build_staker_rewards(
@@ -302,6 +321,225 @@ def _update_staker_rewards(repo, updater: GitHubUpdater) -> bool:
 
     # push only if changed
     return _push_if_changed(repo, updater, out_path, payload)
+
+def _stake_accrual_start():
+    """When the protocol's Aero stake started earning: env PROTOCOL_AERO_STAKE_SINCE, else its first allocation
+    (position_earnings.FIRST_ALLOCATION). None if unknown."""
+    from position_earnings import DEFAULT_STAKE_ID, FIRST_ALLOCATION
+    raw = (os.environ.get("PROTOCOL_AERO_STAKE_SINCE") or "").strip()
+    if raw:
+        try:
+            return int(float(raw))
+        except (ValueError, OverflowError):
+            logger.error(f"[realized_yield] PROTOCOL_AERO_STAKE_SINCE={raw!r} is not unix seconds; ignored")
+    try:
+        return FIRST_ALLOCATION.get(int(os.environ.get("PROTOCOL_AERO_STAKE_ID") or DEFAULT_STAKE_ID))
+    except ValueError:
+        return None
+
+LIVE_STATE_REWRITE_SEC = 3600   # the claims state is rewritten when its claims change, or when this much newer
+
+def _claims_state_due(old: dict, new: dict) -> bool:
+    """Write the claims state when anything but the scanned-to block changed, or a chain's block moved >= 1 h on."""
+    if not isinstance(new, dict) or not new.get("chains"):
+        return False
+    if not isinstance(old, dict) or old.get("stakeId") != new.get("stakeId"):
+        return True
+    oc, nc = old.get("chains") or {}, new.get("chains") or {}
+    if set(oc) != set(nc):
+        return True
+    for cid, n in nc.items():
+        o = oc.get(cid) or {}
+        if any(o.get(k) != n.get(k) for k in ("since", "vrms", "gauges", "unverified", "anyFrom")):
+            return True
+        if int(n.get("blockTimestamp") or 0) - int(o.get("blockTimestamp") or 0) >= LIVE_STATE_REWRITE_SEC:
+            return True
+    return False
+
+def _update_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner, price_fetcher: PriceFetcher) -> bool:
+    """
+    Staking APY -> data/estimated_rewards_usd.json (replaces the legacy EnhancedOptimizedVotesKeeper; same schema plus
+    new fields) and -> data/yield_history.json (replaces the rewards keeper's weekly snapshot).
+    Headline: the measured earnings of the protocol's Aero stake (realized_yield.measured_headline: trailing 7 days
+    if complete, else since its first allocation, else the previous headline kept with a staleReason). The
+    distributor fundings of the last completed epoch go under fundedRealized only. data/live_state.json keeps the
+    claims scan state per chain (incremental scans).
+    """
+    er_enabled = os.environ.get("ESTIMATED_REWARDS_ENABLED", "true").lower() == "true"
+    yh_enabled = os.environ.get("YIELD_HISTORY_ENABLED", "true").lower() == "true"
+    distributor = os.environ.get("EPOCH_STAKING_DISTRIBUTOR")
+    if not (er_enabled or yh_enabled) or not distributor:
+        return False
+
+    from realized_yield import (build_estimated_rewards, stake_payload, apply_measured, measured_headline,
+                                measured_unavailable_reason, kept_headline, funded_realized, sanity_problems,
+                                epoch_start, last_completed_epoch, AERO_ADDRESS, WEEK)
+    from position_earnings import epoch_rate
+    dec_chunk = int(os.environ.get("DEC_CHUNK_SIZE", "75"))
+    decimals_fn = lambda toks: scanner.decimals_map(toks, chunk_size=dec_chunk, default_decimals=18)
+    aero = os.environ.get("AERO_ADDRESS") or AERO_ADDRESS
+    iaero = os.environ.get("IAERO_ADDRESS")
+
+    path = os.environ.get("ESTIMATED_REWARDS_JSON_PATH", "data/estimated_rewards_usd.json")
+    try:
+        prev_doc = _load_json_strict(repo, updater.branch, path)
+    except Exception as e:
+        # publishing now could drop the live block (and its history) and the headline to keep
+        logger.error(f"[realized_yield] could not read {path} ({str(e)[:160]}); NOT publishing this run.")
+        _log_status({"event": "realized_yield_blocked", "reasons": [f"{path} unreadable"]})
+        return False
+    for name in ("ROLLING_SINCE_TS", "ROLLING_CUTOFF_TS", "LIVE_YIELD_ENABLED"):
+        if (os.environ.get(name) or "").strip():
+            logger.info(f"[realized_yield] {name} is no longer used (the headline is the measured rate); ignored")
+
+    now = int(time.time())
+    hist_epoch = last_completed_epoch(now)
+
+    # 1. stake and prices at the current epoch's start (the distributor's payout denominator)
+    try:
+        base = stake_payload(scanner.w3, distributor, epoch_start(now), price_fetcher, decimals_fn, aero, iaero, now)
+    except Exception as e:
+        base = None
+        logger.exception(f"[realized_yield] stake / price read failed: {e}")
+
+    # 2. the live measurement of the stake's earnings (claims scanned from data/live_state.json on)
+    state_path = os.environ.get("LIVE_STATE_JSON_PATH", "data/live_state.json")
+    claims_state = _load_json(repo, updater.branch, state_path)
+    prev_live = prev_doc.get("live")
+    live = live_prices = new_claims_state = None
+    if base is not None:
+        try:
+            live = _build_live_block(scanner, price_fetcher, base, prev_live, claims_state)
+            new_claims_state = live.pop("_claimsState", None)
+            live_prices = live.pop("_prices", None)
+        except Exception as e:
+            logger.exception(f"[position] live block failed: {e}")
+    if live is not None:
+        # the current iAERO price (the APY denominator) and where it came from, also when the headline is kept
+        live["iaeroPriceUsd"] = int(base["iaeroPrice_1e18"]) / 1e18
+        live["iaeroPriceSource"] = base.get("iaeroPriceSource")
+    if live is None and isinstance(prev_live, dict):
+        live = dict(prev_live, stale=True)              # keep its history and gauge list
+    if _claims_state_due(claims_state, new_claims_state):
+        try:
+            updater.update_file(state_path, json.dumps(new_claims_state, indent=2), commit_message="Live claims state")
+        except Exception as e:
+            logger.warning(f"[position] could not write {state_path}: {e}")
+
+    # 3. the headline: measured, or the previous one kept
+    payload, stale_reason = None, None
+    m = measured_headline(live) if base is not None else None
+    if m:
+        payload = apply_measured(base, *m, now_ts=now)
+        problems = sanity_problems(payload)
+        if problems:
+            stale_reason = f"the measured figure fails the sanity guard ({'; '.join(problems)}; apyPct={payload['apyPct']})"
+            payload = None
+    else:
+        stale_reason = "stake / price read failed" if base is None else measured_unavailable_reason(live)
+    if payload is None:
+        payload = kept_headline(prev_doc, stale_reason)
+        logger.error(f"[realized_yield] no measured headline this run ({stale_reason}); "
+                     f"{'keeping the previous headline figures' if payload else 'no previous headline: NOT publishing'}")
+        _log_status({"event": "realized_yield_kept", "reasons": [stale_reason]})
+    else:
+        logger.info(f"[realized_yield] headline {payload['apySource']}: ${payload['measuredUsdPerDay']:.2f}/day -> "
+                    f"apy={payload['apyPct']:.2f}% stakersWeekly=${payload['stakersWeeklyUSD_human']} "
+                    f"staked=${payload['stakedUSD_human']} window={payload['apyWindow']}")
+
+    # 4. secondary: the distributor fundings booked to the last completed epoch
+    if payload is not None and er_enabled:
+        epochs_doc = _load_json(repo, updater.branch, os.environ.get("EPOCHS_JSON_PATH", "data/epochs.json"))
+        if epochs_doc.get("epochs"):
+            try:
+                fr = build_estimated_rewards(w3=scanner.w3, distributor=distributor, epochs_doc=epochs_doc,
+                                             price_fetcher=price_fetcher, decimals_fn=decimals_fn, aero=aero,
+                                             iaero=iaero, epoch=hist_epoch, epoch_mode="last_completed", now_ts=now)
+                payload["fundedRealized"] = funded_realized(fr)
+            except Exception as e:
+                logger.warning(f"[realized_yield] fundedRealized for epoch {hist_epoch} failed: {e}")
+
+    changed = False
+    # 5. yield_history: the completed epoch's measured earnings (complete points near both of its ends)
+    if yh_enabled and isinstance(live, dict) and not live.get("stale") and live_prices is not None:
+        price = lambda cid, t: float((live_prices.get(cid) or {}).get(t, 0.0) or 0.0)
+        er = epoch_rate(live.get("history") or [], hist_epoch, hist_epoch + WEEK, price)
+        if er is None:
+            logger.info(f"[yield_history] epoch {hist_epoch}: no complete history points near both of its ends "
+                        f"(or something left out between them); no entry")
+        else:
+            try:
+                hb = stake_payload(scanner.w3, distributor, hist_epoch, price_fetcher, decimals_fn, aero, iaero, now)
+                hp = apply_measured(hb, er["usdPerDay"], "measured-epoch",
+                                    {"from": er["from"], "to": er["to"], "days": round(er["days"], 6)}, now_ts=now)
+                hist_problems = sanity_problems(hp)
+                if hist_problems:
+                    logger.error(f"[yield_history] epoch {hist_epoch}: {'; '.join(hist_problems)}; not writing its entry.")
+                else:
+                    changed = _update_yield_history(repo, updater, hp) or changed
+            except Exception as e:
+                logger.exception(f"[yield_history] epoch {hist_epoch} read failed; no entry this run: {e}")
+
+    # 6. publish
+    if er_enabled and payload is not None:
+        if live is not None:
+            payload["live"] = live
+        changed = _push_if_changed(repo, updater, path, payload) or changed
+    return changed
+
+def _build_live_block(scanner: ChainScanner, price_fetcher: PriceFetcher, payload: dict, prev_live,
+                      claims_state=None) -> dict:
+    """Real-time earnings of the protocol's Aero stake (Base, Ethereum, Robinhood) -> estimated_rewards_usd.json
+    `live`, plus "_claimsState" and "_prices" for the caller. A chain whose RPC can't be reached is unmeasured."""
+    from web3 import Web3
+    from position_earnings import (ChainReader, build_live, staked_aero, DEFAULT_STAKE_ID, FACTORY_REGISTRY_BASE,
+                                   VOTING_ESCROW, ROBINHOOD_CHAIN_ID, ROBINHOOD_RPC, ROBINHOOD_PRICE_MAP)
+    from price_fetcher import MappedPriceFetcher
+    token_id = int(os.environ.get("PROTOCOL_AERO_STAKE_ID") or DEFAULT_STAKE_ID)
+
+    base = ChainReader(scanner.w3, 8453)
+    readers = [(base, os.environ.get("AERO_FACTORY_REGISTRY") or FACTORY_REGISTRY_BASE)]
+    price_fetchers = {8453: price_fetcher}
+    unreachable = []
+    for cid, url, lag, pf in (
+        (1, os.environ.get("ETH_RPC_URL") or "https://ethereum-rpc.publicnode.com", 3,
+         lambda: PriceFetcher(chain_slug="ethereum", cache_file="price_cache_ethereum.json", ttl_sec=300)),
+        (ROBINHOOD_CHAIN_ID, os.environ.get("ROBINHOOD_RPC_URL") or ROBINHOOD_RPC, 20,
+         lambda: MappedPriceFetcher(PriceFetcher(chain_slug="robinhood", cache_file="price_cache_robinhood.json",
+                                                 ttl_sec=300), ROBINHOOD_PRICE_MAP)),
+    ):
+        try:
+            w3 = Web3(Web3.HTTPProvider(url, request_kwargs={"timeout": 20}))
+            readers.append((ChainReader(w3, cid, block=max(0, int(w3.eth.block_number) - lag)), None))
+            price_fetchers[cid] = pf()
+        except Exception as e:
+            logger.warning(f"[position] chain {cid} RPC unavailable ({str(e)[:120]}); unmeasured this run")
+            unreachable.append(cid)
+
+    return build_live(
+        readers, token_id, price_fetchers,
+        staked_aero_raw=staked_aero(base, token_id, os.environ.get("AERO_VOTING_ESCROW") or VOTING_ESCROW),
+        aero_price=int(payload["aeroPrice_1e18"]) / 1e18,
+        staked_iaero_usd=int(payload["stakedUSD_1e18"]) / 1e18,      # same denominator as apyPct
+        stakers_bps=int((payload.get("splitBps") or {}).get("stakers", 8000)),
+        prev_live=prev_live,
+        first_allocation=_stake_accrual_start(),
+        claims_state=claims_state,
+        unreachable=unreachable,
+    )
+
+def _update_yield_history(repo, updater: GitHubUpdater, payload: dict) -> bool:
+    """Append/update only the realized entry for payload's epoch; keeper-published entries are never rewritten."""
+    from realized_yield import merge_yield_history, dump_yield_history
+    path = os.environ.get("YIELD_HISTORY_JSON_PATH", "data/yield_history.json")
+    cur = _load_json(repo, updater.branch, path)
+    doc, reason = merge_yield_history(cur, payload, int(time.time()))
+    logger.info(f"[yield_history] {reason}")
+    if doc is None:
+        return False
+    # keep the keeper's exact file format (JSON.stringify(..., null, 2)) so old entries stay byte-identical
+    updater.update_file(path, dump_yield_history(doc), commit_message=f"Yield snapshot {payload['epoch']}")
+    return True
 
 def _stable_json_bytes(obj) -> bytes:
     # stable formatting ensures reproducible hashes
@@ -384,7 +622,7 @@ def _run_once() -> bool:
     aerodrome_factory = os.environ.get("AERODROME_FACTORY")
     usdc_addr = os.environ.get("USDC_ADDRESS") or "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
     weth_addr = os.environ.get("WETH_ADDRESS") or "0x4200000000000000000000000000000000000006"
-    max_price_usd = float(os.environ.get("MAX_PRICE_USD", "50000"))
+    max_price_usd = float(os.environ.get("MAX_PRICE_USD", "10000000"))   # BTC wrappers trade above $50k
 
     # Behavior / filters
     force_update = os.environ.get("FORCE_UPDATE", "false").lower() == "true"
@@ -668,8 +906,31 @@ def _run_once() -> bool:
         logger.exception(f"[staker_rewards] failed: {e}")
         _log_status({"event": "staker_rewards", "error": str(e), "triggers": sr_triggers})
 
-    _log_status({"event": "run_end", "any_changed": bool(changed_rewards or st_changed or epochs_changed or sr_changed)})
-    return changed_rewards or st_changed or epochs_changed or sr_changed
+    # === realized APY -> data/estimated_rewards_usd.json + data/yield_history.json (daily) ===
+    er_changed = False
+    try:
+        er_pf = PriceFetcher(
+            chain_slug="base",
+            cache_file="price_cache.json",
+            ttl_sec=300,
+            rpc_url=rpc_url,
+            aerodrome_factory=aerodrome_factory,
+            usdc=usdc_addr,
+            weth=weth_addr,
+            max_price_usd=max_price_usd,
+        )
+        er_changed = _update_realized_yield(repo, updater, scanner, er_pf)
+        if er_changed:
+            logger.info("[realized_yield] Published realized APY (estimated_rewards_usd.json / yield_history.json)")
+        else:
+            logger.info("[realized_yield] No change; skipped commit.")
+        _log_status({"event": "realized_yield", "changed": er_changed})
+    except Exception as e:
+        logger.exception(f"[realized_yield] failed: {e}")
+        _log_status({"event": "realized_yield", "error": str(e)})
+
+    _log_status({"event": "run_end", "any_changed": bool(changed_rewards or st_changed or epochs_changed or sr_changed or er_changed)})
+    return changed_rewards or st_changed or epochs_changed or sr_changed or er_changed
 
 
 
