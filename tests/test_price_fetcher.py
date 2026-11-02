@@ -302,9 +302,11 @@ class RobinhoodPricingTest(unittest.TestCase):
                                             "a:4": {}}}
         with mock.patch.object(price_fetcher.requests, "get", return_value=resp):
             self.assertEqual(price_fetcher.llama_prices(["a:1", "a:2", "a:3", "a:4"]), {"a:1": 2.0})
-        with mock.patch.object(price_fetcher.requests, "get", return_value=mock.Mock(status_code=502, text="bad")):
+        with mock.patch.object(price_fetcher.requests, "get", return_value=mock.Mock(status_code=502, text="bad")), \
+             mock.patch.object(price_fetcher.time, "sleep"):                  # 502s are retried (bounded)
             self.assertEqual(price_fetcher.llama_prices(["a:1"]), {})
-        with mock.patch.object(price_fetcher.requests, "get", side_effect=OSError("down")):
+        with mock.patch.object(price_fetcher.requests, "get", side_effect=OSError("down")), \
+             mock.patch.object(price_fetcher.time, "sleep"):
             self.assertEqual(price_fetcher.llama_prices(["a:1"]), {})
         self.assertEqual(price_fetcher.llama_prices([]), {})
 
@@ -417,6 +419,247 @@ class IaeroRouteTest(unittest.TestCase):
         self.assertEqual(p["iaeroPriceSource"], "fallback:aero")
         self.assertNotIn("iaeroPriceRoute", p)
         self.assertIn("iAERO is unpriced", ry.sanity_problems(p))
+
+
+LLAMA_PREFIX = price_fetcher.LLAMA_URL.format("")
+
+
+def _base_keys(n):
+    return [f"base:0x{0xA0000 + i:040x}" for i in range(n)]
+
+
+class FakeHttp:
+    """requests.get stand-in. DefiLlama URLs are answered from `llama` ({key: coin}) with the status that
+    llama_status(keys, try number for that URL) returns (an Exception is raised); CoinGecko from `cg` ({addr: entry})."""
+
+    def __init__(self, llama=None, cg=None, llama_status=None):
+        self.llama, self.cg = llama or {}, cg or {}
+        self.llama_status = llama_status or (lambda keys, n: 200)
+        self.llama_urls, self.cg_calls = [], []
+
+    def __call__(self, url, params=None, headers=None, timeout=None):
+        if url.startswith(LLAMA_PREFIX):
+            keys = url[len(LLAMA_PREFIX):].split(",")
+            self.llama_urls.append(url)
+            st = self.llama_status(keys, self.llama_urls.count(url))
+            if isinstance(st, Exception):
+                raise st
+            r = mock.Mock(status_code=st, text='{"error":"URL too long"}' if st == 414 else "err")
+            r.json.return_value = {"coins": {k: self.llama[k] for k in keys if k in self.llama}}
+            return r
+        self.cg_calls.append(params)
+        r = mock.Mock(status_code=200, text="")
+        r.json.return_value = {a: self.cg[a] for a in params["contract_addresses"].split(",") if a in self.cg}
+        return r
+
+
+class LlamaBatchingTest(unittest.TestCase):
+    """2 Nov 2026 run: 437 registry tokens in one DefiLlama URL -> HTTP 414 (20,991 chars, max 9,000 on the free tier)
+    -> Llama filled 0 / 437 and 191 tokens ended unpriced. Requests are now split by URL length; a failed batch loses
+    only its own tokens; retries are bounded."""
+
+    def setUp(self):
+        env = mock.patch.dict(os.environ, {}, clear=False)
+        env.start()
+        self.addCleanup(env.stop)
+        for k in ("COINGECKO_API_KEY", "LLAMA_MAX_URL_CHARS"):
+            os.environ.pop(k, None)
+        sleep = mock.patch.object(price_fetcher.time, "sleep")
+        self.sleep = sleep.start()
+        self.addCleanup(sleep.stop)
+
+    def pf(self):
+        return PriceFetcher(cache_file=os.path.join(tempfile.mkdtemp(), "c.json"))
+
+    def test_437_registry_tokens_fit_in_batches_under_the_limit(self):
+        keys = _base_keys(437)
+        self.assertGreater(len(price_fetcher.LLAMA_URL.format(",".join(keys))), 20_000)    # the one URL of 2 Nov
+        batches = price_fetcher.llama_batches(keys)
+        self.assertEqual([k for b in batches for k in b], keys)                            # all, once, in order
+        self.assertEqual(len(batches), 3)                                                  # 165 + 165 + 107
+        for b in batches:
+            self.assertLessEqual(len(price_fetcher.LLAMA_URL.format(",".join(b))), price_fetcher.LLAMA_MAX_URL_CHARS)
+        self.assertLess(price_fetcher.LLAMA_MAX_URL_CHARS, 9_000)
+
+    def test_url_length_boundary(self):
+        keys = _base_keys(3)
+        n = len(price_fetcher.LLAMA_URL.format(",".join(keys)))
+        self.assertEqual(price_fetcher.llama_batches(keys, max_url_chars=n), [keys])          # exactly at the limit
+        self.assertEqual(price_fetcher.llama_batches(keys, max_url_chars=n - 1), [keys[:2], keys[2:]])
+        # sized by length, not count: the same limit holds three short keys or one long one
+        short, long_ = ["a:1", "a:2", "a:3"], ["coingecko:" + "x" * 30, "coingecko:" + "y" * 30]
+        limit = len(LLAMA_PREFIX) + len("a:1,a:2,a:3")
+        self.assertEqual(len(price_fetcher.llama_batches(short, max_url_chars=limit)), 1)
+        self.assertEqual(len(price_fetcher.llama_batches(long_, max_url_chars=limit)), 2)     # each alone, oversized
+        self.assertEqual(price_fetcher.llama_batches([]), [])
+
+    def test_env_limit_and_bad_values(self):
+        keys = _base_keys(100)
+        os.environ["LLAMA_MAX_URL_CHARS"] = "2000"
+        small = price_fetcher.llama_batches(keys)
+        self.assertGreater(len(small), 2)
+        self.assertTrue(all(len(price_fetcher.LLAMA_URL.format(",".join(b))) <= 2000 for b in small))
+        for bad in ("abc", "0", "-5"):
+            os.environ["LLAMA_MAX_URL_CHARS"] = bad
+            self.assertEqual(len(price_fetcher.llama_batches(keys)), 1)                     # default 8,000
+
+    def test_every_batch_is_requested_and_merged(self):
+        keys = _base_keys(437)
+        http = FakeHttp(llama={k: {"price": 1.0 + i, "timestamp": 0} for i, k in enumerate(keys)})
+        with mock.patch.object(price_fetcher.requests, "get", side_effect=http):
+            got = self.pf()._fetch_llama([k.split(":")[1] for k in keys])
+        self.assertEqual(len(got), 437)
+        self.assertEqual(len(http.llama_urls), 3)
+        self.assertTrue(all(len(u) <= price_fetcher.LLAMA_MAX_URL_CHARS for u in http.llama_urls))
+
+    def test_one_failed_batch_does_not_unprice_the_others(self):
+        keys = _base_keys(437)
+        bad = price_fetcher.llama_batches(keys)[1]
+        addrs = [k.split(":")[1] for k in keys]
+        for failure in (414, requests_error()):
+            http = FakeHttp(llama={k: {"price": 2.0, "timestamp": 0} for k in keys},
+                            cg={a: {"usd": 3.0} for a in addrs},
+                            llama_status=lambda ks, n, f=failure: f if ks == bad else 200)
+            with mock.patch.object(price_fetcher.requests, "get", side_effect=http):
+                out = self.pf().fetch_batch(addrs)
+            src = {a: out[a]["source"] for a in addrs}
+            self.assertEqual(sum(s == "llama" for s in src.values()), 437 - len(bad))
+            self.assertEqual({src[k.split(":")[1]] for k in bad}, {"coingecko"})          # only this batch falls back
+            self.assertTrue(all(out[a]["priceUsd"] > 0 for a in addrs))
+            cg_asked = [a for p in http.cg_calls for a in p["contract_addresses"].split(",")]
+            self.assertEqual(sorted(cg_asked), sorted(k.split(":")[1] for k in bad))
+
+    def test_retries_are_bounded(self):
+        keys = _base_keys(2)
+        price = {k: {"price": 1.5, "timestamp": 0} for k in keys}
+        tries = price_fetcher.LLAMA_RETRIES + 1
+        # 503 every time: LLAMA_RETRIES + 1 requests, then the batch is given up
+        http = FakeHttp(llama=price, llama_status=lambda ks, n: 503)
+        with mock.patch.object(price_fetcher.requests, "get", side_effect=http):
+            self.assertEqual(price_fetcher.llama_prices(keys), {})
+        self.assertEqual(len(http.llama_urls), tries)
+        self.assertEqual([c.args[0] for c in self.sleep.call_args_list],
+                         [price_fetcher.LLAMA_RETRY_BACKOFF_SEC * i for i in range(1, tries)])
+        # an exception every time: same bound
+        http = FakeHttp(llama=price, llama_status=lambda ks, n: requests_error())
+        with mock.patch.object(price_fetcher.requests, "get", side_effect=http):
+            self.assertEqual(self.pf()._fetch_llama([k.split(":")[1] for k in keys]), {})
+        self.assertEqual(len(http.llama_urls), tries)
+        # 429, then 200: priced on the second try
+        http = FakeHttp(llama=price, llama_status=lambda ks, n: 429 if n == 1 else 200)
+        with mock.patch.object(price_fetcher.requests, "get", side_effect=http):
+            self.assertEqual(price_fetcher.llama_prices(keys), {k: 1.5 for k in keys})
+        self.assertEqual(len(http.llama_urls), 2)
+        # 414 (or any other 4xx) is final: one request
+        http = FakeHttp(llama=price, llama_status=lambda ks, n: 414)
+        with mock.patch.object(price_fetcher.requests, "get", side_effect=http):
+            self.assertEqual(price_fetcher.llama_prices(keys), {})
+        self.assertEqual(len(http.llama_urls), 1)
+
+    def test_llama_prices_batches_mixed_keys(self):
+        keys = _base_keys(300) + [f"coingecko:token-{i}" for i in range(50)] + ["ethereum:0x" + "c0" * 20]
+        http = FakeHttp(llama={k: {"price": 4.0} for k in keys})
+        with mock.patch.object(price_fetcher.requests, "get", side_effect=http):
+            got = price_fetcher.llama_prices(keys)
+        self.assertEqual(got, {k: 4.0 for k in keys})
+        self.assertGreater(len(http.llama_urls), 1)
+        self.assertTrue(all(len(u) <= price_fetcher.LLAMA_MAX_URL_CHARS for u in http.llama_urls))
+
+    def test_done_log_counts_only_priced_tokens(self):
+        keys = _base_keys(2)
+        http = FakeHttp(llama={keys[0]: {"price": 1.0}})
+        with mock.patch.object(price_fetcher.requests, "get", side_effect=http), \
+             self.assertLogs("price_fetcher", level="INFO") as logs:
+            self.pf().fetch_batch([k.split(":")[1] for k in keys])
+        self.assertTrue(any("Total priced: 1 / 2" in m for m in logs.output), logs.output)
+
+
+def requests_error():
+    return price_fetcher.requests.ConnectionError("connection reset")
+
+
+class IaeroPricingPathTest(unittest.TestCase):
+    """iAERO (a core token; the realized APY's denominator) on 2 Nov 2026: DefiLlama has no iAERO price, CoinGecko's
+    is ~56 h old (last_updated_at 1793402249). Neither may be used; iAERO comes from the AERO/iAERO pools route.
+    A stale price is never used, even when nothing else prices iAERO."""
+    NOW = 1_793_603_689
+    AERO_PX = 0.6176172214432898
+
+    def setUp(self):
+        env = mock.patch.dict(os.environ, {}, clear=False)
+        env.start()
+        self.addCleanup(env.stop)
+        for k in ("COINGECKO_API_KEY", "DEX_TRUSTED_DEPTH_USD", "TRUSTED_DEX_TOKENS", "LLAMA_MAX_URL_CHARS"):
+            os.environ.pop(k, None)
+        self.chain = FakeChain()
+        self.chain.add_aero_pool(AERO_VOLATILE_FACTORY, WETH, 10_000 * 10**18, USDC, 40_000_000 * 10**6)
+        # the route pools as read on 2 Nov (block 53407143): CL ~0.819 AERO per iAERO; v2 46,368 AERO / 57,003 iAERO
+        self.set_pools(0.8189, 46_368, 57_003)
+
+    def set_pools(self, cl_aero_per_iaero, v2_aero, v2_iaero):
+        sp = int(math.sqrt(1 / cl_aero_per_iaero) * 2 ** 96)
+        self.chain.cl[cs(price_fetcher.IAERO_CL_POOL)] = (AERO, IAERO, sp)
+        self.chain.pools[cs(price_fetcher.IAERO_V2_POOL)] = {AERO: v2_aero * 10**18, IAERO: v2_iaero * 10**18}
+
+    def fetch(self, llama, cg, tokens=(AERO, IAERO, LIQ)):
+        with mock.patch.object(price_fetcher, "Web3", fake_web3_cls(self.chain)):
+            pf = PriceFetcher(cache_file=os.path.join(tempfile.mkdtemp(), "c.json"), rpc_url="http://fake", usdc=USDC,
+                              weth=WETH, aerodrome_factory=None)
+        http = FakeHttp(llama={f"base:{a.lower()}": v for a, v in llama.items()},
+                        cg={a.lower(): v for a, v in cg.items()})
+        with mock.patch.object(price_fetcher.requests, "get", side_effect=http), \
+             mock.patch.object(price_fetcher, "_now", return_value=self.NOW), \
+             mock.patch.object(price_fetcher.time, "sleep"), \
+             self.assertLogs("price_fetcher", level="INFO") as logs:
+            out = pf.fetch_batch([t.lower() for t in tokens])
+        return out, pf, "\n".join(logs.output)
+
+    def llama_aero(self):
+        return {AERO: {"price": self.AERO_PX, "timestamp": self.NOW - 60}}
+
+    def test_stale_coingecko_and_missing_llama_price_iaero_from_the_route(self):
+        # the 2 Nov state: DefiLlama: AERO only; CoinGecko: iAERO 56 h old
+        out, pf, logs = self.fetch(self.llama_aero(), {IAERO: {"usd": 0.499549, "last_updated_at": 1793402249},
+                                                       LIQ: {"usd": 0.02}})
+        ia = out[IAERO.lower()]
+        self.assertEqual(ia["source"], "route")
+        self.assertAlmostEqual(ia["priceUsd"], self.AERO_PX * 0.8189, places=6)
+        self.assertEqual(ia["route"]["aeroSource"], "llama")
+        self.assertEqual(pf.mem[f"base:{IAERO.lower()}"]["source"], "route")
+        self.assertIn(f"CoinGecko price of core token {IAERO.lower()} is 56.0 h old (> 2 h); not used "
+                      f"(the AERO/iAERO pools route is tried next)", logs)
+        self.assertNotIn("treated as unpriced", logs)
+        self.assertEqual((out[LIQ.lower()]["source"], out[LIQ.lower()]["priceUsd"]), ("coingecko", 0.02))  # undated, kept
+
+    def test_fresh_aggregator_iaero_is_used(self):
+        out, _, _ = self.fetch(self.llama_aero(), {IAERO: {"usd": 0.5051, "last_updated_at": self.NOW - 600}})
+        self.assertEqual((out[IAERO.lower()]["source"], out[IAERO.lower()]["priceUsd"]), ("coingecko", 0.5051))
+        llama = {**self.llama_aero(), IAERO: {"price": 0.5049, "timestamp": self.NOW - 3600}}
+        out, _, _ = self.fetch(llama, {})
+        self.assertEqual((out[IAERO.lower()]["source"], out[IAERO.lower()]["priceUsd"]), ("llama", 0.5049))
+
+    def test_undated_llama_core_price_is_not_used(self):
+        llama = {AERO: {"price": 0.9}, IAERO: {"price": 0.7}, LIQ: {"price": 0.02}}       # no timestamps
+        out, _, logs = self.fetch(llama, {AERO: {"usd": self.AERO_PX, "last_updated_at": self.NOW - 30}})
+        self.assertEqual((out[AERO.lower()]["source"], out[AERO.lower()]["priceUsd"]), ("coingecko", self.AERO_PX))
+        self.assertEqual(out[IAERO.lower()]["source"], "route")
+        self.assertEqual(out[LIQ.lower()]["source"], "llama")                               # not a core token
+        self.assertIn(f"DefiLlama price of core token {IAERO.lower()} is undated; not used", logs)
+
+    def test_missing_everywhere_and_no_route_leaves_iaero_unpriced(self):
+        del self.chain.cl[cs(price_fetcher.IAERO_CL_POOL)]                                 # route pool unreadable
+        out, pf, logs = self.fetch(self.llama_aero(), {})
+        self.assertEqual((out[IAERO.lower()]["priceUsd"], out[IAERO.lower()]["source"]), (0.0, "none"))
+        self.assertNotIn(f"base:{IAERO.lower()}", pf.mem)
+        self.assertIn("iAERO route: pool read failed", logs)
+
+    def test_stale_prices_are_never_used_when_the_route_fails(self):
+        self.set_pools(0.8189, 46_368, 50_000)                                             # v2 ~13% off: refused
+        llama = {**self.llama_aero(), IAERO: {"price": 0.6656, "timestamp": self.NOW - 9 * 3600}}
+        out, pf, _ = self.fetch(llama, {IAERO: {"usd": 0.499549, "last_updated_at": 1793402249}})
+        self.assertEqual((out[IAERO.lower()]["priceUsd"], out[IAERO.lower()]["source"]), (0.0, "none"))
+        self.assertNotIn(f"base:{IAERO.lower()}", pf.mem)
+        self.assertEqual(out[AERO.lower()]["source"], "llama")
 
 
 if __name__ == "__main__":

@@ -12,6 +12,11 @@ from web3 import Web3
 logger = logging.getLogger(__name__)
 
 LLAMA_URL = "https://coins.llama.fi/prices/current/{}"  # {chain:addr,...}
+# DefiLlama's free tier refuses URLs over 9,000 characters (HTTP 414; 437 registry tokens in one URL = 20,991 chars on
+# 2 Nov 2026), so keys are sent in batches whose URL is at most LLAMA_MAX_URL_CHARS long (env LLAMA_MAX_URL_CHARS).
+LLAMA_MAX_URL_CHARS = 8000
+LLAMA_RETRIES = 2                # extra tries per batch after an exception, HTTP 429 or 5xx; other statuses are final
+LLAMA_RETRY_BACKOFF_SEC = 1.0    # sleep before retry n: n x this
 CG_SIMPLE_URL = (
     "https://pro-api.coingecko.com/api/v3/simple/token_price/{}"
 )  # {platform: base|ethereum}?contract_addresses=&vs_currencies=usd
@@ -25,8 +30,9 @@ ZERO_ADDRESS="0x0000000000000000000000000000000000000000"
 MAX_PRICE_USD = 10_000_000.0     # sanity cap on any price (BTC wrappers trade above $50k)
 DEX_MIN_QUOTE_USD = 25_000.0     # a pool needs this much USDC (or WETH, in USD) on its quote side to price a token
 DEX_QUOTE_NOTIONAL_USD = 10.0    # size of the test swap the DEX price is scaled from
-# Core tokens (Base): an aggregator price older than LLAMA_MAX_AGE_SEC is treated as missing (DefiLlama kept iAERO's
-# last price for hours after the Aerodrome pools were drained on 22 Oct 2026)
+# Core tokens (Base): an aggregator price older than LLAMA_MAX_AGE_SEC, or undated, is treated as missing (DefiLlama
+# kept iAERO's last price for hours after the Aerodrome pools were drained on 22 Oct 2026; on 2 Nov DefiLlama has no
+# iAERO price and CoinGecko's is ~56 h old, so iAERO comes from the route below)
 AERO_ADDRESS = "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee"      # Aero AERO
 IAERO_ADDRESS = "0x81034fb34009115f215f5d5f564aac9ffa46a1dc"
 CORE_TOKENS = (AERO_ADDRESS, IAERO_ADDRESS)
@@ -100,10 +106,81 @@ ERC20_DEC_ABI = [
 def _now() -> int:
     return int(time.time())
 
+
+def _llama_max_url_chars() -> int:
+    try:
+        n = int(os.environ.get("LLAMA_MAX_URL_CHARS") or LLAMA_MAX_URL_CHARS)
+    except ValueError:
+        n = LLAMA_MAX_URL_CHARS
+    return n if n > 0 else LLAMA_MAX_URL_CHARS
+
+
+def llama_batches(keys: List[str], max_url_chars: Optional[int] = None) -> List[List[str]]:
+    """keys, in order, split into batches whose DefiLlama URL is at most max_url_chars long (default
+    LLAMA_MAX_URL_CHARS / env). Sized by URL length, not count (keys differ in length). A key too long on its own
+    gets a batch of its own."""
+    limit = max_url_chars or _llama_max_url_chars()
+    empty = len(LLAMA_URL.format(""))
+    batches: List[List[str]] = []
+    cur: List[str] = []
+    size = empty
+    for k in keys:
+        if cur and size + 1 + len(k) > limit:
+            batches.append(cur)
+            cur, size = [], empty
+        size += len(k) + (1 if cur else 0)
+        cur.append(k)
+    if cur:
+        batches.append(cur)
+    return batches
+
+
+def _llama_get(keys: List[str], timeout: int = 10) -> Optional[dict]:
+    """The "coins" map for one DefiLlama batch, or None if it failed. An exception, HTTP 429 or 5xx is retried at
+    most LLAMA_RETRIES times; any other status (e.g. 414) is final. Only this batch's keys are lost on failure."""
+    url = LLAMA_URL.format(",".join(keys))
+    tries = LLAMA_RETRIES + 1
+    for attempt in range(1, tries + 1):
+        if attempt > 1:
+            time.sleep(LLAMA_RETRY_BACKOFF_SEC * (attempt - 1))
+        try:
+            r = requests.get(url, timeout=timeout)
+        except Exception as e:
+            logger.warning(f"Llama fetch error ({len(keys)} keys, try {attempt}/{tries}): {e}")
+            continue
+        if r.status_code == 200:
+            try:
+                return r.json().get("coins") or {}
+            except Exception as e:
+                logger.warning(f"Llama bad response ({len(keys)} keys): {e}")
+                return None
+        logger.warning(f"Llama HTTP {r.status_code} ({len(keys)} keys, {len(url)} chars, try {attempt}/{tries}): "
+                       f"{r.text[:160]}")
+        if r.status_code != 429 and r.status_code < 500:
+            return None
+    return None
+
+
+def _core_price_problem(ts, now: int) -> Optional[str]:
+    """Why an aggregator price of a core token may not be used: undated, or older than LLAMA_MAX_AGE_SEC. None if fresh."""
+    if isinstance(ts, bool) or not isinstance(ts, (int, float)):
+        return "undated"
+    if now - int(ts) > LLAMA_MAX_AGE_SEC:
+        return f"{(now - int(ts)) / 3600:.1f} h old (> {LLAMA_MAX_AGE_SEC / 3600:g} h)"
+    return None
+
+
+def _log_core_dropped(source: str, addr: str, why: str) -> None:
+    if source == "DefiLlama":
+        nxt = "CoinGecko is tried next"
+    else:
+        nxt = "the AERO/iAERO pools route is tried next" if addr == IAERO_ADDRESS else "the DEX fallback is tried next"
+    logger.warning(f"[PriceFetcher] {source} price of core token {addr} is {why}; not used ({nxt})")
+
 class PriceFetcher:
     """
     Price cache with:
-      1) DefiLlama (primary)
+      1) DefiLlama (primary; batched by URL length, see LLAMA_MAX_URL_CHARS)
       2) CoinGecko (fallback)
       3) On-chain quoter (final fallback): the deepest token/USDC or token/WETH pool across Aero and legacy
          Aerodrome (by quote-side reserve, at least DEX_MIN_QUOTE_USD), quoted with a ~$10 swap and scaled
@@ -198,13 +275,16 @@ class PriceFetcher:
         if not addrs:
             return {}
         uniq = sorted(set(self._key(a) for a in addrs))
-        url = LLAMA_URL.format(",".join(uniq))
         now = _now()
         out: Dict[str, dict] = {}
-        try:
-            r = requests.get(url, timeout=10)
-            if r.status_code == 200:
-                coins = r.json().get("coins", {})
+        batches = llama_batches(uniq)
+        if len(batches) > 1:
+            logger.info(f"[PriceFetcher] Llama: {len(uniq)} tokens in {len(batches)} requests")
+        for batch in batches:
+            coins = _llama_get(batch)     # None: this batch failed; its tokens fall through to the next source
+            if coins is None:
+                continue
+            try:
                 for k, v in coins.items():
                     price = v.get("price")
                     if price is None:
@@ -213,18 +293,15 @@ class PriceFetcher:
                     if not math.isfinite(p) or p <= 0 or p > self.max_price_usd:
                         continue
                     addr = k.split(":")[1]
-                    ts = v.get("timestamp")
-                    if addr in self.core_tokens and isinstance(ts, (int, float)) and now - int(ts) > LLAMA_MAX_AGE_SEC:
-                        logger.warning(f"[PriceFetcher] DefiLlama price of core token {addr} is {(now - int(ts)) / 3600:.1f} h "
-                                       f"old (> {LLAMA_MAX_AGE_SEC / 3600:g} h); treated as unpriced")
+                    why = _core_price_problem(v.get("timestamp"), now) if addr in self.core_tokens else None
+                    if why:
+                        _log_core_dropped("DefiLlama", addr, why)
                         continue
                     entry = {"priceUsd": p, "updatedAt": now, "source": "llama"}
                     self.mem[k] = entry
                     out[addr] = entry
-            else:
-                logger.warning(f"Llama HTTP {r.status_code}: {r.text[:160]}")
-        except Exception as e:
-            logger.warning(f"Llama fetch error: {e}")
+            except Exception as e:
+                logger.warning(f"Llama parse error: {e}")
         return out
 
     def _fetch_coingecko(self, addrs: List[str]) -> Dict[str, dict]:
@@ -251,11 +328,9 @@ class PriceFetcher:
                         if not math.isfinite(p) or p <= 0 or p > self.max_price_usd:
                             continue
                         k_lower = k.lower()
-                        ts = v.get("last_updated_at")
-                        if k_lower in self.core_tokens and (not isinstance(ts, (int, float))
-                                                            or now - int(ts) > LLAMA_MAX_AGE_SEC):
-                            logger.warning(f"[PriceFetcher] CoinGecko price of core token {k_lower} is stale or "
-                                           f"undated; treated as unpriced")
+                        why = _core_price_problem(v.get("last_updated_at"), now) if k_lower in self.core_tokens else None
+                        if why:
+                            _log_core_dropped("CoinGecko", k_lower, why)
                             continue
                         entry = {"priceUsd": p, "updatedAt": now, "source": "coingecko"}
                         self.mem[self._key(k_lower)] = entry
@@ -522,7 +597,8 @@ class PriceFetcher:
             logger.warning(f"[PriceFetcher] {len(missing)} tokens still unpriced after all sources")
 
         took = time.time() - start_time
-        logger.info(f"[PriceFetcher] Done. Total priced: {len(out)} / {total} in {took:.2f}s")
+        priced = sum(1 for v in out.values() if float(v.get("priceUsd") or 0) > 0)
+        logger.info(f"[PriceFetcher] Done. Total priced: {priced} / {total} in {took:.2f}s")
         self._save()
         return out
 
@@ -531,20 +607,17 @@ def llama_prices(keys: List[str], timeout: int = 10) -> Dict[str, float]:
     """DefiLlama prices for arbitrary keys ("chain:0xaddr" or "coingecko:<id>"); missing or bad ones are left out."""
     if not keys:
         return {}
-    try:
-        r = requests.get(LLAMA_URL.format(",".join(sorted(set(keys)))), timeout=timeout)
-        if r.status_code != 200:
-            logger.warning(f"Llama HTTP {r.status_code}: {r.text[:160]}")
-            return {}
-        out = {}
-        for k, v in (r.json().get("coins") or {}).items():
-            p = v.get("price")
-            if p is not None and math.isfinite(float(p)) and float(p) > 0:
-                out[k] = float(p)
-        return out
-    except Exception as e:
-        logger.warning(f"Llama fetch error: {e}")
-        return {}
+    out = {}
+    for batch in llama_batches(sorted(set(keys))):     # a failed batch loses only its own keys
+        coins = _llama_get(batch, timeout=timeout)
+        try:
+            for k, v in (coins or {}).items():
+                p = v.get("price")
+                if p is not None and math.isfinite(float(p)) and float(p) > 0:
+                    out[k] = float(p)
+        except Exception as e:
+            logger.warning(f"Llama parse error: {e}")
+    return out
 
 
 class MappedPriceFetcher:
