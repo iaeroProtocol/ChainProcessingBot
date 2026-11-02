@@ -41,6 +41,9 @@ class FakeReader:
     def block_at(self, ts):
         return 1
 
+    def block_hash(self, block):
+        return "0x" + format(int(block), "064x")
+
     def call_one(self, target, sig, args, out_types, gas=300_000):
         return self.many([(target, sig, args, out_types)])[0]
 
@@ -187,6 +190,25 @@ META = {8453: {AERO: {"symbol": "AERO", "decimals": 18}, USDC: {"symbol": "USDC"
 PRICES = {8453: {AERO: 0.8, USDC: 1.0, WETH: 4000.0}, 1: {"0xweth": 4000.0, "0xusdt": 1.0}}
 
 
+def raw_point(point):
+    """Encode known synthetic fixtures in the verified raw-unit history format (not a production migration)."""
+    from decimal import Decimal
+    decimals = {t: m["decimals"] for ts in META.values() for t, m in ts.items()}
+    decimals["usdc"] = 6
+    decimals["0x" + "77" * 20] = 18  # synthetic unpriced token used by the coverage control
+    point["schemaVersion"] = pe.HISTORY_VERSION
+    point["units"] = {}
+    for key, gauge in point.get("gauges", {}).items():
+        cid = int(key.split(":")[0])
+        for kind, raw in [("fees", "rawFees"), ("incentives", "rawIncentives")]:
+            gauge[raw] = {}
+            for t, amount in gauge.get(kind, {}).items():
+                dec = decimals[t]
+                point["units"][f"{cid}:{t}"] = dec
+                gauge[raw][t] = str(int(Decimal(str(amount)) * (10 ** dec)))
+    return point
+
+
 class ValueLiveTest(unittest.TestCase):
     def test_accrual_rate_and_both_annualisations(self):
         chains = [
@@ -258,8 +280,8 @@ class TrailingTest(unittest.TestCase):
         """History point `ago` seconds before NOW with cumulative USDC fees and AERO incentives (human units)."""
         g = {f"8453:{gauge}": {"usd": 0, "fees": {USDC: usdc_fees}, "incentives": {AERO: aero_inc}}}
         g.update(extra or {})
-        return {"asOf": self.NOW - ago, "chains": [8453], "accruedUSD": 0, "feesCumUSD": 0, "gauges": g,
-                "complete": True}           # review 8 M-1: only complete points end a window
+        return raw_point({"asOf": self.NOW - ago, "chains": [8453], "accruedUSD": 0, "feesCumUSD": 0, "gauges": g,
+                          "complete": True})
 
     def test_windows_are_null_without_history_and_a_point_is_recorded(self):
         live = _live([_g2(G_CL, fees={USDC: 100 * 10**6}, inc={AERO: 50 * E18})], self.NOW)
@@ -473,6 +495,7 @@ class BuildLiveTest(unittest.TestCase):
     def test_history_from_another_stake_is_ignored(self):
         old_point = {"asOf": NOW - DAY, "chains": [8453], "gauges": {f"8453:{G_CL}": {"fees": {WETH: 0.0}, "incentives": {}}},
                      "complete": True}
+        old_point = raw_point(old_point)
         pf = mock.Mock()
         pf.fetch_batch.side_effect = lambda toks: {t: {"priceUsd": PRICES[8453].get(t, 0.0)} for t in toks}
         with mock.patch.object(pe, "token_meta", return_value=META[8453]), \
@@ -504,7 +527,7 @@ class ChainReaderTest(unittest.TestCase):
         mc = mock.Mock()
         mc.functions.aggregate3.side_effect = aggregate3
         w3 = mock.Mock(codec=real.codec, to_checksum_address=Web3.to_checksum_address)
-        w3.eth.get_block.return_value = {"timestamp": NOW}
+        w3.eth.get_block.return_value = {"timestamp": NOW, "hash": bytes.fromhex("ab" * 32)}
         w3.eth.contract.return_value = mc
         return w3, calls
 
@@ -594,7 +617,8 @@ class IncrementalClaimsTest(unittest.TestCase):
         vrms = {VRM_V2: {"fees": dict(v2_fees or {USDC: 2 * 10**6}), "incentives": {AERO: 4 * E18}}}
         if cl:
             vrms[VRM_CL] = {"fees": {}, "incentives": {}}
-        return {"since": T0, "sinceBlock": 10, "block": block, "blockTimestamp": NOW - 3600, "anyFrom": 10,
+        return {"since": T0, "sinceBlock": 10, "block": block, "blockHash": "0x" + format(block, "064x"),
+                "blockTimestamp": NOW - 3600, "anyFrom": 10,
                 "gauges": dict(self.SEEN), "unverified": {}, "vrms": vrms}
 
     def test_first_run_scans_from_the_allocation_and_records_every_vrm(self):
@@ -602,7 +626,8 @@ class IncrementalClaimsTest(unittest.TestCase):
         ch = self.read(r, None)
         self.assertEqual([(c[0], c[2]) for c in r.log_calls], [(None, 10)])      # once, from block_at(since)
         seen = {"firstSeen": NOW, "firstActive": True}
-        self.assertEqual(ch["claimsState"], {"since": T0, "sinceBlock": 10, "block": 1000, "blockTimestamp": NOW,
+        self.assertEqual(ch["claimsState"], {"since": T0, "sinceBlock": 10, "block": 1000,
+                                             "blockHash": r.block_hash(1000), "blockTimestamp": NOW,
                                              "anyFrom": 10, "gauges": {G_CL: seen, G_V2: seen}, "unverified": {}, "vrms": {
             VRM_V2: {"fees": {USDC: 2 * 10**6}, "incentives": {AERO: 4 * E18}},
             VRM_CL: {"fees": {}, "incentives": {}}}})                   # scanned, no claims: not rescanned later
@@ -858,12 +883,12 @@ class GaugeDiscoveryTest(unittest.TestCase):
             f"8453:{G_OLD}": {"active": False, "firstSeen": NOW, "firstActive": False, "fees": {USDC: 500.0},
                               "incentives": {}}}}
         price = lambda cid, t: 1.0
-        d = pe.window_delta(cur, snap, price, {8453: NOW - 3600})               # re-voted after the snapshot
+        d = pe.window_delta(raw_point(cur), raw_point(snap), price, {8453: NOW - 3600})               # re-voted after the snapshot
         self.assertTrue(d["partial"])
         self.assertAlmostEqual(d["usdPerDay"], 10.0)                            # G_OLD's 500 left out
         # first seen after the snapshot while allocated (joined at a re-vote), left again since: counted from zero
         cur["gauges"][f"8453:{G_OLD}"].update(firstSeen=NOW - 3600, firstActive=True)
-        d = pe.window_delta(cur, snap, price, {8453: NOW - 3600})
+        d = pe.window_delta(raw_point(cur), raw_point(snap), price, {8453: NOW - 3600})
         self.assertFalse(d["partial"])
         self.assertAlmostEqual(d["usdPerDay"], 510.0)
         # first seen while allocated, but at (or before) the snapshot: it should have been in it -> partial
@@ -931,9 +956,9 @@ class LogsTest(unittest.TestCase):
 
 
 def _pt(asof, usdc, chains=(8453,), complete=True, unread=(), last_alloc=T0):
-    return {"asOf": asof, "chains": list(chains), "complete": complete, "unread": list(unread),
+    return raw_point({"asOf": asof, "chains": list(chains), "complete": complete, "unread": list(unread),
             "lastAllocated": {str(c): last_alloc for c in chains},
-            "gauges": {f"{c}:{G_CL}": {"fees": {USDC: usdc}, "incentives": {}} for c in chains}}
+            "gauges": {f"{c}:{G_CL}": {"fees": {USDC: usdc}, "incentives": {}} for c in chains}})
 
 
 class EpochRateTest(unittest.TestCase):

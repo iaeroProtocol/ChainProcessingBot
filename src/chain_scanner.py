@@ -159,7 +159,7 @@ class ChainScanner:
             return int(self.w3.eth.block_number)
         except Exception as e:
             logger.warning(f"latest_block failed: {e}")
-            return 0
+            raise
 
     def funded_epochs_and_tokens(self, distributor: str, from_block: int, to_block: int):
         """
@@ -180,6 +180,17 @@ class ChainScanner:
             s.add(self.w3.to_checksum_address(token))
 
         return sorted(epochs), {e: sorted(list(ts)) for e, ts in epoch_tokens.items()}
+
+    def block_hash(self, block: int) -> str:
+        value = self.w3.eth.get_block(int(block))["hash"]
+        value = value.hex() if hasattr(value, "hex") else str(value)
+        value = "0x" + value.removeprefix("0x").lower()
+        if len(value) != 66 or any(c not in "0123456789abcdef" for c in value[2:]):
+            raise ValueError("Missing canonical funding block hash")
+        return value
+
+    def block_timestamp(self, block: int) -> int:
+        return int(self.w3.eth.get_block(int(block))["timestamp"])
 
     
     def _get_logs_chunked(self, address: str, topics: list, from_block: int, to_block: int, step: int = 50_000):
@@ -207,8 +218,8 @@ class ChainScanner:
                     step //= 2
                     continue
                 else:
-                    # give up this slice, advance to avoid infinite loop
-                    pass
+                    # The caller must never checkpoint past an unread range.
+                    raise RuntimeError(f"Unscanned log range {fb}-{end}") from e
             fb = end + 1
 
     def erc20_transfer_logs(self, token: str, from_block: int, to_block: int):
@@ -356,7 +367,5 @@ class ChainScanner:
                 dec = default_decimals
                 if success and len(data) >= 32:
                     dec = int.from_bytes(data[-32:], "big") & 0xFF  # uint8 in the low byte
-                    if dec == 0:  # guard against broken tokens
-                        dec = default_decimals
                 out[addr.lower()] = dec
         return out

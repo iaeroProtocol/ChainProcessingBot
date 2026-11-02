@@ -159,6 +159,9 @@ class SimReader:
     def block_at(self, ts):
         return max(0, min(self.block, self.sim.block_of(ts)))
 
+    def block_hash(self, block):
+        return "0x" + format(int(block), "064x")
+
     def call_one(self, target, sig, args, out_types, gas=300_000):
         return self.many([(target, sig, args, out_types)])[0]
 
@@ -263,10 +266,14 @@ class World:
             if ts <= now:
                 key = (USDC, ts // WEEK * WEEK)
                 rewards[key] = rewards.get(key, 0) + amt
-        self.repo.files["data/epochs.json"] = json.dumps({"epochs": {str(ep): {"tokens": [USDC]} for _, ep in rewards}})
+        self.repo.files["data/epochs.json"] = json.dumps({"distributorAddress": DIST.lower(),
+            "epochs": {str(ep): {"tokens": [USDC]} for _, ep in rewards},
+            "state": {"version": 2, "last_block": 1, "last_block_hash": "0x" + format(1, "064x"),
+                      "last_block_timestamp": now}})
         w3 = FakeDistributorWeb3(rewards=rewards, snapshot=AnyEpoch(STAKED_RAW), supply_at_start={},
                                  total_staked=STAKED_RAW)
         scanner = mock.Mock(w3=w3)
+        scanner.block_hash.side_effect = lambda block: "0x" + format(int(block), "064x")
         scanner.decimals_map.side_effect = lambda toks, **k: {USDC: 6}
         down = {{1: "https://ethereum-rpc.publicnode.com", 4663: pe.ROBINHOOD_RPC}[c] for c in unreachable}
 

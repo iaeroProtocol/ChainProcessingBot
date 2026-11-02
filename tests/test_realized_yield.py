@@ -247,7 +247,7 @@ class FakeDistributorWeb3:
                         val = w3.total_staked
                     else:
                         val = Web3.to_checksum_address(w3.iaero)
-                    return mock.Mock(call=lambda: val)
+                    return mock.Mock(call=lambda **kwargs: val)
                 return fn
 
         return mock.Mock(functions=_Functions())

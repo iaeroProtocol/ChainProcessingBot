@@ -1,11 +1,14 @@
 import os, sys
+import copy
 import json
 import logging
 import base64
 import hashlib
 import time
 import threading
+import hmac
 from collections import deque
+from contextlib import nullcontext
 from datetime import datetime, timezone
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
@@ -15,6 +18,7 @@ from github import Github, Auth
 from chain_scanner import ChainScanner
 from github_updater import GitHubUpdater
 from price_fetcher import PriceFetcher
+from job_runtime import JobDeadlineExceeded, RedactingFormatter, job_deadline, redact_value
 
 from eth_utils import keccak
 TRANSFER_TOPIC = keccak(text="Transfer(address,address,uint256)").hex()
@@ -26,21 +30,36 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
+for handler in logging.getLogger().handlers:
+    handler.setFormatter(RedactingFormatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
 
 # --------------- status log (in-memory ring buffer) ---------------
 _status_log = deque(maxlen=200)
 _status_lock = threading.Lock()
 
 def _log_status(entry: dict):
+    entry = redact_value(entry)
     entry.setdefault("ts", datetime.now(timezone.utc).isoformat())
     with _status_lock:
         _status_log.append(entry)
 
 class _StatusHandler(BaseHTTPRequestHandler):
     def do_GET(self):
+        if self.path not in ("/health", "/status"):
+            self.send_error(404)
+            return
+        if self.path == "/status":
+            token = os.environ.get("STATUS_TOKEN")
+            expected = "Bearer " + token if token else ""
+            if not token or not hmac.compare_digest(self.headers.get("Authorization", ""), expected):
+                self.send_error(403)
+                return
         with _status_lock:
             entries = list(_status_log)
-        body = json.dumps({"status": "ok", "log": entries}, indent=2).encode()
+        payload = {"process": "running", "phase": entries[-1].get("event") if entries else "starting"}
+        if self.path == "/status":
+            payload["log"] = entries
+        body = json.dumps(payload, indent=2).encode()
         self.send_response(200)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(body)))
@@ -51,6 +70,8 @@ class _StatusHandler(BaseHTTPRequestHandler):
         pass  # suppress request logs
 
 def _start_status_server():
+    if os.environ.get("STATUS_HTTP_ENABLED", "false").lower() != "true":
+        return
     port = int(os.environ.get("PORT", "8080"))
     try:
         server = HTTPServer(("0.0.0.0", port), _StatusHandler)
@@ -70,51 +91,42 @@ def load_last_state_from_github(repo, branch="main"):
       - returns a tuple: (epoch_state, liq_state)
       - if liqState missing, returns default for it
     """
-    try:
-        f = repo.get_contents("data/active_reward_tokens.json", ref=branch)
-        content = base64.b64decode(f.content).decode("utf-8")
-        data = json.loads(content)
-        epoch_state = data.get("state", _default_state())
-        liq_state = data.get("liqState", _default_state())
-        return epoch_state, liq_state
-    except Exception as e:
-        logger.info(f"No existing active file found in GitHub: {e}")
-        return _default_state(), _default_state()
+    data = _load_json_strict(repo, branch, "data/active_reward_tokens.json")
+    return data.get("state", _default_state()), data.get("liqState", _default_state())
+
+
+def _read_repo_text(repo, branch: str, path: str) -> str:
+    f = repo.get_contents(path, ref=branch)
+    if getattr(f, "encoding", "base64") == "none":
+        # Contents API omits large files. Blob lookup is pinned to the exact SHA, not a moving download URL.
+        f = repo.get_git_blob(f.sha)
+    return base64.b64decode(f.content).decode("utf-8")
 
 def _load_stakers_state(repo, branch: str, path: str) -> dict:
-    try:
-        f = repo.get_contents(path, ref=branch)
-        import base64, json
-        return json.loads(base64.b64decode(f.content).decode("utf-8"))
-    except Exception:
-        return {}
+    return _load_json_strict(repo, branch, path)
 
 def _load_json(repo, branch: str, path: str) -> dict:
-    try:
-        f = repo.get_contents(path, ref=branch)
-        import base64, json
-        return json.loads(base64.b64decode(f.content).decode("utf-8"))
-    except Exception:
-        return {}
+    return _load_json_strict(repo, branch, path)
 
 def _is_not_found(e: Exception) -> bool:
     # PyGithub raises UnknownObjectException (status 404, str "404 {...}") for a missing file
     return isinstance(e, FileNotFoundError) or getattr(e, "status", None) == 404 or str(e).startswith("404")
 
 def _load_json_strict(repo, branch: str, path: str) -> dict:
-    """Like _load_json, but only a missing (404) or unparseable file reads as {}; any other read error raises."""
+    """Only an absent (404) file reads as {}; malformed data and other read failures raise."""
     try:
-        f = repo.get_contents(path, ref=branch)
+        text = _read_repo_text(repo, branch, path)
     except Exception as e:
         if _is_not_found(e):
             return {}
         raise
     try:
-        doc = json.loads(base64.b64decode(f.content).decode("utf-8"))
+        doc = json.loads(text)
     except Exception as e:
-        logger.warning(f"[GitHub] {path} is not valid JSON ({e}); treating it as empty")
-        return {}
-    return doc if isinstance(doc, dict) else {}
+        raise ValueError(f"Invalid JSON state: {path}") from e
+    if not isinstance(doc, dict):
+        raise ValueError(f"Invalid state object: {path}")
+    return doc
 
 def _update_stakers(repo, updater: GitHubUpdater, scanner: ChainScanner) -> bool:
     """
@@ -134,15 +146,18 @@ def _update_stakers(repo, updater: GitHubUpdater, scanner: ChainScanner) -> bool
     last_block = int(checkpoint.get("last_block", 0))
 
     latest = scanner.latest_block()
-    if last_block <= 0 or last_block > latest:
-        # bootstrap: look back a safe window
-        lookback = int(os.environ.get("STAKERS_BOOTSTRAP_BLOCKS", "100000"))
-        last_block = max(0, latest - lookback)
+    if last_block > latest:
+        raise RuntimeError("Holder RPC is behind the saved checkpoint")
+    if last_block <= 0:
+        start = os.environ.get("STAKERS_START_BLOCK")
+        if start is None:
+            raise ValueError("STAKERS_START_BLOCK is required to bootstrap a complete holder index")
+        last_block = int(start) - 1
 
-    from_block = last_block + 1 if last_block > 0 else last_block
+    from_block = max(0, last_block + 1)
     if from_block > latest:
         logger.info("[stakers] up to date; no new blocks to scan.")
-        from_block = latest
+        return False
 
     # 1) Scan new Transfer logs to update holder set
     added = removed = 0
@@ -199,7 +214,9 @@ def _update_stakers(repo, updater: GitHubUpdater, scanner: ChainScanner) -> bool
     # Filter zeros/dust and build holder list
     filtered = []
     for addr in hold_list:
-        bal = int(results.get(addr, 0))
+        if addr not in results:
+            raise RuntimeError("Holder balance unavailable; retaining previous holder snapshot")
+        bal = int(results[addr])
         if bal <= min_units:
             continue
         filtered.append({"address": addr, "balance": str(bal)})
@@ -209,7 +226,7 @@ def _update_stakers(repo, updater: GitHubUpdater, scanner: ChainScanner) -> bool
         "token": token_lc,
         "decimals": int(decimals),
         "asOf": int(datetime.now(timezone.utc).timestamp()),
-        "checkpoint": {"last_block": int(last_block)},
+        "checkpoint": {"last_block": int(latest)},
         "totalSupply": str(total_supply),
         "holderCount": len(filtered),
         "holders": filtered
@@ -219,58 +236,87 @@ def _update_stakers(repo, updater: GitHubUpdater, scanner: ChainScanner) -> bool
     return _push_if_changed(repo, updater, path, payload)
 
 def _update_epochs(repo, updater: GitHubUpdater, scanner: ChainScanner) -> bool:
+    transaction = updater.transaction() if hasattr(updater, "transaction") else nullcontext()
+    with transaction:
+        return _collect_epochs(repo, updater, scanner)
+
+
+# The current app verified this deployment boundary with two providers on 26 October 2026.
+# The block identity is checked against the configured RPC before a full index rebuild.
+_EPOCH_DEPLOYMENTS = {
+    (8453, "0x781a80fa817b5a146c440f03ef8643f4aca6588a"):
+        (35164965, "0xbe61dd5b23c067f7592af7e343095dc1cd96284e96c354f07e4f1e6c875c02f0")
+}
+
+
+def _collect_epochs(repo, updater: GitHubUpdater, scanner: ChainScanner) -> bool:
     path = os.environ.get("EPOCHS_JSON_PATH", "data/epochs.json")
     distributor = os.environ.get("EPOCH_STAKING_DISTRIBUTOR")
     if not distributor:
         return False
-
+    distributor = distributor.lower()
     tip = scanner.latest_block()
+    tip_hash = scanner.block_hash(tip)
+    tip_timestamp = scanner.block_timestamp(tip)
     cur = _load_json(repo, updater.branch, path)
+    state = cur.get("state") or {}
+    last = int(state.get("last_block", -1))
+    if last > tip:
+        raise RuntimeError("Epoch RPC is behind the saved checkpoint")
 
-    # bootstrap or continue from last scanned block
-    state = cur.get("state", {}) or {}
-    last_scanned = int(state.get("last_block", 0))
-    if last_scanned <= 0 or last_scanned > tip:
-        lookback = int(os.environ.get("EPOCHS_BOOTSTRAP_BLOCKS", "200000"))
-        last_scanned = max(0, tip - lookback)
+    known = _EPOCH_DEPLOYMENTS.get((scanner.chain_id, distributor))
+    configured = os.environ.get("EPOCHS_START_BLOCK")
+    if configured is not None:
+        start = int(configured)
+        if known and start > known[0]:
+            raise ValueError("EPOCHS_START_BLOCK would omit the known distributor's funding history")
+        expected_start_hash = os.environ.get("EPOCHS_START_BLOCK_HASH")
+        if expected_start_hash is None and known and start == known[0]:
+            expected_start_hash = known[1]
+    elif known:
+        start, expected_start_hash = known
+    elif state.get("version") == 2 and isinstance(state.get("start_block"), int):
+        start, expected_start_hash = state["start_block"], state.get("start_block_hash")
+    else:
+        raise ValueError("EPOCHS_START_BLOCK is required to bootstrap or repair a complete funding index")
+    if start < 0 or start > tip:
+        raise ValueError("Funding deployment anchor is outside the available chain")
 
-    from_block = last_scanned + 1 if last_scanned > 0 else last_scanned
-    if from_block > tip:
-        return False
+    rebuild = (state.get("version") != 2 or not state.get("last_block_hash") or not state.get("start_block_hash")
+               or not isinstance(state.get("last_block_timestamp"), int)
+               or state.get("start_block") != start or cur.get("distributorAddress") != distributor)
+    if not rebuild:
+        rebuild = scanner.block_hash(last) != state["last_block_hash"]
+    if rebuild:
+        start_hash = scanner.block_hash(start)
+        if expected_start_hash and start_hash != expected_start_hash.lower():
+            raise RuntimeError("Funding deployment anchor is no longer canonical")
+        # Replace, rather than union with, the old map: orphaned tokens and epochs must disappear.
+        epoch_map = {}
+        from_block = start
+    else:
+        start_hash = state.get("start_block_hash")
+        epoch_map = copy.deepcopy(cur.get("epochs") or {})
+        from_block = last + 1
+        if from_block > tip:
+            return False
 
-    epochs, epoch_tokens = scanner.funded_epochs_and_tokens(distributor, from_block, tip)
-    if not epoch_tokens:
-        # still advance last_block to avoid rescanning the same span
-        cur.setdefault("state", {})["last_block"] = tip
-        return _push_if_changed(repo, updater, path, cur)
-
-    # merge into file (append-only per epoch)
-    cur.setdefault("distributorAddress", distributor.lower())
-    cur.setdefault("epochs", {})
-
+    _, epoch_tokens = scanner.funded_epochs_and_tokens(distributor, from_block, tip)
     for eid, tokens in epoch_tokens.items():
         key = str(eid)
-        # normalize to lowercase + dedupe + sort
-        new_lc = sorted({ (t or "").lower() for t in tokens if t })
-        cur.setdefault("epochs", {})
-        if key not in cur["epochs"]:
-            cur["epochs"][key] = {"tokens": new_lc}
-        else:
-            prev = { (t or "").lower() for t in cur["epochs"][key].get("tokens", []) }
-            cur["epochs"][key]["tokens"] = sorted(prev.union(new_lc))
+        previous = set((epoch_map.get(key) or {}).get("tokens") or [])
+        epoch_map[key] = {"tokens": sorted(previous | {t.lower() for t in tokens if t})}
+    if scanner.block_hash(tip) != tip_hash:
+        raise RuntimeError("Canonical funding scan tip changed; index publication blocked")
 
-
-    # nice-to-have: current/previous epoch markers (based on wall-clock)
-    WEEK = 7 * 24 * 60 * 60
-    now_epoch = (int(time.time()) // WEEK) * WEEK
-    cur["currentEpoch"] = now_epoch
-    cur["previousEpoch"] = now_epoch - WEEK
-
-    cur["state"] = {"last_block": tip, "last_update": int(time.time())}
-    cur["summary"] = {
-        "totalEpochs": len(cur["epochs"])
-    }
-
+    now = int(time.time())
+    week = 7 * 24 * 60 * 60
+    cur.update(distributorAddress=distributor, epochs=epoch_map, currentEpoch=now // week * week,
+               previousEpoch=now // week * week - week,
+               state={"version": 2, "last_block": tip, "last_block_hash": tip_hash,
+                      "last_block_timestamp": tip_timestamp,
+                      "start_block": start, "start_block_hash": start_hash, "last_update": now},
+               summary={"totalEpochs": len(epoch_map)})
     return _push_if_changed(repo, updater, path, cur)
 
 def _sync_data_from_github(repo, branch: str, data_dir: str = "data"):
@@ -340,23 +386,31 @@ def _stake_accrual_start():
 LIVE_STATE_REWRITE_SEC = 3600   # the claims state is rewritten when its claims change, or when this much newer
 
 def _claims_state_due(old: dict, new: dict) -> bool:
-    """Write the claims state when anything but the scanned-to block changed, or a chain's block moved >= 1 h on."""
+    """Persist observations and canonical checkpoints together; retain the hourly rule for legacy state inputs."""
     if not isinstance(new, dict) or not new.get("chains"):
         return False
     if not isinstance(old, dict) or old.get("stakeId") != new.get("stakeId"):
+        return True
+    if any(old.get(k) != new.get(k) for k in ("version", "history", "gauges")):
         return True
     oc, nc = old.get("chains") or {}, new.get("chains") or {}
     if set(oc) != set(nc):
         return True
     for cid, n in nc.items():
         o = oc.get(cid) or {}
-        if any(o.get(k) != n.get(k) for k in ("since", "vrms", "gauges", "unverified", "anyFrom")):
+        if any(o.get(k) != n.get(k) for k in ("since", "vrms", "gauges", "unverified", "anyFrom", "blockHash")):
             return True
         if int(n.get("blockTimestamp") or 0) - int(o.get("blockTimestamp") or 0) >= LIVE_STATE_REWRITE_SEC:
             return True
     return False
 
 def _update_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner, price_fetcher: PriceFetcher) -> bool:
+    transaction = updater.transaction() if hasattr(updater, "transaction") else nullcontext()
+    with transaction:
+        return _collect_realized_yield(repo, updater, scanner, price_fetcher)
+
+
+def _collect_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner, price_fetcher: PriceFetcher) -> bool:
     """
     Staking APY -> data/estimated_rewards_usd.json (replaces the legacy EnhancedOptimizedVotesKeeper; same schema plus
     new fields) and -> data/yield_history.json (replaces the rewards keeper's weekly snapshot).
@@ -365,10 +419,12 @@ def _update_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner, 
     distributor fundings of the last completed epoch go under fundedRealized only. data/live_state.json keeps the
     claims scan state per chain (incremental scans).
     """
+    updater.measurement_status = "starting"
     er_enabled = os.environ.get("ESTIMATED_REWARDS_ENABLED", "true").lower() == "true"
     yh_enabled = os.environ.get("YIELD_HISTORY_ENABLED", "true").lower() == "true"
     distributor = os.environ.get("EPOCH_STAKING_DISTRIBUTOR")
     if not (er_enabled or yh_enabled) or not distributor:
+        updater.measurement_status = "disabled"
         return False
 
     from realized_yield import (build_estimated_rewards, stake_payload, apply_measured, measured_headline,
@@ -376,7 +432,7 @@ def _update_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner, 
                                 epoch_start, last_completed_epoch, AERO_ADDRESS, WEEK)
     from position_earnings import epoch_rate
     dec_chunk = int(os.environ.get("DEC_CHUNK_SIZE", "75"))
-    decimals_fn = lambda toks: scanner.decimals_map(toks, chunk_size=dec_chunk, default_decimals=18)
+    decimals_fn = lambda toks: scanner.decimals_map(toks, chunk_size=dec_chunk, default_decimals=None)
     aero = os.environ.get("AERO_ADDRESS") or AERO_ADDRESS
     iaero = os.environ.get("IAERO_ADDRESS")
 
@@ -387,6 +443,7 @@ def _update_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner, 
         # publishing now could drop the live block (and its history) and the headline to keep
         logger.error(f"[realized_yield] could not read {path} ({str(e)[:160]}); NOT publishing this run.")
         _log_status({"event": "realized_yield_blocked", "reasons": [f"{path} unreadable"]})
+        updater.measurement_status = "blocked"
         return False
     for name in ("ROLLING_SINCE_TS", "ROLLING_CUTOFF_TS", "LIVE_YIELD_ENABLED"):
         if (os.environ.get(name) or "").strip():
@@ -404,12 +461,26 @@ def _update_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner, 
 
     # 2. the live measurement of the stake's earnings (claims scanned from data/live_state.json on)
     state_path = os.environ.get("LIVE_STATE_JSON_PATH", "data/live_state.json")
-    claims_state = _load_json(repo, updater.branch, state_path)
+    # Measurement history is durable even when there is no eligible public headline (CPB-R01).
+    claims_state = _load_json_strict(repo, updater.branch, state_path)
     prev_live = prev_doc.get("live")
+    stake_id = int(os.environ.get("PROTOCOL_AERO_STAKE_ID") or 1584)
+    unanchored_history = isinstance(prev_live, dict) and not (
+        claims_state.get("version") == 2 and claims_state.get("stakeId") == stake_id)
+    invalidate_headline = unanchored_history or any(
+        s.get("invalidated") for s in (claims_state.get("chains") or {}).values())
+    if claims_state.get("version") == 2 and claims_state.get("stakeId") == stake_id:
+        prev_live = dict(prev_live or {}, stakeId=stake_id, history=claims_state.get("history") or [])
+        prev_live["gauges"] = claims_state.get("gauges") or prev_live.get("gauges") or []
+    elif isinstance(prev_live, dict):
+        # Public history without its coherent canonical checkpoint cannot establish a trusted window.
+        prev_live = dict(prev_live, history=[])
     live = live_prices = new_claims_state = None
     if base is not None:
         try:
             live = _build_live_block(scanner, price_fetcher, base, prev_live, claims_state)
+            live["historyReset"] = live.get("historyReset", False) or invalidate_headline
+            invalidate_headline = live["historyReset"]
             new_claims_state = live.pop("_claimsState", None)
             live_prices = live.pop("_prices", None)
         except Exception as e:
@@ -420,11 +491,18 @@ def _update_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner, 
         live["iaeroPriceSource"] = base.get("iaeroPriceSource")
     if live is None and isinstance(prev_live, dict):
         live = dict(prev_live, stale=True)              # keep its history and gauge list
-    if _claims_state_due(claims_state, new_claims_state):
+    state_changed = _claims_state_due(claims_state, new_claims_state)
+    if state_changed:
+        generation = hashlib.sha256(json.dumps(new_claims_state, sort_keys=True).encode()).hexdigest()
+        new_claims_state["generation"] = generation
         try:
             updater.update_file(state_path, json.dumps(new_claims_state, indent=2), commit_message="Live claims state")
-        except Exception as e:
-            logger.warning(f"[position] could not write {state_path}: {e}")
+        except Exception:
+            # A public fresh rate must not outrun the durable observations and canonical checkpoint behind it.
+            logger.exception("[position] could not persist measurement state; publication blocked")
+            raise
+    elif new_claims_state is not None:
+        new_claims_state["generation"] = claims_state.get("generation")
 
     # 3. the headline: measured, or the previous one kept
     payload, stale_reason = None, None
@@ -439,6 +517,14 @@ def _update_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner, 
         stale_reason = "stake / price read failed" if base is None else measured_unavailable_reason(live)
     if payload is None:
         payload = kept_headline(prev_doc, stale_reason)
+        if invalidate_headline and payload is not None:
+            # Existing consumers reject null financial fields. An orphaned headline must not stay actionable.
+            payload["previousHeadline"] = {k: payload.get(k) for k in ("apyPct", "updatedAt", "apyWindow")}
+            for key in list(payload):
+                if "WeeklyUSD" in key or "AnnualUSD" in key or key in (
+                        "apyPct", "weeklyYieldPct", "measuredUsdPerDay", "apyWindow"):
+                    payload[key] = None
+            payload.update(stale=True, staleReason="Canonical claims rebuilt; measurement window is being re-established")
         logger.error(f"[realized_yield] no measured headline this run ({stale_reason}); "
                      f"{'keeping the previous headline figures' if payload else 'no previous headline: NOT publishing'}")
         _log_status({"event": "realized_yield_kept", "reasons": [stale_reason]})
@@ -449,17 +535,37 @@ def _update_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner, 
 
     # 4. secondary: the distributor fundings booked to the last completed epoch
     if payload is not None and er_enabled:
-        epochs_doc = _load_json(repo, updater.branch, os.environ.get("EPOCHS_JSON_PATH", "data/epochs.json"))
-        if epochs_doc.get("epochs"):
-            try:
+        try:
+            epochs_doc = _load_json(repo, updater.branch, os.environ.get("EPOCHS_JSON_PATH", "data/epochs.json"))
+            state = epochs_doc.get("state") or {}
+            if epochs_doc.get("distributorAddress") != distributor.lower():
+                raise ValueError("Funding index belongs to another distributor")
+            if state.get("version") != 2 or not state.get("last_block_hash"):
+                raise ValueError("Funding index has no verified canonical checkpoint")
+            if not isinstance(state.get("last_block_timestamp"), int) or state["last_block_timestamp"] < hist_epoch + WEEK:
+                raise ValueError("Funding index does not yet cover the completed epoch")
+            if scanner.block_hash(int(state["last_block"])) != state["last_block_hash"]:
+                raise ValueError("Funding index checkpoint is no longer canonical")
+            if epochs_doc.get("epochs"):
                 fr = build_estimated_rewards(w3=scanner.w3, distributor=distributor, epochs_doc=epochs_doc,
                                              price_fetcher=price_fetcher, decimals_fn=decimals_fn, aero=aero,
-                                             iaero=iaero, epoch=hist_epoch, epoch_mode="last_completed", now_ts=now)
+                                             iaero=iaero, epoch=hist_epoch, epoch_mode="last_completed", now_ts=now,
+                                             funding_block=int(state["last_block"]))
+                if scanner.block_hash(int(state["last_block"])) != state["last_block_hash"]:
+                    raise ValueError("Funding checkpoint changed during secondary valuation")
                 payload["fundedRealized"] = funded_realized(fr)
-            except Exception as e:
-                logger.warning(f"[realized_yield] fundedRealized for epoch {hist_epoch} failed: {e}")
+                payload["fundedRealized"]["asOfBlock"] = int(state["last_block"])
+                payload["fundedRealized"]["asOfBlockHash"] = state["last_block_hash"]
+                payload["fundedRealizedStatus"] = "available"
+            else:
+                payload["fundedRealizedStatus"] = "unavailable"
+        except Exception as e:
+            # Optional reconciliation must not roll back the valid core generation already being collected.
+            payload.pop("fundedRealized", None)
+            payload["fundedRealizedStatus"] = "unavailable"
+            logger.warning(f"[realized_yield] fundedRealized for epoch {hist_epoch} unavailable: {e}")
 
-    changed = False
+    changed = state_changed
     # 5. yield_history: the completed epoch's measured earnings (complete points near both of its ends)
     if yh_enabled and isinstance(live, dict) and not live.get("stale") and live_prices is not None:
         price = lambda cid, t: float((live_prices.get(cid) or {}).get(t, 0.0) or 0.0)
@@ -484,7 +590,16 @@ def _update_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner, 
     if er_enabled and payload is not None:
         if live is not None:
             payload["live"] = live
+        if new_claims_state is not None and new_claims_state.get("generation"):
+            payload["measurementGeneration"] = new_claims_state["generation"]
+        elif invalidate_headline and claims_state.get("generation"):
+            payload["measurementGeneration"] = claims_state["generation"]
         changed = _push_if_changed(repo, updater, path, payload) or changed
+    fresh = payload is not None and not payload.get("stale", True)
+    warming = bool(live and live.get("readComplete") and stale_reason and
+                   ("no 7-day window" in stale_reason or "under 1 day" in stale_reason))
+    updater.measurement_status = "fresh" if fresh else "warming_up" if warming else "degraded"
+    _log_status({"event": "measurement_result", "status": updater.measurement_status})
     return changed
 
 def _build_live_block(scanner: ChainScanner, price_fetcher: PriceFetcher, payload: dict, prev_live,
@@ -526,6 +641,8 @@ def _build_live_block(scanner: ChainScanner, price_fetcher: PriceFetcher, payloa
         first_allocation=_stake_accrual_start(),
         claims_state=claims_state,
         unreachable=unreachable,
+        required_chains=[int(c.strip()) for c in os.environ.get("REQUIRED_EARNINGS_CHAIN_IDS", "8453,1,4663").split(",")
+                         if c.strip()],
     )
 
 def _update_yield_history(repo, updater: GitHubUpdater, payload: dict) -> bool:
@@ -571,22 +688,12 @@ def _push_if_changed(repo, updater: GitHubUpdater, path: str, payload: dict) -> 
     new_norm = _strip_volatile(payload)
     new_bytes = json.dumps(new_norm, sort_keys=True, separators=(",", ":")).encode("utf-8")
 
-    try:
-        cur = repo.get_contents(path, ref=updater.branch)
-        cur_text = base64.b64decode(cur.content).decode("utf-8")
-        try:
-            cur_json = json.loads(cur_text)
-        except Exception:
-            cur_json = {}
-        cur_norm = _strip_volatile(cur_json)
-        cur_bytes = json.dumps(cur_norm, sort_keys=True, separators=(",", ":")).encode("utf-8")
-
-        if hashlib.sha256(cur_bytes).digest() == hashlib.sha256(new_bytes).digest():
-            logger.info(f"[GitHub] {path} unchanged (stable compare); skipping commit.")
-            return False
-    except Exception:
-        # file may not exist yet -> proceed to create
-        pass
+    cur_json = _load_json_strict(repo, updater.branch, path)
+    cur_norm = _strip_volatile(cur_json)
+    cur_bytes = json.dumps(cur_norm, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    if hashlib.sha256(cur_bytes).digest() == hashlib.sha256(new_bytes).digest():
+        logger.info("[GitHub] %s unchanged; skipping commit", path)
+        return False
 
     # Write: your updater will add lastUpdated/updateTimestamp; that's fine.
     updater.update_json(path, payload)
@@ -636,22 +743,45 @@ def _run_once() -> bool:
     logger.info(f"Registry:            {registry_address}")
     logger.info(f"Min USD filter: ${min_usd:.2f}")
 
-    if not all([rpc_url, explorer_api_key, github_token, github_repo, epoch_distributor, liq_distributor, registry_address]):
-        logger.error("Missing required env (RPC, EXPLORER KEY, GITHUB, DISTRIBUTORS, REGISTRY).")
-        return False
+    legacy_enabled = os.environ.get("GLOBAL_WALLET_EXPORT_ENABLED", "false").lower() == "true"
+    if not all([rpc_url, github_token, github_repo, epoch_distributor]):
+        raise ValueError("Missing required RPC, GitHub or epoch distributor configuration")
+    if legacy_enabled and not all([explorer_api_key, registry_address]):
+        raise ValueError("Optional global export requires explorer and registry configuration")
 
     gh = Github(auth=Auth.Token(github_token))
     repo = gh.get_repo(github_repo)
-    epoch_state, liq_state = load_last_state_from_github(repo, github_branch)
-    last_update = max(epoch_state.get("last_update", 0), liq_state.get("last_update", 0))
+    scanner = ChainScanner(rpc_url, explorer_api_key or "", chain_id=8453, multicall3=multicall3_addr)
 
-    scanner = ChainScanner(rpc_url, explorer_api_key, chain_id=8453, multicall3=multicall3_addr)
-
-    updater = GitHubUpdater(github_token, github_repo, github_branch)
+    updater = GitHubUpdater(github_token, github_repo, github_branch, repo=repo)
 
     _log_status({"event": "run_start"})
 
+    # === realized APY -> data/estimated_rewards_usd.json + data/yield_history.json (daily) ===
+    er_changed = False
+    try:
+        er_pf = PriceFetcher(
+            chain_slug="base",
+            cache_file="price_cache.json",
+            ttl_sec=300,
+            rpc_url=rpc_url,
+            aerodrome_factory=aerodrome_factory,
+            usdc=usdc_addr,
+            weth=weth_addr,
+            max_price_usd=max_price_usd,
+        )
+        er_changed = _update_realized_yield(repo, updater, scanner, er_pf)
+        if getattr(updater, "measurement_status", None) in ("blocked", "degraded"):
+            raise RuntimeError("Required earnings measurement unavailable; previous figures retained")
+        logger.info("[measurement] status=%s changed=%s", updater.measurement_status, bool(er_changed))
+        _log_status({"event": "realized_yield", "changed": er_changed})
+    except Exception as e:
+        logger.exception(f"[realized_yield] failed: {e}")
+        _log_status({"event": "realized_yield", "error": str(e)})
+        raise
+
     epochs_changed = False
+    epochs_error = None
     try:
         epochs_changed = _update_epochs(repo, updater, scanner)
         if epochs_changed:
@@ -662,7 +792,17 @@ def _run_once() -> bool:
     except Exception as e:
         logger.exception(f"[epochs] failed: {e}")
         _log_status({"event": "epochs", "error": str(e)})
+        epochs_error = e
 
+
+    if epochs_error is not None:
+        raise RuntimeError("Funding index incomplete; its checkpoint was retained") from epochs_error
+    if not legacy_enabled:
+        _log_status({"event": "run_end", "globalExport": "disabled", "any_changed": bool(epochs_changed or er_changed)})
+        return bool(epochs_changed or er_changed)
+
+    epoch_state, liq_state = load_last_state_from_github(repo, github_branch)
+    last_update = max(epoch_state.get("last_update", 0), liq_state.get("last_update", 0))
 
     # Decide whether to update rewards (but do not return early)
     new_epoch_tx = epoch_state.get("last_tx_hash")
@@ -749,9 +889,14 @@ def _run_once() -> bool:
         logger.info(f"Registry tokens: {len(reg_tokens)}")
 
         # 2) decimals (shared) & balances (per distributor)
-        decimals = scanner.decimals_map(reg_tokens, chunk_size=int(os.environ.get("DEC_CHUNK_SIZE", "75")), default_decimals=18)
         balances_epoch = scanner.balances_map(epoch_distributor, reg_tokens, chunk_size=int(os.environ.get("BAL_CHUNK_SIZE", "50")))
         balances_liq   = scanner.balances_map(liq_distributor,   reg_tokens, chunk_size=int(os.environ.get("BAL_CHUNK_SIZE", "50")))
+
+        # Price only real distributor exposures; zero-balance registry entries need neither metadata nor prices.
+        held_tokens = [t for t in reg_tokens if balances_epoch.get(t, 0) > 0 or balances_liq.get(t, 0) > 0]
+        decimals = scanner.decimals_map(held_tokens, chunk_size=int(os.environ.get("DEC_CHUNK_SIZE", "75")), default_decimals=None)
+        if any(decimals.get(t) is None for t in held_tokens):
+            raise RuntimeError("Token decimals unavailable; retaining previous distributor snapshot")
 
         # 3) prices
         pf = PriceFetcher(
@@ -764,7 +909,7 @@ def _run_once() -> bool:
             weth=weth_addr,
             max_price_usd=max_price_usd,
         )
-        price_map = pf.fetch_batch(reg_tokens)  # addr -> {priceUsd, ...}
+        price_map = pf.fetch_batch(held_tokens)  # addr -> {priceUsd, ...}
 
         # 4) compute USD + filter to ≥ min_usd, build snapshots (per distributor)
         def build_active(balances_map: dict) -> tuple[list[str], list[dict]]:
@@ -773,7 +918,7 @@ def _run_once() -> bool:
             for addr in reg_tokens:
                 a = addr.lower()
                 bal = int(balances_map.get(a, 0))
-                if dust_units is not None and bal <= dust_units:
+                if bal == 0 or (dust_units is not None and bal <= dust_units):
                     continue
                 dec = int(decimals.get(a, 18))
                 px = float(price_map.get(a, {}).get("priceUsd", 0.0))  # never null
@@ -906,52 +1051,36 @@ def _run_once() -> bool:
         logger.exception(f"[staker_rewards] failed: {e}")
         _log_status({"event": "staker_rewards", "error": str(e), "triggers": sr_triggers})
 
-    # === realized APY -> data/estimated_rewards_usd.json + data/yield_history.json (daily) ===
-    er_changed = False
-    try:
-        er_pf = PriceFetcher(
-            chain_slug="base",
-            cache_file="price_cache.json",
-            ttl_sec=300,
-            rpc_url=rpc_url,
-            aerodrome_factory=aerodrome_factory,
-            usdc=usdc_addr,
-            weth=weth_addr,
-            max_price_usd=max_price_usd,
-        )
-        er_changed = _update_realized_yield(repo, updater, scanner, er_pf)
-        if er_changed:
-            logger.info("[realized_yield] Published realized APY (estimated_rewards_usd.json / yield_history.json)")
-        else:
-            logger.info("[realized_yield] No change; skipped commit.")
-        _log_status({"event": "realized_yield", "changed": er_changed})
-    except Exception as e:
-        logger.exception(f"[realized_yield] failed: {e}")
-        _log_status({"event": "realized_yield", "error": str(e)})
-
     _log_status({"event": "run_end", "any_changed": bool(changed_rewards or st_changed or epochs_changed or sr_changed or er_changed)})
     return changed_rewards or st_changed or epochs_changed or sr_changed or er_changed
 
 
 
 def main():
-    """
-    Default behaviour: LISTEN & LOOP.
-    Set LOOP=0 to run once and exit.
-    """
+    """Run once for Railway cron. LOOP=1 is an explicit operator-only compatibility mode."""
+    load_dotenv()
     _start_status_server()
 
     loop = os.environ.get("LOOP", "0") == "1"
     delay = int(os.environ.get("POLL_INTERVAL", "60"))
 
     if not loop:
-        _run_once()
+        try:
+            with job_deadline(float(os.environ.get("MAX_JOB_SECONDS", "1200"))):
+                _run_once()
+        except JobDeadlineExceeded:
+            logger.error("Chain-processing job deadline exceeded")
+            raise SystemExit(1)
         return
 
     logger.info(f"Starting in loop mode (POLL_INTERVAL={delay}s)")
     while True:
         try:
-            _run_once()
+            with job_deadline(float(os.environ.get("MAX_JOB_SECONDS", "1200"))):
+                _run_once()
+        except JobDeadlineExceeded:
+            logger.error("Chain-processing job deadline exceeded")
+            raise SystemExit(1)
         except Exception as e:
             logger.exception(f"run_once failed: {e}")
             _log_status({"event": "run_error", "error": str(e)})
