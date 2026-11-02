@@ -124,6 +124,8 @@ class M1_SinceAllocationFallbackAfterWeekOne(unittest.TestCase):
         hist = [{"asOf": now - 8 * DAY + 600, "complete": True},     # 7.99 d old, complete
                 {"asOf": now - 7 * DAY, "complete": False},          # 7.00 d old, one chain failed that day
                 {"asOf": now - 6 * DAY - 600, "complete": True}]     # 6.01 d old, complete
+        for h in hist:
+            h["schemaVersion"] = pe.HISTORY_VERSION
         snap = pe.pick_snapshot(hist, now, "7d")
         self.assertTrue(snap["complete"], "a complete 6-8 d point exists, but the incomplete one is chosen")
 

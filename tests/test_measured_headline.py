@@ -159,6 +159,9 @@ class SimReader:
     def block_at(self, ts):
         return max(0, min(self.block, self.sim.block_of(ts)))
 
+    def block_hash(self, block):
+        return "0x" + format(int(block), "064x")
+
     def call_one(self, target, sig, args, out_types, gas=300_000):
         return self.many([(target, sig, args, out_types)])[0]
 

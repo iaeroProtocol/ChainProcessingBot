@@ -13,6 +13,7 @@ sys.path.insert(0, HERE)
 from r9world import (Extra, MultiWorld, FrontLoadedWorld, apy_of, SAT, RUN0, T0, DAY, E22)  # noqa: E402
 import test_measured_headline as tmh  # noqa: E402
 import position_earnings as pe  # noqa: E402
+from test_position_earnings import raw_point  # noqa: E402
 
 JITTER = [0, 90, -90, 45, -45, 120, -120, 30, -30, 60, -60, 15, -15, 100, -100, 75, -75, 5, -5, 50, -50, 20, -20,
           110, -110, 35, 0, 10, -10, 70, -70, 25]
@@ -72,7 +73,7 @@ class L2_ReVoteChurnFreezesTheHeadline(unittest.TestCase):
         snap = {"asOf": s_ts, "chains": [8453], "gauges": {"8453:a": {"fees": {"usdc": 7_000.0}}}, "complete": True}
         cur = {"asOf": now, "chains": [8453], "gauges": {"8453:a": {"active": True, "fees": {"usdc": 14_000.0}},
                                                          "8453:g": {"active": False, "fees": {"usdc": 1_000.0}}}}
-        d = pe.window_delta(cur, snap, lambda cid, t: 1.0, {8453: s_ts + 4 * DAY})
+        d = pe.window_delta(raw_point(cur), raw_point(snap), lambda cid, t: 1.0, {8453: s_ts + 4 * DAY})
         self.assertFalse(d["partial"])
         self.assertAlmostEqual(d["usdPerDay"], 8_000.0 / 7, places=6)
 

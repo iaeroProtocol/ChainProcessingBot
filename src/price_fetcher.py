@@ -207,6 +207,7 @@ class PriceFetcher:
         self.cache_file = cache_file
         self.ttl = ttl_sec
         self.mem: Dict[str, dict] = {}
+        self.unpriced_until: Dict[str, int] = {}  # short-lived lookup memo, never a cached financial price
         self.cg_key = os.environ.get("COINGECKO_API_KEY")  # optional
         self.max_price_usd = max_price_usd
         self.dex_min_quote_usd = dex_min_quote_usd
@@ -266,6 +267,8 @@ class PriceFetcher:
             v = self.mem.get(k)
             if v and float(v.get("priceUsd") or 0) > 0 and (now - int(v.get("updatedAt", 0))) <= self.ttl:
                 out[a.lower()] = v
+            elif a.lower() not in self.core_tokens and self.unpriced_until.get(k, 0) > now:
+                out[a.lower()] = {"priceUsd": 0.0, "updatedAt": now, "source": "none"}
             else:
                 want.append(a.lower())
         return out, want
@@ -343,12 +346,11 @@ class PriceFetcher:
 
     # ---------- Aero / Aerodrome quoter (final fallback) ----------
     def _decimals(self, addr: str) -> int:
-        try:
-            c = self.w3.eth.contract(self.w3.to_checksum_address(addr), abi=ERC20_DEC_ABI)
-            d = c.functions.decimals().call()
-            return int(d) if d else 18
-        except Exception:
-            return 18
+        c = self.w3.eth.contract(self.w3.to_checksum_address(addr), abi=ERC20_DEC_ABI)
+        d = c.functions.decimals().call()
+        if not isinstance(d, int) or isinstance(d, bool) or not 0 <= d <= 255:
+            raise ValueError("Token decimals unavailable for DEX pricing")
+        return d
 
     def _pair(self, a: str, b: str, stable: bool) -> Optional[str]:
         try:
@@ -593,6 +595,8 @@ class PriceFetcher:
             now = _now()
             for a in missing:
                 self.mem.pop(self._key(a), None)
+                if a not in self.core_tokens:
+                    self.unpriced_until[self._key(a)] = now + 30
                 out[a] = {"priceUsd": 0.0, "updatedAt": now, "source": "none"}
             logger.warning(f"[PriceFetcher] {len(missing)} tokens still unpriced after all sources")
 

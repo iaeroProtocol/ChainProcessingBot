@@ -1,111 +1,109 @@
-# github_updater.py  (replace your file with this or add the new methods)
-
-from github import Github
-import json
+"""GitHub publication with snapshot reads and atomic multi-file measurement generations."""
 import base64
-import hashlib
-from datetime import datetime
+import json
 import logging
+from contextlib import contextmanager
+from datetime import datetime, timezone
+from github import Github, InputGitTreeElement
 
 logger = logging.getLogger(__name__)
 
-def _stable_json_bytes(obj) -> bytes:
-    # stable formatting ensures reproducible hashes
-    return json.dumps(obj, sort_keys=True, separators=(",", ":")).encode("utf-8")
+
+def _missing(error):
+    return getattr(error, "status", None) == 404 or isinstance(error, FileNotFoundError)
+
+
+def _stable_json_bytes(obj):
+    return json.dumps(obj, sort_keys=True, separators=(",", ":")).encode()
+
 
 class GitHubUpdater:
-    def __init__(self, token, repo_name, branch='main'):
-        self.g = Github(token)
-        self.repo = self.g.get_repo(repo_name)
+    def __init__(self, token, repo_name, branch="main", repo=None):
+        self.g = None if repo is not None else Github(token)
+        self.repo = repo if repo is not None else self.g.get_repo(repo_name)
         self.branch = branch
+        self._pending = None
 
-    # ---------- NEW: read helpers ----------
-    def read_text_or_none(self, file_path: str) -> str | None:
+    def read_text_or_none(self, path):
         try:
-            f = self.repo.get_contents(file_path, ref=self.branch)
-            return base64.b64decode(f.content).decode("utf-8")
-        except Exception as e:
-            logger.info(f"[GitHubUpdater] {file_path} not found on {self.branch}: {e}")
-            return None
+            f = self.repo.get_contents(path, ref=self.branch)
+            if getattr(f, "encoding", "base64") == "none":
+                f = self.repo.get_git_blob(f.sha)
+            return base64.b64decode(f.content).decode()
+        except Exception as error:
+            if _missing(error):
+                return None
+            raise
 
-    def read_json_or_none(self, file_path: str):
-        txt = self.read_text_or_none(file_path)
-        if txt is None:
-            return None
+    def read_json_or_none(self, path):
+        text = self.read_text_or_none(path)
+        return None if text is None else json.loads(text)
+
+    def _sha(self, path, ref):
         try:
-            return json.loads(txt)
-        except Exception as e:
-            logger.warning(f"[GitHubUpdater] Failed to parse JSON in {file_path}: {e}")
-            return None
+            return self.repo.get_contents(path, ref=ref).sha
+        except Exception as error:
+            if _missing(error):
+                return None
+            raise
 
-    # ---------- legacy (kept) ----------
-    def update_file(self, file_path, content, commit_message=None):
-        if commit_message is None:
-            commit_message = f"Update {file_path} - {datetime.utcnow().isoformat()}"
+    @contextmanager
+    def transaction(self):
+        """Read one immutable input revision; commit related outputs together, without overwriting concurrent work."""
+        if self._pending is not None:
+            raise RuntimeError("Nested publication transaction")
+        branch = self.branch
+        base = self.repo.get_git_ref("heads/" + branch).object.sha
+        pending = {}
+        self._pending, self.branch = pending, base
         try:
-            file = self.repo.get_contents(file_path, ref=self.branch)
-            self.repo.update_file(
-                path=file_path,
-                message=commit_message,
-                content=content,
-                sha=file.sha,
-                branch=self.branch
-            )
-            logger.info(f"Updated {file_path}")
-        except Exception:
-            try:
-                self.repo.create_file(
-                    path=file_path,
-                    message=commit_message,
-                    content=content,
-                    branch=self.branch
-                )
-                logger.info(f"Created {file_path}")
-            except Exception as create_error:
-                logger.error(f"Error updating/creating file: {create_error}")
-                raise
+            yield
+            if not pending:
+                return
+            for attempt in range(3):
+                ref = self.repo.get_git_ref("heads/" + branch)
+                current = ref.object.sha
+                if current != base:
+                    for path in pending:
+                        if self._sha(path, base) != self._sha(path, current):
+                            raise RuntimeError("Concurrent measurement update; refusing to overwrite " + path)
+                parent = self.repo.get_git_commit(current)
+                entries = [InputGitTreeElement(path, "100644", "blob", content=content)
+                           for path, content in sorted(pending.items())]
+                tree = self.repo.create_git_tree(entries, base_tree=parent.tree)
+                commit = self.repo.create_git_commit("Publish measured earnings generation", tree, [parent])
+                try:
+                    ref.edit(commit.sha, force=False)
+                    logger.info("Published %s files atomically at %s", len(pending), commit.sha)
+                    return
+                except Exception as error:
+                    if getattr(error, "status", None) not in (409, 422) or attempt == 2:
+                        raise
+            raise RuntimeError("Publication conflict")
+        finally:
+            self._pending, self.branch = None, branch
 
-    # ---------- NEW: only update if changed ----------
-    def update_json_if_changed(self, file_path: str, data: dict) -> bool:
-        data = dict(data)  # copy
-        data['lastUpdated'] = datetime.utcnow().isoformat()
-        data['updateTimestamp'] = int(datetime.utcnow().timestamp())
+    def update_file(self, path=None, content=None, commit_message=None, file_path=None):
+        path = path if path is not None else file_path
+        if self._pending is not None:
+            self._pending[path] = content
+            return
+        message = commit_message or "Update " + path
+        sha = self._sha(path, self.branch)
+        if sha is None:
+            self.repo.create_file(path=path, message=message, content=content, branch=self.branch)
+        else:
+            self.repo.update_file(path=path, message=message, content=content, sha=sha, branch=self.branch)
 
-        new_bytes = _stable_json_bytes(data)
-        try:
-            cur = self.repo.get_contents(file_path, ref=self.branch)
-            cur_bytes = base64.b64decode(cur.content)
-            if hashlib.sha256(cur_bytes).digest() == hashlib.sha256(new_bytes).digest():
-                logger.info(f"[GitHubUpdater] {file_path} unchanged")
-                return False
-            self.repo.update_file(
-                file_path,
-                f"Update {file_path} - {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}",
-                new_bytes.decode("utf-8"),
-                cur.sha,
-                branch=self.branch
-            )
-            logger.info(f"Updated {file_path}")
-            return True
-        except Exception:
-            # file probably doesn't exist yet
-            self.repo.create_file(
-                file_path,
-                f"Create {file_path} - {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}",
-                new_bytes.decode("utf-8"),
-                branch=self.branch
-            )
-            logger.info(f"Created {file_path}")
-            return True
+    def update_json(self, path, data):
+        now = datetime.now(timezone.utc)
+        out = dict(data, lastUpdated=now.isoformat(), updateTimestamp=int(now.timestamp()))
+        self.update_file(path, json.dumps(out, indent=2, sort_keys=True))
 
-    # ---------- legacy (kept, but now optional) ----------
-    def update_json(self, file_path, data):
-        data = dict(data)
-        data['lastUpdated'] = datetime.utcnow().isoformat()
-        data['updateTimestamp'] = int(datetime.utcnow().timestamp())
-        json_content = json.dumps(data, indent=2, sort_keys=True)
-        self.update_file(
-            file_path=file_path,
-            content=json_content,
-            commit_message=f"Update reward tokens - {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}"
-        )
+    def update_json_if_changed(self, path, data):
+        previous = self.read_json_or_none(path)
+        stable = lambda d: {k: v for k, v in (d or {}).items() if k not in ("lastUpdated", "updateTimestamp")}
+        if _stable_json_bytes(stable(previous)) == _stable_json_bytes(stable(data)):
+            return False
+        self.update_json(path, data)
+        return True

@@ -159,7 +159,7 @@ class ChainScanner:
             return int(self.w3.eth.block_number)
         except Exception as e:
             logger.warning(f"latest_block failed: {e}")
-            return 0
+            raise
 
     def funded_epochs_and_tokens(self, distributor: str, from_block: int, to_block: int):
         """
@@ -207,8 +207,8 @@ class ChainScanner:
                     step //= 2
                     continue
                 else:
-                    # give up this slice, advance to avoid infinite loop
-                    pass
+                    # The caller must never checkpoint past an unread range.
+                    raise RuntimeError(f"Unscanned log range {fb}-{end}") from e
             fb = end + 1
 
     def erc20_transfer_logs(self, token: str, from_block: int, to_block: int):
@@ -356,7 +356,5 @@ class ChainScanner:
                 dec = default_decimals
                 if success and len(data) >= 32:
                     dec = int.from_bytes(data[-32:], "big") & 0xFF  # uint8 in the low byte
-                    if dec == 0:  # guard against broken tokens
-                        dec = default_decimals
                 out[addr.lower()] = dec
         return out

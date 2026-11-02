@@ -4,6 +4,7 @@
     "watchPatterns": [
       "src/**",
       "requirements.txt",
+      "requirements.lock",
       "runtime.txt",
       "railway.json"
     ]
