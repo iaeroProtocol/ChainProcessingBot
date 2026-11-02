@@ -551,6 +551,8 @@ def _collect_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner,
                                              price_fetcher=price_fetcher, decimals_fn=decimals_fn, aero=aero,
                                              iaero=iaero, epoch=hist_epoch, epoch_mode="last_completed", now_ts=now,
                                              funding_block=int(state["last_block"]))
+                if scanner.block_hash(int(state["last_block"])) != state["last_block_hash"]:
+                    raise ValueError("Funding checkpoint changed during secondary valuation")
                 payload["fundedRealized"] = funded_realized(fr)
                 payload["fundedRealized"]["asOfBlock"] = int(state["last_block"])
                 payload["fundedRealized"]["asOfBlockHash"] = state["last_block_hash"]

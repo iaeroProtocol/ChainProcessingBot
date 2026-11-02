@@ -39,6 +39,7 @@ wallet/epoch, run explorer probes or require an explorer credential. Existing co
   unverified, orphaned, or does not cover the completed epoch, the field is omitted with
   `fundedRealizedStatus: "unavailable"`. A valid snapshot pins its raw funding amounts to the indexed block and reports
   `asOfBlock` / `asOfBlockHash`; current pricing remains explicit. It does not mix an old token list with latest balances.
+  Its canonical hash is checked again after valuation; a changed or unreadable hash discards only the attachment.
 - The funding index stores a canonical block hash, timestamp and deployment anchor. Legacy height-only state or a
   changed checkpoint triggers full replacement from that anchor, removing orphaned tokens/epochs and discovering
   replacements. Failed or reorganised replays retain the prior file; unverified data cannot enter secondary valuation.

@@ -59,3 +59,16 @@ No production publisher or deployment was run. A manual public-RPC header probe 
 establish live verification of the configured anchor; provenance is the app's existing two-provider deployment record,
 and the implementation checks that hash against its configured RPC before a rebuild. A clean deployment image was
 not built in this follow-up. The sealed auditor fixtures were not present locally; these are independent regressions.
+
+
+## CPB-PR6-FIX-L01 follow-up at reviewed head 0b025fed2f
+
+A second canonical hash check runs after optional funding valuation and before attaching its results.
+A changed hash or failed post-check marks only that attachment unavailable; core history and the measured rate
+still commit together. The positive control retains an available attachment for a stable block.
+
+All **212 tests pass on Python 3.11.9**. The three new controls also run independently.
+On reviewed head 0b025fed2f, the reorg and unreadable-hash controls fail while the stable-block control passes.
+The controls assert the measured rate is unchanged and core publication remains atomic.
+No live publisher, deployment, or clean deployment-image build was performed. The sealed auditor fixtures were
+not present locally; these are independently written controls for the supplied finding.
