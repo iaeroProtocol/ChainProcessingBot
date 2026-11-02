@@ -5,12 +5,12 @@ The normal Railway schedule is daily at 02:30 UTC. It does not execute claims, s
 
 ## Normal pipeline
 
-1. Continue the funded-epoch index from its saved complete block range.
-2. Measure the protocol position on the required chains, with block-pinned reads and canonical claims checkpoints.
-3. Persist raw-unit cumulative measurement history and claims state together in `data/live_state.json`.
-4. Publish an eligible headline and measured weekly history, preserving unavailable/stale status when necessary.
-5. Commit related measurement outputs as one GitHub generation. Reads during collection are pinned to the input commit;
-   a concurrent writer to the same output causes an error instead of an overwrite.
+1. Measure the protocol position on the required chains, with block-pinned reads and canonical claims checkpoints.
+2. Persist raw-unit cumulative measurement history and claims state together in `data/live_state.json`.
+3. Publish an eligible headline and measured weekly history as one GitHub generation from pinned inputs.
+   A concurrent writer to the same output causes an error instead of an overwrite.
+4. Repair or extend the funded-epoch index in a separate transaction after the core publication.
+   A slow full replay cannot roll back a core generation that has already committed.
 
 Earnings processing precedes the optional global wallet export. The default job does not enumerate holders, preview every
 wallet/epoch, run explorer probes or require an explorer credential. Existing compatibility files and spam-feed URLs remain.
@@ -22,6 +22,8 @@ wallet/epoch, run explorer probes or require an explorer credential. Existing co
 - **CPB-R02:** claim checkpoints contain a canonical block hash. A mismatch or legacy hashless checkpoint triggers a
   canonical replay from the configured first allocation. The current block is checked before and after measurement.
   A hash read failure does not authorise an incremental resume. Reorg-affected history is discarded.
+  Invalidation is reported before replay and persisted even if replay fails. Invalid claim totals are replaced by
+  an explicit pending marker; it is cleared only after successful canonical replay.
 - **CPB-R03:** unknown token decimals remain unknown. Material unknown units make a measurement incomplete.
   Version 2 history stores exact integer raw amounts; deltas are normalised using verified consistent units.
   Human amounts remain presentation fields.
@@ -33,6 +35,13 @@ wallet/epoch, run explorer probes or require an explorer credential. Existing co
   forecast. Measurement persistence continues while the window rebuilds.
 - Unreadable or malformed state is not treated as a blank bootstrap. Failed log ranges never advance the index past
   unread data. A lagging provider cannot reset a newer checkpoint.
+- Optional `fundedRealized` reconciliation reads are isolated from core publication. If the index is unreadable,
+  unverified, orphaned, or does not cover the completed epoch, the field is omitted with
+  `fundedRealizedStatus: "unavailable"`. A valid snapshot pins its raw funding amounts to the indexed block and reports
+  `asOfBlock` / `asOfBlockHash`; current pricing remains explicit. It does not mix an old token list with latest balances.
+- The funding index stores a canonical block hash, timestamp and deployment anchor. Legacy height-only state or a
+  changed checkpoint triggers full replacement from that anchor, removing orphaned tokens/epochs and discovering
+  replacements. Failed or reorganised replays retain the prior file; unverified data cannot enter secondary valuation.
 - A failed required measurement makes the one-shot job fail. A complete measurement awaiting its initial history
   window is reported as `warming_up`, not as a fresh APY.
 
@@ -59,7 +68,8 @@ Relevant settings:
 | `PROTOCOL_AERO_STAKE_ID` | `1584`. An explicit inventory/configuration review is needed when protocol backing changes. |
 | `PROTOCOL_AERO_STAKE_SINCE` | Existing first-allocation configuration. |
 | `REQUIRED_EARNINGS_CHAIN_IDS` | `8453,1,4663`. Missing required chains make coverage incomplete; do not shrink this list to hide an outage. |
-| `EPOCHS_START_BLOCK` | Required only for a genuinely empty funding index; use its verified deployment anchor. |
+| `EPOCHS_START_BLOCK` | Verified deployment anchor for an unknown distributor. The current Base distributor has the app's verified default (block 35164965), whose hash is checked before replay. |
+| `EPOCHS_START_BLOCK_HASH` | Optional expected anchor hash for an explicitly configured start block. |
 | `GLOBAL_WALLET_EXPORT_ENABLED` | `false`. Explicitly opt into the expensive legacy export. |
 | `BASE_EXPLORER_API_KEY`, `REWARD_TOKEN_REGISTRY` | Needed only for the optional global export. |
 | `STAKERS_START_BLOCK` | Required to bootstrap a genuinely empty optional holder index. |

@@ -439,8 +439,13 @@ class MigrationAndCursorControls(unittest.TestCase):
     def test_failed_funding_scan_keeps_its_saved_cursor(self):
         from test_measured_headline import FakeRepo, FakeUpdater
         path = "data/epochs.json"
-        repo = FakeRepo({path: json.dumps({"state": {"last_block": 100}, "epochs": {}})})
+        repo = FakeRepo({path: json.dumps({"distributorAddress": USDC,
+            "state": {"version": 2, "last_block": 100, "last_block_hash": "0x" + format(100, "064x"),
+                      "last_block_timestamp": NOW,
+                      "start_block": 10, "start_block_hash": "0x" + format(10, "064x")}, "epochs": {}})})
         scanner = mock.Mock()
+        scanner.chain_id = 8453
+        scanner.block_hash.side_effect = lambda block: "0x" + format(int(block), "064x")
         scanner.latest_block.return_value = 200
         scanner.funded_epochs_and_tokens.side_effect = RuntimeError("missing range")
         updater = FakeUpdater(repo)

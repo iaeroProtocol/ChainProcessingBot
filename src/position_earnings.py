@@ -265,7 +265,8 @@ def _registered_vrms(reader, leaf_voter: str, registry: Optional[str], vrms: Lis
 
 def read_chain_position(reader, token_id: int, leaf_voter: str = LEAF_VOTER, registry: Optional[str] = None,
                         extra_gauges: tuple = (), max_checkpoints: int = MAX_CHECKPOINTS,
-                        first_allocation: Optional[int] = None, claims_state: Optional[dict] = None) -> dict:
+                        first_allocation: Optional[int] = None, claims_state: Optional[dict] = None,
+                        on_invalidation: Optional[Callable[[int], None]] = None) -> dict:
     """Raw on-chain earnings of `token_id` on one chain (no prices).
     Gauges read: allocatedGauges now, extra_gauges (the previous live block's, the first-allocation ones from
     config) and every gauge this chain's claims state remembers, so a gauge the stake left keeps being measured. Each
@@ -281,6 +282,17 @@ def read_chain_position(reader, token_id: int, leaf_voter: str = LEAF_VOTER, reg
     while unchecked). The result's claimsState is the updated one, or the given one (plus the gauges and emitters
     learnt) if a scan failed (claimsScanned False)."""
     snapshot_hash = reader.block_hash(reader.block)
+    cs_in = claims_state if isinstance(claims_state, dict) else {}
+    history_reset = bool(cs_in.get("invalidated"))
+    if isinstance(cs_in.get("block"), int) and cs_in["block"] <= reader.block:
+        canonical = reader.block_hash(cs_in["block"])
+        history_reset = history_reset or not cs_in.get("blockHash") or cs_in["blockHash"] != canonical
+    if history_reset:
+        # Report invalidation before any replay read can fail; the caller persists a marker independently.
+        if on_invalidation:
+            on_invalidation(reader.chain_id)
+        cs_in = {}
+        extra_gauges = tuple(FIRST_ALLOCATION_GAUGES.get(int(token_id), {}).get(reader.chain_id, []))
     gauges, state = reader.many([
         (leaf_voter, "allocatedGauges(uint256)", [token_id], ["address[]"]),
         (leaf_voter, "tokenStates(uint256)", [token_id], ["address", "uint48", "bool", "uint128"]),
@@ -288,20 +300,13 @@ def read_chain_position(reader, token_id: int, leaf_voter: str = LEAF_VOTER, reg
     first = first_allocation if first_allocation is not None else FIRST_ALLOCATION.get(token_id)
     last_alloc = int(state[1]) if state else 0
     since = min(x for x in (last_alloc, first) if x) if (last_alloc or first) else reader.block_ts
-    cs_in = claims_state if isinstance(claims_state, dict) else {}
     prev = cs_in if (cs_in.get("since") == int(since) and isinstance(cs_in.get("block"), int)) else None
-    history_reset = bool(cs_in and prev is None)
-    if history_reset:
+    if cs_in and prev is None:
+        history_reset = True
+        if on_invalidation:
+            on_invalidation(reader.chain_id)
         cs_in = {}
         extra_gauges = tuple(FIRST_ALLOCATION_GAUGES.get(int(token_id), {}).get(reader.chain_id, []))
-    if prev and prev["block"] <= reader.block:
-        # Missing hashes are legacy, unverified totals. Rebuild once; never extend an orphaned accumulator.
-        canonical = reader.block_hash(prev["block"])
-        if not prev.get("blockHash") or prev["blockHash"] != canonical:
-            logger.warning("[position] chain %s: claims checkpoint unverified or reorganised; rebuilding", reader.chain_id)
-            history_reset = True
-            prev, cs_in = None, {}
-            extra_gauges = tuple(FIRST_ALLOCATION_GAUGES.get(int(token_id), {}).get(reader.chain_id, []))
     allocated = [g.lower() for g in (gauges or [])]
     remembered = cs_in.get("gauges") or {}
     if isinstance(remembered, list):                    # 6aefe5c's list form: first-seen unknown
@@ -896,14 +901,28 @@ def build_live(chain_readers: List[tuple], token_id: int, price_fetchers: Dict[i
     configured = {r.chain_id for r, _ in chain_readers}
     unmeasured = list(UNMEASURED_CHAINS) + [int(c) for c in (unreachable or [])]
     unmeasured += sorted(set(required_chains or []) - configured)
-    history_reset = False
+    invalidated = {int(cid) for cid, state in cs_chains.items() if state.get("invalidated")}
+    history_reset = bool(invalidated)
+
+    def invalidate(cid):
+        nonlocal history_reset
+        history_reset = True
+        invalidated.add(cid)
+        cs_chains[str(cid)] = {"invalidated": True}
+        logger.warning("[position] chain %s: claims invalidated; canonical replay required", cid)
     for reader, registry in chain_readers:
         try:
             seed = FIRST_ALLOCATION_GAUGES.get(int(token_id), {}).get(reader.chain_id, [])
             ch = read_chain_position(reader, token_id, registry=registry, first_allocation=first_allocation,
                                      extra_gauges=tuple(prev_g.get(reader.chain_id, [])) + tuple(seed),
-                                     claims_state=cs_chains.get(str(reader.chain_id)))
+                                     claims_state=cs_chains.get(str(reader.chain_id)), on_invalidation=invalidate)
             history_reset = history_reset or ch.get("historyReset", False)
+            new_state = ch.get("claimsState")
+            if ch.get("claimsScanned") and new_state and new_state.get("blockHash"):
+                cs_chains[str(reader.chain_id)] = new_state
+                invalidated.discard(reader.chain_id)
+            elif reader.chain_id not in invalidated and new_state is not None:
+                cs_chains[str(reader.chain_id)] = new_state
             toks = set()
             label_tokens = set()
             for r in ch["gauges"]:
@@ -920,8 +939,6 @@ def build_live(chain_readers: List[tuple], token_id: int, price_fetchers: Dict[i
             logger.warning(f"[position] chain {reader.chain_id} read failed ({str(e)[:160]}); reported as unmeasured")
             unmeasured.append(reader.chain_id)
             continue
-        if ch.get("claimsState") is not None:
-            cs_chains[str(reader.chain_id)] = ch["claimsState"]
         chains.append(ch)
         prices[reader.chain_id] = {}
         for t in toks:

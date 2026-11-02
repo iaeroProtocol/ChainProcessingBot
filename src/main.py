@@ -1,4 +1,5 @@
 import os, sys
+import copy
 import json
 import logging
 import base64
@@ -112,7 +113,7 @@ def _is_not_found(e: Exception) -> bool:
     return isinstance(e, FileNotFoundError) or getattr(e, "status", None) == 404 or str(e).startswith("404")
 
 def _load_json_strict(repo, branch: str, path: str) -> dict:
-    """Like _load_json, but only a missing (404) or unparseable file reads as {}; any other read error raises."""
+    """Only an absent (404) file reads as {}; malformed data and other read failures raise."""
     try:
         text = _read_repo_text(repo, branch, path)
     except Exception as e:
@@ -235,62 +236,87 @@ def _update_stakers(repo, updater: GitHubUpdater, scanner: ChainScanner) -> bool
     return _push_if_changed(repo, updater, path, payload)
 
 def _update_epochs(repo, updater: GitHubUpdater, scanner: ChainScanner) -> bool:
+    transaction = updater.transaction() if hasattr(updater, "transaction") else nullcontext()
+    with transaction:
+        return _collect_epochs(repo, updater, scanner)
+
+
+# The current app verified this deployment boundary with two providers on 26 October 2026.
+# The block identity is checked against the configured RPC before a full index rebuild.
+_EPOCH_DEPLOYMENTS = {
+    (8453, "0x781a80fa817b5a146c440f03ef8643f4aca6588a"):
+        (35164965, "0xbe61dd5b23c067f7592af7e343095dc1cd96284e96c354f07e4f1e6c875c02f0")
+}
+
+
+def _collect_epochs(repo, updater: GitHubUpdater, scanner: ChainScanner) -> bool:
     path = os.environ.get("EPOCHS_JSON_PATH", "data/epochs.json")
     distributor = os.environ.get("EPOCH_STAKING_DISTRIBUTOR")
     if not distributor:
         return False
-
+    distributor = distributor.lower()
     tip = scanner.latest_block()
+    tip_hash = scanner.block_hash(tip)
+    tip_timestamp = scanner.block_timestamp(tip)
     cur = _load_json(repo, updater.branch, path)
-
-    # bootstrap or continue from last scanned block
-    state = cur.get("state", {}) or {}
-    last_scanned = int(state.get("last_block", 0))
-    if last_scanned > tip:
+    state = cur.get("state") or {}
+    last = int(state.get("last_block", -1))
+    if last > tip:
         raise RuntimeError("Epoch RPC is behind the saved checkpoint")
-    if last_scanned <= 0:
-        start = os.environ.get("EPOCHS_START_BLOCK")
-        if start is None:
-            raise ValueError("EPOCHS_START_BLOCK is required to bootstrap a complete funding index")
-        last_scanned = int(start) - 1
 
-    from_block = max(0, last_scanned + 1)
-    if from_block > tip:
-        return False
+    known = _EPOCH_DEPLOYMENTS.get((scanner.chain_id, distributor))
+    configured = os.environ.get("EPOCHS_START_BLOCK")
+    if configured is not None:
+        start = int(configured)
+        if known and start > known[0]:
+            raise ValueError("EPOCHS_START_BLOCK would omit the known distributor's funding history")
+        expected_start_hash = os.environ.get("EPOCHS_START_BLOCK_HASH")
+        if expected_start_hash is None and known and start == known[0]:
+            expected_start_hash = known[1]
+    elif known:
+        start, expected_start_hash = known
+    elif state.get("version") == 2 and isinstance(state.get("start_block"), int):
+        start, expected_start_hash = state["start_block"], state.get("start_block_hash")
+    else:
+        raise ValueError("EPOCHS_START_BLOCK is required to bootstrap or repair a complete funding index")
+    if start < 0 or start > tip:
+        raise ValueError("Funding deployment anchor is outside the available chain")
 
-    epochs, epoch_tokens = scanner.funded_epochs_and_tokens(distributor, from_block, tip)
-    if not epoch_tokens:
-        # still advance last_block to avoid rescanning the same span
-        cur.setdefault("state", {})["last_block"] = tip
-        return _push_if_changed(repo, updater, path, cur)
+    rebuild = (state.get("version") != 2 or not state.get("last_block_hash") or not state.get("start_block_hash")
+               or not isinstance(state.get("last_block_timestamp"), int)
+               or state.get("start_block") != start or cur.get("distributorAddress") != distributor)
+    if not rebuild:
+        rebuild = scanner.block_hash(last) != state["last_block_hash"]
+    if rebuild:
+        start_hash = scanner.block_hash(start)
+        if expected_start_hash and start_hash != expected_start_hash.lower():
+            raise RuntimeError("Funding deployment anchor is no longer canonical")
+        # Replace, rather than union with, the old map: orphaned tokens and epochs must disappear.
+        epoch_map = {}
+        from_block = start
+    else:
+        start_hash = state.get("start_block_hash")
+        epoch_map = copy.deepcopy(cur.get("epochs") or {})
+        from_block = last + 1
+        if from_block > tip:
+            return False
 
-    # merge into file (append-only per epoch)
-    cur.setdefault("distributorAddress", distributor.lower())
-    cur.setdefault("epochs", {})
-
+    _, epoch_tokens = scanner.funded_epochs_and_tokens(distributor, from_block, tip)
     for eid, tokens in epoch_tokens.items():
         key = str(eid)
-        # normalize to lowercase + dedupe + sort
-        new_lc = sorted({ (t or "").lower() for t in tokens if t })
-        cur.setdefault("epochs", {})
-        if key not in cur["epochs"]:
-            cur["epochs"][key] = {"tokens": new_lc}
-        else:
-            prev = { (t or "").lower() for t in cur["epochs"][key].get("tokens", []) }
-            cur["epochs"][key]["tokens"] = sorted(prev.union(new_lc))
+        previous = set((epoch_map.get(key) or {}).get("tokens") or [])
+        epoch_map[key] = {"tokens": sorted(previous | {t.lower() for t in tokens if t})}
+    if scanner.block_hash(tip) != tip_hash:
+        raise RuntimeError("Canonical funding scan tip changed; index publication blocked")
 
-
-    # nice-to-have: current/previous epoch markers (based on wall-clock)
-    WEEK = 7 * 24 * 60 * 60
-    now_epoch = (int(time.time()) // WEEK) * WEEK
-    cur["currentEpoch"] = now_epoch
-    cur["previousEpoch"] = now_epoch - WEEK
-
-    cur["state"] = {"last_block": tip, "last_update": int(time.time())}
-    cur["summary"] = {
-        "totalEpochs": len(cur["epochs"])
-    }
-
+    now = int(time.time())
+    week = 7 * 24 * 60 * 60
+    cur.update(distributorAddress=distributor, epochs=epoch_map, currentEpoch=now // week * week,
+               previousEpoch=now // week * week - week,
+               state={"version": 2, "last_block": tip, "last_block_hash": tip_hash,
+                      "last_block_timestamp": tip_timestamp,
+                      "start_block": start, "start_block_hash": start_hash, "last_update": now},
+               summary={"totalEpochs": len(epoch_map)})
     return _push_if_changed(repo, updater, path, cur)
 
 def _sync_data_from_github(repo, branch: str, data_dir: str = "data"):
@@ -441,6 +467,8 @@ def _collect_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner,
     stake_id = int(os.environ.get("PROTOCOL_AERO_STAKE_ID") or 1584)
     unanchored_history = isinstance(prev_live, dict) and not (
         claims_state.get("version") == 2 and claims_state.get("stakeId") == stake_id)
+    invalidate_headline = unanchored_history or any(
+        s.get("invalidated") for s in (claims_state.get("chains") or {}).values())
     if claims_state.get("version") == 2 and claims_state.get("stakeId") == stake_id:
         prev_live = dict(prev_live or {}, stakeId=stake_id, history=claims_state.get("history") or [])
         prev_live["gauges"] = claims_state.get("gauges") or prev_live.get("gauges") or []
@@ -451,7 +479,8 @@ def _collect_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner,
     if base is not None:
         try:
             live = _build_live_block(scanner, price_fetcher, base, prev_live, claims_state)
-            live["historyReset"] = live.get("historyReset", False) or unanchored_history
+            live["historyReset"] = live.get("historyReset", False) or invalidate_headline
+            invalidate_headline = live["historyReset"]
             new_claims_state = live.pop("_claimsState", None)
             live_prices = live.pop("_prices", None)
         except Exception as e:
@@ -488,7 +517,7 @@ def _collect_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner,
         stale_reason = "stake / price read failed" if base is None else measured_unavailable_reason(live)
     if payload is None:
         payload = kept_headline(prev_doc, stale_reason)
-        if live is not None and live.get("historyReset") and payload is not None:
+        if invalidate_headline and payload is not None:
             # Existing consumers reject null financial fields. An orphaned headline must not stay actionable.
             payload["previousHeadline"] = {k: payload.get(k) for k in ("apyPct", "updatedAt", "apyWindow")}
             for key in list(payload):
@@ -506,15 +535,33 @@ def _collect_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner,
 
     # 4. secondary: the distributor fundings booked to the last completed epoch
     if payload is not None and er_enabled:
-        epochs_doc = _load_json(repo, updater.branch, os.environ.get("EPOCHS_JSON_PATH", "data/epochs.json"))
-        if epochs_doc.get("epochs"):
-            try:
+        try:
+            epochs_doc = _load_json(repo, updater.branch, os.environ.get("EPOCHS_JSON_PATH", "data/epochs.json"))
+            state = epochs_doc.get("state") or {}
+            if epochs_doc.get("distributorAddress") != distributor.lower():
+                raise ValueError("Funding index belongs to another distributor")
+            if state.get("version") != 2 or not state.get("last_block_hash"):
+                raise ValueError("Funding index has no verified canonical checkpoint")
+            if not isinstance(state.get("last_block_timestamp"), int) or state["last_block_timestamp"] < hist_epoch + WEEK:
+                raise ValueError("Funding index does not yet cover the completed epoch")
+            if scanner.block_hash(int(state["last_block"])) != state["last_block_hash"]:
+                raise ValueError("Funding index checkpoint is no longer canonical")
+            if epochs_doc.get("epochs"):
                 fr = build_estimated_rewards(w3=scanner.w3, distributor=distributor, epochs_doc=epochs_doc,
                                              price_fetcher=price_fetcher, decimals_fn=decimals_fn, aero=aero,
-                                             iaero=iaero, epoch=hist_epoch, epoch_mode="last_completed", now_ts=now)
+                                             iaero=iaero, epoch=hist_epoch, epoch_mode="last_completed", now_ts=now,
+                                             funding_block=int(state["last_block"]))
                 payload["fundedRealized"] = funded_realized(fr)
-            except Exception as e:
-                logger.warning(f"[realized_yield] fundedRealized for epoch {hist_epoch} failed: {e}")
+                payload["fundedRealized"]["asOfBlock"] = int(state["last_block"])
+                payload["fundedRealized"]["asOfBlockHash"] = state["last_block_hash"]
+                payload["fundedRealizedStatus"] = "available"
+            else:
+                payload["fundedRealizedStatus"] = "unavailable"
+        except Exception as e:
+            # Optional reconciliation must not roll back the valid core generation already being collected.
+            payload.pop("fundedRealized", None)
+            payload["fundedRealizedStatus"] = "unavailable"
+            logger.warning(f"[realized_yield] fundedRealized for epoch {hist_epoch} unavailable: {e}")
 
     changed = state_changed
     # 5. yield_history: the completed epoch's measured earnings (complete points near both of its ends)
@@ -543,6 +590,8 @@ def _collect_realized_yield(repo, updater: GitHubUpdater, scanner: ChainScanner,
             payload["live"] = live
         if new_claims_state is not None and new_claims_state.get("generation"):
             payload["measurementGeneration"] = new_claims_state["generation"]
+        elif invalidate_headline and claims_state.get("generation"):
+            payload["measurementGeneration"] = claims_state["generation"]
         changed = _push_if_changed(repo, updater, path, payload) or changed
     fresh = payload is not None and not payload.get("stale", True)
     warming = bool(live and live.get("readComplete") and stale_reason and
@@ -706,21 +755,6 @@ def _run_once() -> bool:
 
     _log_status({"event": "run_start"})
 
-    epochs_changed = False
-    epochs_error = None
-    try:
-        epochs_changed = _update_epochs(repo, updater, scanner)
-        if epochs_changed:
-            logger.info("[epochs] Published/updated epochs.json")
-        else:
-            logger.info("[epochs] No new funded epochs; skipped commit.")
-        _log_status({"event": "epochs", "changed": epochs_changed})
-    except Exception as e:
-        logger.exception(f"[epochs] failed: {e}")
-        _log_status({"event": "epochs", "error": str(e)})
-        epochs_error = e
-
-
     # === realized APY -> data/estimated_rewards_usd.json + data/yield_history.json (daily) ===
     er_changed = False
     try:
@@ -743,6 +777,21 @@ def _run_once() -> bool:
         logger.exception(f"[realized_yield] failed: {e}")
         _log_status({"event": "realized_yield", "error": str(e)})
         raise
+
+    epochs_changed = False
+    epochs_error = None
+    try:
+        epochs_changed = _update_epochs(repo, updater, scanner)
+        if epochs_changed:
+            logger.info("[epochs] Published/updated epochs.json")
+        else:
+            logger.info("[epochs] No new funded epochs; skipped commit.")
+        _log_status({"event": "epochs", "changed": epochs_changed})
+    except Exception as e:
+        logger.exception(f"[epochs] failed: {e}")
+        _log_status({"event": "epochs", "error": str(e)})
+        epochs_error = e
+
 
     if epochs_error is not None:
         raise RuntimeError("Funding index incomplete; its checkpoint was retained") from epochs_error

@@ -181,6 +181,17 @@ class ChainScanner:
 
         return sorted(epochs), {e: sorted(list(ts)) for e, ts in epoch_tokens.items()}
 
+    def block_hash(self, block: int) -> str:
+        value = self.w3.eth.get_block(int(block))["hash"]
+        value = value.hex() if hasattr(value, "hex") else str(value)
+        value = "0x" + value.removeprefix("0x").lower()
+        if len(value) != 66 or any(c not in "0123456789abcdef" for c in value[2:]):
+            raise ValueError("Missing canonical funding block hash")
+        return value
+
+    def block_timestamp(self, block: int) -> int:
+        return int(self.w3.eth.get_block(int(block))["timestamp"])
+
     
     def _get_logs_chunked(self, address: str, topics: list, from_block: int, to_block: int, step: int = 50_000):
         """

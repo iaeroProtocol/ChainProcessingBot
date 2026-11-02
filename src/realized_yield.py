@@ -478,11 +478,13 @@ def build_estimated_rewards(
     aero: str = AERO_ADDRESS,
     iaero: Optional[str] = None,
     epoch_mode: str = "latest_funded",
+    funding_block: Optional[int] = None,
 ) -> dict:
     """
     Read the funding booked to the selected epoch (see select_epoch) from the EpochStakingDistributor and price it
     (main.py: the fundedRealized sub-object and the base payload the measured headline is applied to).
     Token list per epoch comes from epochs.json (RewardFunded scan); amounts from rewardsForEpoch().
+    funding_block pins those amounts to the index's canonical checkpoint; valuation still uses current prices.
     """
     now_ts = int(now_ts if now_ts is not None else time.time())
     if epoch_mode not in EPOCH_MODES:
@@ -499,7 +501,8 @@ def build_estimated_rewards(
     tokens = [] if stale else sorted({t.lower() for t in (ep.get("tokens") or []) if t})
     funded_raw: Dict[str, int] = {}
     for t in tokens:
-        amt = int(dist.functions.rewardsForEpoch(cs(t), epoch).call())
+        request = dist.functions.rewardsForEpoch(cs(t), epoch)
+        amt = int(request.call(block_identifier=funding_block) if funding_block is not None else request.call())
         if amt > 0:
             funded_raw[t] = amt
 

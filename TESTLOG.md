@@ -42,3 +42,20 @@ Migration intentionally rebuilds unverified legacy measurement history. After th
 since-allocation fallback period, a fresh rate needs a complete six-to-eight-day reference point.
 The prior headline is not relabelled fresh to cover that interval. See README for configuration,
 state persistence, deadline and compatibility-export behaviour.
+
+
+## PR #6 follow-up at reviewed head 275fd8b
+
+The initial four follow-up safety controls fail against 275fd8b, reproducing the isolated secondary-read abort,
+lost reorg invalidation and funding-index reorg cases. The complete upgraded suite passes **209 tests on
+Python 3.11.9**, including 15 follow-up tests (with additional subcases). The original 194 remain passing.
+
+The new controls use the real publication transaction against a simulated Git repository to verify that valid core
+state and forecast move together despite secondary errors. They also cover replay failures before/after the first call,
+restart and disabled-output cases, canonical recovery, same-height funding reorgs, failed migration, lagging providers,
+a changed scan tip, deployment-anchor checks, core-before-repair scheduling, and block-pinned funding reads.
+
+No production publisher or deployment was run. A manual public-RPC header probe returned HTTP 403, so it does not
+establish live verification of the configured anchor; provenance is the app's existing two-provider deployment record,
+and the implementation checks that hash against its configured RPC before a rebuild. A clean deployment image was
+not built in this follow-up. The sealed auditor fixtures were not present locally; these are independent regressions.
