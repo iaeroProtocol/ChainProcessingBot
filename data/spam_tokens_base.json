@@ -15403,34 +15403,6 @@
       "reason": "authorized security test",
       "addedAt": "2026-10-18T13:26:58.822Z",
       "reportedBy": "auto"
-    },
-    {
-      "address": "0x1111111111166b7fe7bd91427724b487980afc69",
-      "symbol": "TESTTOKEN",
-      "reason": "Auto-detected spam",
-      "addedAt": "2026-10-26T09:22:05.665Z",
-      "reportedBy": "auto"
-    },
-    {
-      "address": "http://169.254.169.254/",
-      "symbol": "A",
-      "reason": "Auto-detected spam",
-      "addedAt": "2026-10-26T09:22:12.320Z",
-      "reportedBy": "auto"
-    },
-    {
-      "address": "0xdead000000000000000000000000000000062798",
-      "symbol": "<img src=x onerror=window.__x=ZZXSSMARK62798>ZZXSSMARK62798",
-      "reason": "Auto-detected spam",
-      "addedAt": "2026-10-26T09:41:51.625Z",
-      "reportedBy": "auto"
-    },
-    {
-      "address": "0xdead00000000000000000000000000000006279a",
-      "symbol": "EXTRATEST62798",
-      "reason": "<b>bold</b>",
-      "addedAt": "2026-10-26T09:43:57.581Z",
-      "reportedBy": "auto"
     }
   ],
   "symbolPatterns": [
