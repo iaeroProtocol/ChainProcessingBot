@@ -8,6 +8,7 @@ on:
       - 'runtime.txt'
       - '.github/workflows/tests.yml'
   push:
+    branches: [main]
     paths:
       - 'src/**'
       - 'tests/**'
