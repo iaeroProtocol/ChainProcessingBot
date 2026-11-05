@@ -1,5 +1,5 @@
 {
-  "currentEpoch": 1793232000,
+  "currentEpoch": 1793836800,
   "distributorAddress": "0x781a80fa817b5a146c440f03ef8643f4aca6588a",
   "epochs": {
     "1757548800": {
@@ -2291,21 +2291,45 @@
         "0xfb31f85a8367210b2e4ed2360d2da9dc2d2ccc95",
         "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2"
       ]
+    },
+    "1793836800": {
+      "tokens": [
+        "0x311935cd80b76769bf2ecc9d8ab7635b2139cf82",
+        "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee",
+        "0x4200000000000000000000000000000000000006",
+        "0x6985884c4392d348587b19cb9eaaf157f13271cd",
+        "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+        "0xb095274743941e953c746f9c228da9c18bb6ec29",
+        "0xb200000000000000000000187f7071d6e321a7d2",
+        "0xb2000000000000000000001e800a7f5189430cd0",
+        "0xb200000000000000000000397293cb8cda9a10c5",
+        "0xb2000000000000000000004884b426556b92883d",
+        "0xb2000000000000000000004c27f6523082f41d01",
+        "0xb20000000000000000000078ee7ce2fe4908108c",
+        "0xb2000000000000000000007b9fcbd005511acbd5",
+        "0xb200000000000000000000c2e324d24d7eecd1fb",
+        "0xb200000000000000000000d9192b6b456483c2e8",
+        "0xbaa5cc21fd487b8fcc2f632f3f4e8d37262a0842",
+        "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
+        "0xed664536023d8e4b1640c394777d34abaff1df8f",
+        "0xed6e000def95780fb89734c07ee2ce9f6dcaf110",
+        "0xfb31f85a8367210b2e4ed2360d2da9dc2d2ccc95"
+      ]
     }
   },
-  "lastUpdated": "2026-11-04T02:34:58.759401+00:00",
-  "previousEpoch": 1792627200,
+  "lastUpdated": "2026-11-05T02:30:32.624339+00:00",
+  "previousEpoch": 1793232000,
   "state": {
-    "last_block": 53485175,
-    "last_block_hash": "0xbdab80fc793285b69533327ac49c3e153709002d5217d88004bc497efeb60021",
-    "last_block_timestamp": 1793759697,
-    "last_update": 1793759698,
+    "last_block": 53528242,
+    "last_block_hash": "0xb87e77e55599018c4b1ff7a69782764e233e22dcdad7cf54d8a5bfbf6993f700",
+    "last_block_timestamp": 1793845831,
+    "last_update": 1793845832,
     "start_block": 35164965,
     "start_block_hash": "0xbe61dd5b23c067f7592af7e343095dc1cd96284e96c354f07e4f1e6c875c02f0",
     "version": 2
   },
   "summary": {
-    "totalEpochs": 60
+    "totalEpochs": 61
   },
-  "updateTimestamp": 1793759698
+  "updateTimestamp": 1793845832
 }
