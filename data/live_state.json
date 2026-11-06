@@ -4,9 +4,9 @@
   "chains": {
     "8453": {
       "since": 1792635063,
-      "block": 53528235,
-      "blockHash": "0xc92a8cfe4fbb8b2807833ee0de877a606f851aadb9d5e16c8ed2393380eadb6d",
-      "blockTimestamp": 1793845817,
+      "block": 53710297,
+      "blockHash": "0xf3b6f134987c8ae6676342285767b64423fa9358603c37d456d76591c969d173",
+      "blockTimestamp": 1793932435,
       "sinceBlock": 52922858,
       "anyFrom": 52922858,
       "gauges": {
@@ -34,6 +34,10 @@
           "firstSeen": 1793759683,
           "firstActive": true
         },
+        "0x2cd47ba367766a8a5ab641825fbf4a3a29e92ec9": {
+          "firstSeen": 1793932435,
+          "firstActive": true
+        },
         "0x2e45bbaeebd8e00bbb838bc885e5332cd8829d4f": {
           "firstSeen": 1793759683,
           "firstActive": true
@@ -58,9 +62,21 @@
           "firstSeen": 1793649547,
           "firstActive": false
         },
+        "0x4a870ac2a047909c1ab791f8d7176d33bc2d60eb": {
+          "firstSeen": 1793932435,
+          "firstActive": true
+        },
+        "0x5aa337b53c6b866d255542f834ae80109ce292b4": {
+          "firstSeen": 1793932435,
+          "firstActive": true
+        },
         "0x5b14d6d194e49330647eb4717010ade1b1b3f8b5": {
           "firstSeen": 1793649547,
           "firstActive": false
+        },
+        "0x5c7974887d29ad70aef991dc4d5ed51a60d108a9": {
+          "firstSeen": 1793932435,
+          "firstActive": true
         },
         "0x694fdc6b6bfdf5186e04516f699d643dc4c5c9b4": {
           "firstSeen": 1793649547,
@@ -70,9 +86,17 @@
           "firstSeen": 1793649547,
           "firstActive": false
         },
+        "0x6dca50a328ac12bf9a475f81c9d351ccf77f61d2": {
+          "firstSeen": 1793932435,
+          "firstActive": true
+        },
         "0x74a30b3357121a822adb91a539f4b11b5fb7cb3f": {
           "firstSeen": 1793649547,
           "firstActive": false
+        },
+        "0x79fc4cbd860e3528f092bd7d9261e0cd141a4803": {
+          "firstSeen": 1793932435,
+          "firstActive": true
         },
         "0x81189366762ce456db7cf81181785bf22b5baec6": {
           "firstSeen": 1793759683,
@@ -138,12 +162,28 @@
           "firstSeen": 1793649547,
           "firstActive": false
         },
+        "0xd8c0e093327b5dfb3e654ec520ff2100c3c20f76": {
+          "firstSeen": 1793932435,
+          "firstActive": true
+        },
         "0xdef20c7f935b5baab283302eb248d023575c1862": {
           "firstSeen": 1793649547,
           "firstActive": false
         },
+        "0xe0fa8cec2386ec254926dfacaf5d57481369ee8c": {
+          "firstSeen": 1793932435,
+          "firstActive": true
+        },
+        "0xe300153b7a51c02a47cb8b78c76f97e7bc5ddbe7": {
+          "firstSeen": 1793932435,
+          "firstActive": true
+        },
         "0xe7977774210874fc95e2975b799906cc3bbfa399": {
           "firstSeen": 1793759683,
+          "firstActive": true
+        },
+        "0xfa66e7f39cd27f2c16ad25080e57e30ba2abf043": {
+          "firstSeen": 1793932435,
           "firstActive": true
         },
         "0xfc8922e268cccbe8160e5c1ad546af9705cf0a61": {
@@ -186,8 +226,8 @@
         },
         "0x351dedd326478d6f1fedf6f74daf3694ca92a7ff": {
           "fees": {
-            "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": 35218,
-            "0xed6e000def95780fb89734c07ee2ce9f6dcaf110": 522368350302733504290
+            "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": 42631,
+            "0xed6e000def95780fb89734c07ee2ce9f6dcaf110": 564912376507748867399
           },
           "incentives": {
             "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 24732124230033070788
@@ -211,8 +251,8 @@
         },
         "0x95353c63852e85402eb93a73f7076d3e3d83f027": {
           "fees": {
-            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 323968170195550830061,
-            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 216253613
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 326625473827192907418,
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 218772456
           },
           "incentives": {}
         },
@@ -246,8 +286,8 @@
         },
         "0x623de2a4cb208e8498ae888ec1ec805a105fef48": {
           "fees": {
-            "0x4200000000000000000000000000000000000006": 203441276781141527,
-            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 441906662
+            "0x4200000000000000000000000000000000000006": 204449374282013195,
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 444653605
           },
           "incentives": {
             "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 258237249897851747700
@@ -301,8 +341,8 @@
         },
         "0x45bf43ecd849c6aedbaa86cae629ebbb392b89a1": {
           "fees": {
-            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 425142894,
-            "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": 590708
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 437752000,
+            "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": 607059
           },
           "incentives": {}
         },
@@ -317,8 +357,8 @@
         },
         "0xcf816ce0e5bb63df34a7890a74f3bedc873eb4c7": {
           "fees": {
-            "0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b": 346439253318665134032,
-            "0x4200000000000000000000000000000000000006": 94300905232945154
+            "0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b": 346940412620872601095,
+            "0x4200000000000000000000000000000000000006": 94507570609472513
           },
           "incentives": {
             "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 194609672040172121047,
@@ -336,8 +376,8 @@
         },
         "0xbe91f4e0b11c629d2534c00c5fd858f2b34989d4": {
           "fees": {
-            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 235475243,
-            "0xb2000000000000000000004884b426556b92883d": 162900853
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 254336166,
+            "0xb2000000000000000000004884b426556b92883d": 176813122
           },
           "incentives": {}
         },
@@ -350,8 +390,8 @@
         },
         "0xeae4e8a98950c9bfd3409b6b393d728cbe88a88f": {
           "fees": {
-            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 159803583,
-            "0xb200000000000000000000397293cb8cda9a10c5": 13775153
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 178770415,
+            "0xb200000000000000000000397293cb8cda9a10c5": 15695268
           },
           "incentives": {
             "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 80337372111464095774
@@ -359,15 +399,15 @@
         },
         "0x5f2fdf050de1e109f740a19acd80d894c540c3b0": {
           "fees": {
-            "0x4200000000000000000000000000000000000006": 78969529193997896,
-            "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2": 190498651
+            "0x4200000000000000000000000000000000000006": 79412788371140924,
+            "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2": 191862170
           },
           "incentives": {}
         },
         "0x8425b338a3cc209e1238b68ba53f676b9165c441": {
           "fees": {
-            "0x0c1c1c109fe34733fca54b82d7b46b75cfb71f6e": 6388650374784340257902,
-            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 456913390
+            "0x0c1c1c109fe34733fca54b82d7b46b75cfb71f6e": 6422796748468149434994,
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 457903128
           },
           "incentives": {
             "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 20854169314380999365
@@ -384,8 +424,8 @@
         },
         "0x39686eb0f6d6abb4e55297427687b13d256fae26": {
           "fees": {
-            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 6885197,
-            "0xb2000000000000000000008501b13360000cb2ec": 560117
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 9887087,
+            "0xb2000000000000000000008501b13360000cb2ec": 689758
           },
           "incentives": {
             "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 6091144948684179120
@@ -409,60 +449,126 @@
         },
         "0xbe46863020ed49f89e04cf23b0bc05fee2420a11": {
           "fees": {
-            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 323595467,
-            "0xb200000000000000000000c2e324d24d7eecd1fb": 76040580
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 340768136,
+            "0xb200000000000000000000c2e324d24d7eecd1fb": 81702204
           },
           "incentives": {}
         },
         "0xe1717637e87a9e6170caa73a606db66d4a7d45db": {
           "fees": {
-            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 78694213,
-            "0xb2000000000000000000007b9fcbd005511acbd5": 58873752
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 83967249,
+            "0xb2000000000000000000007b9fcbd005511acbd5": 63550006
           },
           "incentives": {}
         },
         "0xfecfdb37189cf5ad415b34a34e4efe9d2c52e63f": {
           "fees": {
-            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 86386259,
-            "0xb20000000000000000000078ee7ce2fe4908108c": 45257183
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 93281614,
+            "0xb20000000000000000000078ee7ce2fe4908108c": 50238705
           },
           "incentives": {}
         },
         "0x7cb2aa9d8fc0f7a5e1e59d77844acdba99184547": {
           "fees": {
-            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 267279455,
-            "0xb200000000000000000000d9192b6b456483c2e8": 68067794
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 281941810,
+            "0xb200000000000000000000d9192b6b456483c2e8": 75746814
           },
           "incentives": {}
         },
         "0xf56b5fede125344482e5398a6b9683eeac5ecdbc": {
           "fees": {
-            "0x311935cd80b76769bf2ecc9d8ab7635b2139cf82": 210172636,
-            "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": 23869
+            "0x311935cd80b76769bf2ecc9d8ab7635b2139cf82": 231350749,
+            "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": 26646
           },
           "incentives": {}
         },
         "0x1550c95a4033988a9b944f31f040bccc6016a9dc": {
           "fees": {
-            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 49806222,
-            "0xb2000000000000000000001e800a7f5189430cd0": 14406146
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 56858902,
+            "0xb2000000000000000000001e800a7f5189430cd0": 16464281
           },
           "incentives": {}
         },
         "0x272c6f180f8871c1324e12e2a7c68e3ab861bf4e": {
           "fees": {
-            "0x311935cd80b76769bf2ecc9d8ab7635b2139cf82": 647847551,
-            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 66871207
+            "0x311935cd80b76769bf2ecc9d8ab7635b2139cf82": 774842142,
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 79321647
           },
+          "incentives": {}
+        },
+        "0x03083fe7831aec75839b28932b065bbd74dce6f6": {
+          "fees": {
+            "0x2ae3f1ec7f1f5012cfeab0185bfc7aa3cf0dec22": 221495325745210,
+            "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": 692
+          },
+          "incentives": {}
+        },
+        "0x7731193d889d0a731d3f289f79bf764faf0038af": {
+          "fees": {
+            "0x4200000000000000000000000000000000000006": 40615324070338,
+            "0xcb585250f852c6c6bf90434ab21a00f02833a4af": 189081
+          },
+          "incentives": {}
+        },
+        "0x14206d7547fab5fbcec73e28b3424eb8d58812f2": {
+          "fees": {
+            "0x22af33fe49fd1fa80c7149773dde5890d3c76f3b": 4196397707149490689615,
+            "0x4200000000000000000000000000000000000006": 228167962437657
+          },
+          "incentives": {}
+        },
+        "0x2de071c888167e369511554ff8fcf260584bf2c5": {
+          "fees": {
+            "0x4200000000000000000000000000000000000006": 112390506280627,
+            "0xb2000000000000000000002d0ba3164cc74f58b7": 44562
+          },
+          "incentives": {}
+        },
+        "0x7b80b53c8528aa775a49694dfe7fcd6e595ba019": {
+          "fees": {
+            "0x4200000000000000000000000000000000000006": 372294321310276,
+            "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42": 1161355
+          },
+          "incentives": {}
+        },
+        "0xf7542d06c4f573f7eaa3843da299abea5eb9ecb2": {
+          "fees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 202621,
+            "0xf4d97f2da56e8c3098f3a8d538db630a2606a024": 278023556085018
+          },
+          "incentives": {}
+        },
+        "0x6f2df205f826752eafbfdfec66e5f24e585c20a1": {
+          "fees": {
+            "0x5b2193fdc451c1f847be09ca9d13a4bf60f8c86b": 105594347549562653764,
+            "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": 3659
+          },
+          "incentives": {}
+        },
+        "0x40293b3aa4cda39c16879ed176fe8d4ccaded196": {
+          "fees": {
+            "0xacfe6019ed1a7dc6f7b508c02d1b04ec88cc21bf": 11289147869988582
+          },
+          "incentives": {}
+        },
+        "0x60ee4d688c5c36c4e856da519617d9407189c80c": {
+          "fees": {
+            "0xb2000000000000000000004884b426556b92883d": 853944,
+            "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": 1425
+          },
+          "incentives": {}
+        },
+        "0xf35a9b45e4e9cf25324798e256172db92aea3666": {
+          "fees": {},
           "incentives": {}
         }
       }
     },
     "1": {
       "since": 1792635063,
-      "block": 26345645,
-      "blockHash": "0xa1cb0dbfc5acc16efebf297ece0547bb0eac59c7f32abebff6c601bc04530213",
-      "blockTimestamp": 1793845775,
+      "block": 26352843,
+      "blockHash": "0xc718f3593056c33b3325408182deb6e863cda6b0185e9de72027af7900d4db6f",
+      "blockTimestamp": 1793932391,
       "sinceBlock": 26245079,
       "anyFrom": 26245079,
       "gauges": {
@@ -491,32 +597,32 @@
       "vrms": {
         "0x2652fe9aa927597dd4c15921640671d262e43bcc": {
           "fees": {
-            "0x4c9edd5852cd905f086c759e8383e09bff1e68b3": 131415046913614303593,
-            "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": 114485899
+            "0x4c9edd5852cd905f086c759e8383e09bff1e68b3": 134046555891061289530,
+            "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": 115640131
           },
           "incentives": {
             "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": 103677556793099073,
-            "0xdac17f958d2ee523a2206206994597c13d831ec7": 95304097
+            "0xdac17f958d2ee523a2206206994597c13d831ec7": 104556852
           }
         },
         "0x96a9bcdd396941a8de29624571a19d78e6b59b3b": {
           "fees": {
-            "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": 52389974,
-            "0xdac17f958d2ee523a2206206994597c13d831ec7": 50980235
+            "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": 52573052,
+            "0xdac17f958d2ee523a2206206994597c13d831ec7": 51434580
           },
           "incentives": {
             "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": 88587810080694131,
-            "0xdac17f958d2ee523a2206206994597c13d831ec7": 62356165
+            "0xdac17f958d2ee523a2206206994597c13d831ec7": 67966482
           }
         },
         "0x46daf47fc787ca293f743151042a22b8fd79bbf4": {
           "fees": {
-            "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": 89662625,
-            "0xe343167631d89b6ffc58b88d6b7fb0228795491d": 84024907
+            "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": 90393895,
+            "0xe343167631d89b6ffc58b88d6b7fb0228795491d": 86722120
           },
           "incentives": {
             "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": 70167762122120388,
-            "0xdac17f958d2ee523a2206206994597c13d831ec7": 49986649
+            "0xdac17f958d2ee523a2206206994597c13d831ec7": 53858715
           }
         },
         "0x067af5806d5b736faa54bdee90501a6b96b7f65d": {
@@ -539,9 +645,9 @@
     },
     "4663": {
       "since": 1792635063,
-      "block": 106389359,
-      "blockHash": "0x47804f39b5834a1b9c939a1abe86e5510a99105cf08066ac151548f296897ef2",
-      "blockTimestamp": 1793845818,
+      "block": 107233999,
+      "blockHash": "0x16c9272f19e1ccc4949217a908bba4ec4ac25c567cb39cb549e4bec032575d4f",
+      "blockTimestamp": 1793932432,
       "sinceBlock": 94757491,
       "anyFrom": 94757491,
       "gauges": {
@@ -611,8 +717,8 @@
         },
         "0x0fd6cc0e3d1a15f39a197e075b92a3e589ee3fcc": {
           "fees": {
-            "0x0bd7d308f8e1639fab988df18a8011f41eacad73": 169507324575035804,
-            "0x5fc5360d0400a0fd4f2af552add042d716f1d168": 397844804
+            "0x0bd7d308f8e1639fab988df18a8011f41eacad73": 177076693376770525,
+            "0x5fc5360d0400a0fd4f2af552add042d716f1d168": 416114980
           },
           "incentives": {
             "0x0bd7d308f8e1639fab988df18a8011f41eacad73": 60840852022022643
@@ -3399,16 +3505,1226 @@
         "1": 1793681603,
         "4663": 1793682821
       }
+    },
+    {
+      "schemaVersion": 2,
+      "asOf": 1793932441,
+      "chains": [
+        1,
+        4663,
+        8453
+      ],
+      "units": {
+        "8453:0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b": 18,
+        "8453:0x0c1c1c109fe34733fca54b82d7b46b75cfb71f6e": 18,
+        "8453:0x22af33fe49fd1fa80c7149773dde5890d3c76f3b": 18,
+        "8453:0x2ae3f1ec7f1f5012cfeab0185bfc7aa3cf0dec22": 18,
+        "8453:0x311935cd80b76769bf2ecc9d8ab7635b2139cf82": 9,
+        "8453:0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 18,
+        "8453:0x4200000000000000000000000000000000000006": 18,
+        "8453:0x526728dbc96689597f85ae4cd716d4f7fccbae9d": 18,
+        "8453:0x5b2193fdc451c1f847be09ca9d13a4bf60f8c86b": 18,
+        "8453:0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42": 6,
+        "8453:0x6985884c4392d348587b19cb9eaaf157f13271cd": 18,
+        "8453:0x7ba6f01772924a82d9626c126347a28299e98c98": 18,
+        "8453:0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 6,
+        "8453:0xacfe6019ed1a7dc6f7b508c02d1b04ec88cc21bf": 18,
+        "8453:0xb095274743941e953c746f9c228da9c18bb6ec29": 18,
+        "8453:0xb200000000000000000000187f7071d6e321a7d2": 8,
+        "8453:0xb2000000000000000000001e800a7f5189430cd0": 8,
+        "8453:0xb2000000000000000000002d0ba3164cc74f58b7": 8,
+        "8453:0xb200000000000000000000397293cb8cda9a10c5": 8,
+        "8453:0xb200000000000000000000451d033a5000cb479e": 18,
+        "8453:0xb2000000000000000000004884b426556b92883d": 8,
+        "8453:0xb2000000000000000000004c27f6523082f41d01": 18,
+        "8453:0xb20000000000000000000078ee7ce2fe4908108c": 8,
+        "8453:0xb2000000000000000000007b9fcbd005511acbd5": 8,
+        "8453:0xb2000000000000000000008501b13360000cb2ec": 8,
+        "8453:0xb200000000000000000000c2e324d24d7eecd1fb": 8,
+        "8453:0xb200000000000000000000d9192b6b456483c2e8": 8,
+        "8453:0xb200000000000000000000fd2f87532b90095211": 8,
+        "8453:0xbaa5cc21fd487b8fcc2f632f3f4e8d37262a0842": 18,
+        "8453:0xcb585250f852c6c6bf90434ab21a00f02833a4af": 6,
+        "8453:0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": 8,
+        "8453:0xed664536023d8e4b1640c394777d34abaff1df8f": 18,
+        "8453:0xed6e000def95780fb89734c07ee2ce9f6dcaf110": 18,
+        "8453:0xeeee77bc7e82c0d4166d52f58239d4c5bf41eeee": 18,
+        "8453:0xf3df0a31ec5ea438150987805e841f960b9471b6": 18,
+        "8453:0xf4d97f2da56e8c3098f3a8d538db630a2606a024": 18,
+        "8453:0xfb31f85a8367210b2e4ed2360d2da9dc2d2ccc95": 18,
+        "8453:0xfde4c96c8593536e31f229ea8f37b2ada2699bb2": 6,
+        "1:0x4c9edd5852cd905f086c759e8383e09bff1e68b3": 18,
+        "1:0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": 6,
+        "1:0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": 18,
+        "1:0xdac17f958d2ee523a2206206994597c13d831ec7": 6,
+        "1:0xe343167631d89b6ffc58b88d6b7fb0228795491d": 6,
+        "4663:0x020bfc650a365f8bb26819deaabf3e21291018b4": 18,
+        "4663:0x0bd7d308f8e1639fab988df18a8011f41eacad73": 18,
+        "4663:0x2e8c31162b855a2ffa90f6f8634643ad6f111e18": 18,
+        "4663:0x39dbed3a2bd333467115de45665cc57f813c4571": 18,
+        "4663:0x5fc5360d0400a0fd4f2af552add042d716f1d168": 6,
+        "4663:0xaa07a0e9209e16ac99708c3ec70159c6ef3128a3": 18,
+        "4663:0xd0601ce157db5bdc3162bbac2a2c8af5320d9eec": 18
+      },
+      "blocks": {
+        "8453": {
+          "number": 53710297,
+          "hash": "0xf3b6f134987c8ae6676342285767b64423fa9358603c37d456d76591c969d173"
+        },
+        "1": {
+          "number": 26352843,
+          "hash": "0xc718f3593056c33b3325408182deb6e863cda6b0185e9de72027af7900d4db6f"
+        },
+        "4663": {
+          "number": 107233999,
+          "hash": "0x16c9272f19e1ccc4949217a908bba4ec4ac25c567cb39cb549e4bec032575d4f"
+        }
+      },
+      "accruedUSD": 23651.305,
+      "feesCumUSD": 20759.591,
+      "gauges": {
+        "8453:0xfa66e7f39cd27f2c16ad25080e57e30ba2abf043": {
+          "active": true,
+          "firstSeen": 1793932435,
+          "firstActive": true,
+          "usd": 109.5076,
+          "rawFees": {
+            "0x2ae3f1ec7f1f5012cfeab0185bfc7aa3cf0dec22": "23565275433502349",
+            "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": "64663"
+          },
+          "rawIncentives": {},
+          "fees": {
+            "0x2ae3f1ec7f1f5012cfeab0185bfc7aa3cf0dec22": 0.023565275,
+            "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": 0.00064663
+          },
+          "incentives": {}
+        },
+        "8453:0xdef20c7f935b5baab283302eb248d023575c1862": {
+          "active": true,
+          "firstSeen": 1793649547,
+          "firstActive": false,
+          "usd": 574.69337,
+          "rawFees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "286784729",
+            "0xb200000000000000000000397293cb8cda9a10c5": "27800575"
+          },
+          "rawIncentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "80391519461665819522"
+          },
+          "fees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 286.78473,
+            "0xb200000000000000000000397293cb8cda9a10c5": 0.27800575
+          },
+          "incentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 80.391519
+          }
+        },
+        "8453:0xe300153b7a51c02a47cb8b78c76f97e7bc5ddbe7": {
+          "active": true,
+          "firstSeen": 1793932435,
+          "firstActive": true,
+          "usd": 43.506931,
+          "rawFees": {
+            "0x4200000000000000000000000000000000000006": "9343723483862449",
+            "0xcb585250f852c6c6bf90434ab21a00f02833a4af": "18512888"
+          },
+          "rawIncentives": {},
+          "fees": {
+            "0x4200000000000000000000000000000000000006": 0.0093437235,
+            "0xcb585250f852c6c6bf90434ab21a00f02833a4af": 18.512888
+          },
+          "incentives": {}
+        },
+        "8453:0xe0fa8cec2386ec254926dfacaf5d57481369ee8c": {
+          "active": true,
+          "firstSeen": 1793932435,
+          "firstActive": true,
+          "usd": 22.917288,
+          "rawFees": {
+            "0x22af33fe49fd1fa80c7149773dde5890d3c76f3b": "41029755138240721663619",
+            "0x4200000000000000000000000000000000000006": "5402395737906750"
+          },
+          "rawIncentives": {},
+          "fees": {
+            "0x22af33fe49fd1fa80c7149773dde5890d3c76f3b": 41029.755,
+            "0x4200000000000000000000000000000000000006": 0.0054023957
+          },
+          "incentives": {}
+        },
+        "8453:0xd8c0e093327b5dfb3e654ec520ff2100c3c20f76": {
+          "active": true,
+          "firstSeen": 1793932435,
+          "firstActive": true,
+          "usd": 28.025624,
+          "rawFees": {
+            "0x4200000000000000000000000000000000000006": "6563043330516669",
+            "0xb2000000000000000000002d0ba3164cc74f58b7": "4685982"
+          },
+          "rawIncentives": {},
+          "fees": {
+            "0x4200000000000000000000000000000000000006": 0.0065630433,
+            "0xb2000000000000000000002d0ba3164cc74f58b7": 0.04685982
+          },
+          "incentives": {}
+        },
+        "8453:0x2e45bbaeebd8e00bbb838bc885e5332cd8829d4f": {
+          "active": true,
+          "firstSeen": 1793759683,
+          "firstActive": true,
+          "usd": 533.61992,
+          "rawFees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "306242389",
+            "0xb200000000000000000000d9192b6b456483c2e8": "88021747"
+          },
+          "rawIncentives": {},
+          "fees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 306.24239,
+            "0xb200000000000000000000d9192b6b456483c2e8": 0.88021747
+          },
+          "incentives": {}
+        },
+        "8453:0xcba7452690663d6789c0115fe889c9da85bf8c56": {
+          "active": true,
+          "firstSeen": 1793649547,
+          "firstActive": false,
+          "usd": 371.4165,
+          "rawFees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "190132816",
+            "0xb2000000000000000000008501b13360000cb2ec": "13528909"
+          },
+          "rawIncentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "6091993133807975371"
+          },
+          "fees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 190.13282,
+            "0xb2000000000000000000008501b13360000cb2ec": 0.13528909
+          },
+          "incentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 6.0919931
+          }
+        },
+        "8453:0xaa3b00f22de3c2a4a2485a9bdcfe56c185b49b88": {
+          "active": true,
+          "firstSeen": 1793649547,
+          "firstActive": false,
+          "usd": 787.2726,
+          "rawFees": {
+            "0x0c1c1c109fe34733fca54b82d7b46b75cfb71f6e": "7555071420331682163518",
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "491851396"
+          },
+          "rawIncentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "20854169314380999365"
+          },
+          "fees": {
+            "0x0c1c1c109fe34733fca54b82d7b46b75cfb71f6e": 7555.0714,
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 491.8514
+          },
+          "incentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 20.854169
+          }
+        },
+        "8453:0x9376bbef9bcb2558c4d9fc2eadaa3cf7356a6941": {
+          "active": true,
+          "firstSeen": 1793649547,
+          "firstActive": false,
+          "usd": 578.08318,
+          "rawFees": {
+            "0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b": "380642867628933438520",
+            "0x4200000000000000000000000000000000000006": "103783744836907697"
+          },
+          "rawIncentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "194609672040172121047",
+            "0x4200000000000000000000000000000000000006": "6796831552583041"
+          },
+          "fees": {
+            "0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b": 380.64287,
+            "0x4200000000000000000000000000000000000006": 0.10378374
+          },
+          "incentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 194.60967,
+            "0x4200000000000000000000000000000000000006": 0.0067968316
+          }
+        },
+        "8453:0x9f4594cc94c373141242fa2ca199c5f78e1662e5": {
+          "active": true,
+          "firstSeen": 1793759683,
+          "firstActive": true,
+          "usd": 269.93652,
+          "rawFees": {
+            "0x311935cd80b76769bf2ecc9d8ab7635b2139cf82": "1455592386",
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "138782121"
+          },
+          "rawIncentives": {},
+          "fees": {
+            "0x311935cd80b76769bf2ecc9d8ab7635b2139cf82": 1.4555924,
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 138.78212
+          },
+          "incentives": {}
+        },
+        "8453:0x1e417f2af612d2e9a951ede32ca4b05a287b50de": {
+          "active": true,
+          "firstSeen": 1793649547,
+          "firstActive": false,
+          "usd": 706.60748,
+          "rawFees": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "582989383138674874898",
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "365608652"
+          },
+          "rawIncentives": {},
+          "fees": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 582.98938,
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 365.60865
+          },
+          "incentives": {}
+        },
+        "8453:0x2cd47ba367766a8a5ab641825fbf4a3a29e92ec9": {
+          "active": true,
+          "firstSeen": 1793932435,
+          "firstActive": true,
+          "usd": 113.61986,
+          "rawFees": {
+            "0x4200000000000000000000000000000000000006": "27770832658667993",
+            "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42": "45918700"
+          },
+          "rawIncentives": {},
+          "fees": {
+            "0x4200000000000000000000000000000000000006": 0.027770833,
+            "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42": 45.9187
+          },
+          "incentives": {}
+        },
+        "8453:0x2f68e89ad5176d1fca1b4cac7265536a539807e7": {
+          "active": true,
+          "firstSeen": 1793649547,
+          "firstActive": false,
+          "usd": 492.98481,
+          "rawFees": {
+            "0x4200000000000000000000000000000000000006": "109426127050998995",
+            "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2": "248199320"
+          },
+          "rawIncentives": {},
+          "fees": {
+            "0x4200000000000000000000000000000000000006": 0.10942613,
+            "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2": 248.19932
+          },
+          "incentives": {}
+        },
+        "8453:0x46a9dca72d78366571be583aa69c1dc16e6889fb": {
+          "active": true,
+          "firstSeen": 1793649547,
+          "firstActive": false,
+          "usd": 1252.9774,
+          "rawFees": {
+            "0x4200000000000000000000000000000000000006": "254788549854903320",
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "531419732"
+          },
+          "rawIncentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "258237249897851747700",
+            "0xf3df0a31ec5ea438150987805e841f960b9471b6": "2954083111248994188"
+          },
+          "fees": {
+            "0x4200000000000000000000000000000000000006": 0.25478855,
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 531.41973
+          },
+          "incentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 258.23725,
+            "0xf3df0a31ec5ea438150987805e841f960b9471b6": 2.9540831
+          }
+        },
+        "8453:0x4a870ac2a047909c1ab791f8d7176d33bc2d60eb": {
+          "active": true,
+          "firstSeen": 1793932435,
+          "firstActive": true,
+          "usd": 47.440957,
+          "rawFees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "22617818",
+            "0xf4d97f2da56e8c3098f3a8d538db630a2606a024": "15145372900114251"
+          },
+          "rawIncentives": {},
+          "fees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 22.617818,
+            "0xf4d97f2da56e8c3098f3a8d538db630a2606a024": 0.015145373
+          },
+          "incentives": {}
+        },
+        "8453:0x5aa337b53c6b866d255542f834ae80109ce292b4": {
+          "active": true,
+          "firstSeen": 1793932435,
+          "firstActive": true,
+          "usd": 92.67902,
+          "rawFees": {
+            "0x5b2193fdc451c1f847be09ca9d13a4bf60f8c86b": "771409397399479121741",
+            "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": "52842"
+          },
+          "rawIncentives": {},
+          "fees": {
+            "0x5b2193fdc451c1f847be09ca9d13a4bf60f8c86b": 771.4094,
+            "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": 0.00052842
+          },
+          "incentives": {}
+        },
+        "8453:0x5c7974887d29ad70aef991dc4d5ed51a60d108a9": {
+          "active": true,
+          "firstSeen": 1793932435,
+          "firstActive": true,
+          "usd": 36.146477,
+          "rawFees": {
+            "0x526728dbc96689597f85ae4cd716d4f7fccbae9d": "6541369814763208470",
+            "0x7ba6f01772924a82d9626c126347a28299e98c98": "16016771067323318"
+          },
+          "rawIncentives": {},
+          "fees": {
+            "0x526728dbc96689597f85ae4cd716d4f7fccbae9d": 6.5413698,
+            "0x7ba6f01772924a82d9626c126347a28299e98c98": 0.016016771
+          },
+          "incentives": {}
+        },
+        "8453:0x6a5aa92f7db7a7f010fe73a747d121db8498e857": {
+          "active": true,
+          "firstSeen": 1793649547,
+          "firstActive": false,
+          "usd": 244.95114,
+          "rawFees": {
+            "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": "139854",
+            "0xed6e000def95780fb89734c07ee2ce9f6dcaf110": "1304415630029377231422"
+          },
+          "rawIncentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "24732124230033070788"
+          },
+          "fees": {
+            "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": 0.00139854,
+            "0xed6e000def95780fb89734c07ee2ce9f6dcaf110": 1304.4156
+          },
+          "incentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 24.732124
+          }
+        },
+        "8453:0x6dca50a328ac12bf9a475f81c9d351ccf77f61d2": {
+          "active": true,
+          "firstSeen": 1793932435,
+          "firstActive": true,
+          "usd": 32.666524,
+          "rawFees": {
+            "0xacfe6019ed1a7dc6f7b508c02d1b04ec88cc21bf": "692989237021349384",
+            "0xf4d97f2da56e8c3098f3a8d538db630a2606a024": "11054107001455525"
+          },
+          "rawIncentives": {},
+          "fees": {
+            "0xacfe6019ed1a7dc6f7b508c02d1b04ec88cc21bf": 0.69298924,
+            "0xf4d97f2da56e8c3098f3a8d538db630a2606a024": 0.011054107
+          },
+          "incentives": {}
+        },
+        "8453:0x79fc4cbd860e3528f092bd7d9261e0cd141a4803": {
+          "active": true,
+          "firstSeen": 1793932435,
+          "firstActive": true,
+          "usd": 244.92738,
+          "rawFees": {
+            "0xb2000000000000000000004884b426556b92883d": "96399829",
+            "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": "157420"
+          },
+          "rawIncentives": {},
+          "fees": {
+            "0xb2000000000000000000004884b426556b92883d": 0.96399829,
+            "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": 0.0015742
+          },
+          "incentives": {}
+        },
+        "8453:0xe7977774210874fc95e2975b799906cc3bbfa399": {
+          "active": false,
+          "firstSeen": 1793759683,
+          "firstActive": true,
+          "usd": 621.13572,
+          "rawFees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "340768136",
+            "0xb200000000000000000000c2e324d24d7eecd1fb": "81702204"
+          },
+          "rawIncentives": {},
+          "fees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 340.76814,
+            "0xb200000000000000000000c2e324d24d7eecd1fb": 0.81702204
+          },
+          "incentives": {}
+        },
+        "8453:0xa958059616fae8cc0778662b3f033afa582d7576": {
+          "active": false,
+          "firstSeen": 1793649547,
+          "firstActive": false,
+          "usd": 484.10474,
+          "rawFees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "254336166",
+            "0xb2000000000000000000004884b426556b92883d": "176813122"
+          },
+          "rawIncentives": {},
+          "fees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 254.33617,
+            "0xb2000000000000000000004884b426556b92883d": 1.7681312
+          },
+          "incentives": {}
+        },
+        "8453:0x0ccf7cb21169934f4686cb895518aa179bfcea53": {
+          "active": false,
+          "firstSeen": 1793759683,
+          "firstActive": true,
+          "usd": 165.15638,
+          "rawFees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "83967249",
+            "0xb2000000000000000000007b9fcbd005511acbd5": "63550006"
+          },
+          "rawIncentives": {},
+          "fees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 83.967249,
+            "0xb2000000000000000000007b9fcbd005511acbd5": 0.63550006
+          },
+          "incentives": {}
+        },
+        "8453:0x230ec639ae09b4cdea38b5665910e3b10f1b8eb8": {
+          "active": false,
+          "firstSeen": 1793759683,
+          "firstActive": true,
+          "usd": 187.17468,
+          "rawFees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "93281614",
+            "0xb20000000000000000000078ee7ce2fe4908108c": "50238705"
+          },
+          "rawIncentives": {},
+          "fees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 93.281614,
+            "0xb20000000000000000000078ee7ce2fe4908108c": 0.50238705
+          },
+          "incentives": {}
+        },
+        "8453:0x74a30b3357121a822adb91a539f4b11b5fb7cb3f": {
+          "active": false,
+          "firstSeen": 1793649547,
+          "firstActive": false,
+          "usd": 898.9944,
+          "rawFees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "437752000",
+            "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": "607059"
+          },
+          "rawIncentives": {},
+          "fees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 437.752,
+            "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": 0.00607059
+          },
+          "incentives": {}
+        },
+        "8453:0x81189366762ce456db7cf81181785bf22b5baec6": {
+          "active": false,
+          "firstSeen": 1793759683,
+          "firstActive": true,
+          "usd": 41.099087,
+          "rawFees": {
+            "0x311935cd80b76769bf2ecc9d8ab7635b2139cf82": "231350749",
+            "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": "26646"
+          },
+          "rawIncentives": {},
+          "fees": {
+            "0x311935cd80b76769bf2ecc9d8ab7635b2139cf82": 0.23135075,
+            "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": 0.00026646
+          },
+          "incentives": {}
+        },
+        "8453:0x9d32ce3252b817ba708e959562c1a43ffe70c893": {
+          "active": false,
+          "firstSeen": 1793759683,
+          "firstActive": true,
+          "usd": 114.37619,
+          "rawFees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "56858902",
+            "0xb2000000000000000000001e800a7f5189430cd0": "16464281"
+          },
+          "rawIncentives": {},
+          "fees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 56.858902,
+            "0xb2000000000000000000001e800a7f5189430cd0": 0.16464281
+          },
+          "incentives": {}
+        },
+        "8453:0x694fdc6b6bfdf5186e04516f699d643dc4c5c9b4": {
+          "active": false,
+          "firstSeen": 1793649547,
+          "firstActive": true,
+          "usd": 217.47988,
+          "rawFees": {
+            "0x4200000000000000000000000000000000000006": "43442813014694807",
+            "0xbaa5cc21fd487b8fcc2f632f3f4e8d37262a0842": "56700686099868348920"
+          },
+          "rawIncentives": {},
+          "fees": {
+            "0x4200000000000000000000000000000000000006": 0.043442813,
+            "0xbaa5cc21fd487b8fcc2f632f3f4e8d37262a0842": 56.700686
+          },
+          "incentives": {}
+        },
+        "8453:0x8971783f2b9ece611663b7e33e5b2ea96d73b9f3": {
+          "active": false,
+          "firstSeen": 1793649547,
+          "firstActive": true,
+          "usd": 85.911038,
+          "rawFees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "36098268",
+            "0xb095274743941e953c746f9c228da9c18bb6ec29": "913062271370662396905"
+          },
+          "rawIncentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "13517739625488534040"
+          },
+          "fees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 36.098268,
+            "0xb095274743941e953c746f9c228da9c18bb6ec29": 913.06227
+          },
+          "incentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 13.51774
+          }
+        },
+        "8453:0xb3b8d636d59b71eab86cd36ab4c94c1c2dfbce70": {
+          "active": false,
+          "firstSeen": 1793649547,
+          "firstActive": true,
+          "usd": 81.299613,
+          "rawFees": {
+            "0x4200000000000000000000000000000000000006": "15634390765216406",
+            "0x6985884c4392d348587b19cb9eaaf157f13271cd": "22486786910456663878"
+          },
+          "rawIncentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "17274214881172324180",
+            "0x4200000000000000000000000000000000000006": "5068550068293"
+          },
+          "fees": {
+            "0x4200000000000000000000000000000000000006": 0.015634391,
+            "0x6985884c4392d348587b19cb9eaaf157f13271cd": 22.486787
+          },
+          "incentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 17.274215,
+            "0x4200000000000000000000000000000000000006": 5.0685501e-06
+          }
+        },
+        "8453:0x14018f5afaeca44bb49d5036267d836723b57c91": {
+          "active": false,
+          "firstSeen": 1793649547,
+          "firstActive": false,
+          "usd": 734.48621,
+          "rawFees": {
+            "0x4200000000000000000000000000000000000006": "132475268443210257",
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "296308747"
+          },
+          "rawIncentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "242008244718039008820"
+          },
+          "fees": {
+            "0x4200000000000000000000000000000000000006": 0.13247527,
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 296.30875
+          },
+          "incentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 242.00824
+          }
+        },
+        "8453:0x347f2eedd83dc6b14116f0260403d67a21f47c30": {
+          "active": false,
+          "firstSeen": 1793649547,
+          "firstActive": false,
+          "usd": 497.52475,
+          "rawFees": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "332635598361333472922",
+            "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": "204105"
+          },
+          "rawIncentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "242254878082637251812",
+            "0xb2000000000000000000007b9fcbd005511acbd5": "4763612"
+          },
+          "fees": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 332.6356,
+            "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": 0.00204105
+          },
+          "incentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 242.25488,
+            "0xb2000000000000000000007b9fcbd005511acbd5": 0.04763612
+          }
+        },
+        "8453:0x4262b2d1415345b98e656a56c2f12cdbb1118539": {
+          "active": false,
+          "firstSeen": 1793649547,
+          "firstActive": false,
+          "usd": 443.303,
+          "rawFees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "118589413",
+            "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": "207519"
+          },
+          "rawIncentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "285513068558160390813"
+          },
+          "fees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 118.58941,
+            "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": 0.00207519
+          },
+          "incentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 285.51307
+          }
+        },
+        "8453:0x4a3b6a77b545584d870d4a6de446aac4610c60d5": {
+          "active": false,
+          "firstSeen": 1793649547,
+          "firstActive": false,
+          "usd": 467.99573,
+          "rawFees": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "458566745452843929449",
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "74232015"
+          },
+          "rawIncentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "214518095098273914362"
+          },
+          "fees": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 458.56675,
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 74.232015
+          },
+          "incentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 214.5181
+          }
+        },
+        "8453:0x5b14d6d194e49330647eb4717010ade1b1b3f8b5": {
+          "active": false,
+          "firstSeen": 1793649547,
+          "firstActive": false,
+          "usd": 454.6083,
+          "rawFees": {
+            "0x4200000000000000000000000000000000000006": "52952278647553853",
+            "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": "219137"
+          },
+          "rawIncentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "289730383342819258654",
+            "0xbaa5cc21fd487b8fcc2f632f3f4e8d37262a0842": "7680262959"
+          },
+          "fees": {
+            "0x4200000000000000000000000000000000000006": 0.052952279,
+            "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": 0.00219137
+          },
+          "incentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 289.73038,
+            "0xbaa5cc21fd487b8fcc2f632f3f4e8d37262a0842": 7.680263e-09
+          }
+        },
+        "8453:0xb1b27a2fa4e67a6d0ee1aa9de97c8b1ddf54fdd4": {
+          "active": false,
+          "firstSeen": 1793649547,
+          "firstActive": false,
+          "usd": 460.6604,
+          "rawFees": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "323886448852087524674",
+            "0x4200000000000000000000000000000000000006": "59022165026807126"
+          },
+          "rawIncentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "237605758176385702242"
+          },
+          "fees": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 323.88645,
+            "0x4200000000000000000000000000000000000006": 0.059022165
+          },
+          "incentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 237.60576
+          }
+        },
+        "8453:0xd424ba8ca9d4e278753de76651a0095451e65cd1": {
+          "active": false,
+          "firstSeen": 1793649547,
+          "firstActive": false,
+          "usd": 397.89458,
+          "rawFees": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "179390824503774054608",
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "98337084"
+          },
+          "rawIncentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "318395774909982388921",
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "8355560"
+          },
+          "fees": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 179.39082,
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 98.337084
+          },
+          "incentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 318.39577,
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 8.35556
+          }
+        },
+        "8453:0xfc8922e268cccbe8160e5c1ad546af9705cf0a61": {
+          "active": false,
+          "firstSeen": 1793649547,
+          "firstActive": false,
+          "usd": 230.74692,
+          "rawFees": {
+            "0x4200000000000000000000000000000000000006": "42382526273448582",
+            "0xacfe6019ed1a7dc6f7b508c02d1b04ec88cc21bf": "3368871060899222005"
+          },
+          "rawIncentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "111322867062617853699"
+          },
+          "fees": {
+            "0x4200000000000000000000000000000000000006": 0.042382526,
+            "0xacfe6019ed1a7dc6f7b508c02d1b04ec88cc21bf": 3.3688711
+          },
+          "incentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 111.32287
+          }
+        },
+        "8453:0x8b5670678192519c9847d235011c82a34aee495d": {
+          "active": false,
+          "firstSeen": 1793649547,
+          "firstActive": false,
+          "usd": 178.43829,
+          "rawFees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "67703701",
+            "0xb200000000000000000000fd2f87532b90095211": "7555969"
+          },
+          "rawIncentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "98345581254834711137"
+          },
+          "fees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 67.703701,
+            "0xb200000000000000000000fd2f87532b90095211": 0.07555969
+          },
+          "incentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 98.345581
+          }
+        },
+        "8453:0x9ce9f01445d390c9d828a600a924f7860e2c80b2": {
+          "active": false,
+          "firstSeen": 1793649547,
+          "firstActive": false,
+          "usd": 29.218308,
+          "rawFees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "12890711",
+            "0xb2000000000000000000004c27f6523082f41d01": "1328970907571680782394"
+          },
+          "rawIncentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "9798941867225413304"
+          },
+          "fees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 12.890711,
+            "0xb2000000000000000000004c27f6523082f41d01": 1328.9709
+          },
+          "incentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 9.7989419
+          }
+        },
+        "8453:0x02256e78b5116f24fe16aeea83b827c1c79b5596": {
+          "active": false,
+          "firstSeen": 1793649547,
+          "firstActive": false,
+          "usd": 15.666889,
+          "rawFees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "6986207",
+            "0xb200000000000000000000187f7071d6e321a7d2": "4403356"
+          },
+          "rawIncentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "5579586619566624859"
+          },
+          "fees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 6.986207,
+            "0xb200000000000000000000187f7071d6e321a7d2": 0.04403356
+          },
+          "incentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 5.5795866
+          }
+        },
+        "8453:0x1dd07350114baf9fa8d9caf91cd5a3480d34ec6f": {
+          "active": false,
+          "firstSeen": 1793649547,
+          "firstActive": false,
+          "usd": 111.02184,
+          "rawFees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "56466497",
+            "0xed664536023d8e4b1640c394777d34abaff1df8f": "113678818489592873939"
+          },
+          "rawIncentives": {},
+          "fees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 56.466497,
+            "0xed664536023d8e4b1640c394777d34abaff1df8f": 113.67882
+          },
+          "incentives": {}
+        },
+        "8453:0xfcb69fa140fb835169bc6c74ee9363f752edcb7a": {
+          "active": false,
+          "firstSeen": 1793649547,
+          "firstActive": false,
+          "usd": 56.153087,
+          "rawFees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "16965418",
+            "0xeeee77bc7e82c0d4166d52f58239d4c5bf41eeee": "8097212811306543645"
+          },
+          "rawIncentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "41319968006328472120"
+          },
+          "fees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 16.965418,
+            "0xeeee77bc7e82c0d4166d52f58239d4c5bf41eeee": 8.0972128
+          },
+          "incentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 41.319968
+          }
+        },
+        "8453:0xabb3fb6659e05847631896cb87a6d1b8bc0c6d8c": {
+          "active": false,
+          "firstSeen": 1793649547,
+          "firstActive": false,
+          "usd": 461.12276,
+          "rawFees": {
+            "0x4200000000000000000000000000000000000006": "104022110852451382",
+            "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": "299917"
+          },
+          "rawIncentives": {
+            "0x4200000000000000000000000000000000000006": "119993074871105"
+          },
+          "fees": {
+            "0x4200000000000000000000000000000000000006": 0.10402211,
+            "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": 0.00299917
+          },
+          "incentives": {
+            "0x4200000000000000000000000000000000000006": 0.00011999307
+          }
+        },
+        "8453:0xaa63309011db42ab09331f1c86298d6194c4e551": {
+          "active": false,
+          "firstSeen": 1793649547,
+          "firstActive": false,
+          "usd": 44.59637,
+          "rawFees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "22114946",
+            "0xfb31f85a8367210b2e4ed2360d2da9dc2d2ccc95": "783593834907645527725"
+          },
+          "rawIncentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "7978979032006138020"
+          },
+          "fees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 22.114946,
+            "0xfb31f85a8367210b2e4ed2360d2da9dc2d2ccc95": 783.59383
+          },
+          "incentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 7.978979
+          }
+        },
+        "8453:0xa06fd10bb776e511c46243c03baa3427f5bf656f": {
+          "active": false,
+          "firstSeen": 1793649547,
+          "firstActive": false,
+          "usd": 88.784259,
+          "rawFees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "42020498",
+            "0xb200000000000000000000451d033a5000cb479e": "541666397512886964"
+          },
+          "rawIncentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "7845971064391198217"
+          },
+          "fees": {
+            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 42.020498,
+            "0xb200000000000000000000451d033a5000cb479e": 0.5416664
+          },
+          "incentives": {
+            "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 7.8459711
+          }
+        },
+        "1:0xbc694fc46324791d75762e44d5d8cdcc00e2f053": {
+          "active": false,
+          "firstSeen": 1793649503,
+          "firstActive": true,
+          "usd": 586.09761,
+          "rawFees": {
+            "0x4c9edd5852cd905f086c759e8383e09bff1e68b3": "134046555891061289530",
+            "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": "115640131"
+          },
+          "rawIncentives": {
+            "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": "103677556793099073",
+            "0xdac17f958d2ee523a2206206994597c13d831ec7": "104556852"
+          },
+          "fees": {
+            "0x4c9edd5852cd905f086c759e8383e09bff1e68b3": 134.04656,
+            "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": 115.64013
+          },
+          "incentives": {
+            "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": 0.10367756,
+            "0xdac17f958d2ee523a2206206994597c13d831ec7": 104.55685
+          }
+        },
+        "1:0x9ce6331e5d7a42db5876a9e5b1205e07502fce06": {
+          "active": false,
+          "firstSeen": 1793649503,
+          "firstActive": true,
+          "usd": 387.99064,
+          "rawFees": {
+            "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": "90393895",
+            "0xe343167631d89b6ffc58b88d6b7fb0228795491d": "86722120"
+          },
+          "rawIncentives": {
+            "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": "70167762122120388",
+            "0xdac17f958d2ee523a2206206994597c13d831ec7": "53858715"
+          },
+          "fees": {
+            "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": 90.393895,
+            "0xe343167631d89b6ffc58b88d6b7fb0228795491d": 86.72212
+          },
+          "incentives": {
+            "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": 0.070167762,
+            "0xdac17f958d2ee523a2206206994597c13d831ec7": 53.858715
+          }
+        },
+        "1:0x3142ce317ea21b4e4121a8bbf04f51230da5c649": {
+          "active": false,
+          "firstSeen": 1793649503,
+          "firstActive": true,
+          "usd": 370.24343,
+          "rawFees": {
+            "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": "52573052",
+            "0xdac17f958d2ee523a2206206994597c13d831ec7": "51434580"
+          },
+          "rawIncentives": {
+            "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": "88587810080694131",
+            "0xe343167631d89b6ffc58b88d6b7fb0228795491d": "84336",
+            "0xdac17f958d2ee523a2206206994597c13d831ec7": "67966482"
+          },
+          "fees": {
+            "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": 52.573052,
+            "0xdac17f958d2ee523a2206206994597c13d831ec7": 51.43458
+          },
+          "incentives": {
+            "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": 0.08858781,
+            "0xe343167631d89b6ffc58b88d6b7fb0228795491d": 0.084336,
+            "0xdac17f958d2ee523a2206206994597c13d831ec7": 67.966482
+          }
+        },
+        "1:0x9de929252c9017fe8a4cd5986475a658ad87ce33": {
+          "active": false,
+          "firstSeen": 1793649503,
+          "firstActive": true,
+          "usd": 1506.3224,
+          "rawFees": {
+            "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": "747032699",
+            "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": "339139442683917156"
+          },
+          "rawIncentives": {},
+          "fees": {
+            "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": 747.0327,
+            "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": 0.33913944
+          },
+          "incentives": {}
+        },
+        "1:0x430d74920f5bf2a6a2a27af16ab66dfe77bffa2a": {
+          "active": false,
+          "firstSeen": 1793649503,
+          "firstActive": true,
+          "usd": 4229.1928,
+          "rawFees": {
+            "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": "905029700554740564",
+            "0xdac17f958d2ee523a2206206994597c13d831ec7": "1891097055"
+          },
+          "rawIncentives": {
+            "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": "140358734165396917"
+          },
+          "fees": {
+            "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": 0.9050297,
+            "0xdac17f958d2ee523a2206206994597c13d831ec7": 1891.0971
+          },
+          "incentives": {
+            "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": 0.14035873
+          }
+        },
+        "4663:0xe033f4bd3d7ccf537a2f954ecdc8eb1218e3b7a6": {
+          "active": false,
+          "firstSeen": 1793649549,
+          "firstActive": false,
+          "usd": 949.40008,
+          "rawFees": {
+            "0x0bd7d308f8e1639fab988df18a8011f41eacad73": "177076693376770525",
+            "0x5fc5360d0400a0fd4f2af552add042d716f1d168": "416114980"
+          },
+          "rawIncentives": {
+            "0x0bd7d308f8e1639fab988df18a8011f41eacad73": "60840852022022643"
+          },
+          "fees": {
+            "0x0bd7d308f8e1639fab988df18a8011f41eacad73": 0.17707669,
+            "0x5fc5360d0400a0fd4f2af552add042d716f1d168": 416.11498
+          },
+          "incentives": {
+            "0x0bd7d308f8e1639fab988df18a8011f41eacad73": 0.060840852
+          }
+        },
+        "4663:0x045ccb9d8a98cb748b39253005be2d6d5b955c14": {
+          "active": false,
+          "firstSeen": 1793649549,
+          "firstActive": false,
+          "usd": 79.357852,
+          "rawFees": {
+            "0x020bfc650a365f8bb26819deaabf3e21291018b4": "464955109117917634708",
+            "0x0bd7d308f8e1639fab988df18a8011f41eacad73": "16101597909381073"
+          },
+          "rawIncentives": {},
+          "fees": {
+            "0x020bfc650a365f8bb26819deaabf3e21291018b4": 464.95511,
+            "0x0bd7d308f8e1639fab988df18a8011f41eacad73": 0.016101598
+          },
+          "incentives": {}
+        },
+        "4663:0x220d17d3260f130a4f91a1ba2d21f8f75f624942": {
+          "active": false,
+          "firstSeen": 1793649549,
+          "firstActive": false,
+          "usd": 250.14303,
+          "rawFees": {
+            "0x2e8c31162b855a2ffa90f6f8634643ad6f111e18": "2301877134052096814170",
+            "0x5fc5360d0400a0fd4f2af552add042d716f1d168": "153160447"
+          },
+          "rawIncentives": {},
+          "fees": {
+            "0x2e8c31162b855a2ffa90f6f8634643ad6f111e18": 2301.8771,
+            "0x5fc5360d0400a0fd4f2af552add042d716f1d168": 153.16045
+          },
+          "incentives": {}
+        },
+        "4663:0x5874f5b8728776993de4c90c61473d76eeab90db": {
+          "active": false,
+          "firstSeen": 1793649549,
+          "firstActive": false,
+          "usd": 27.127383,
+          "rawFees": {
+            "0x5fc5360d0400a0fd4f2af552add042d716f1d168": "11531666",
+            "0xd0601ce157db5bdc3162bbac2a2c8af5320d9eec": "76253424549813205"
+          },
+          "rawIncentives": {
+            "0x5fc5360d0400a0fd4f2af552add042d716f1d168": "1322125"
+          },
+          "fees": {
+            "0x5fc5360d0400a0fd4f2af552add042d716f1d168": 11.531666,
+            "0xd0601ce157db5bdc3162bbac2a2c8af5320d9eec": 0.076253425
+          },
+          "incentives": {
+            "0x5fc5360d0400a0fd4f2af552add042d716f1d168": 1.322125
+          }
+        },
+        "4663:0xd1900b7cdb51671dba4b8b0a876cde1fb2c6a97d": {
+          "active": false,
+          "firstSeen": 1793649549,
+          "firstActive": false,
+          "usd": 35.626105,
+          "rawFees": {
+            "0x5fc5360d0400a0fd4f2af552add042d716f1d168": "15644254",
+            "0xaa07a0e9209e16ac99708c3ec70159c6ef3128a3": "729425577232871278349"
+          },
+          "rawIncentives": {},
+          "fees": {
+            "0x5fc5360d0400a0fd4f2af552add042d716f1d168": 15.644254,
+            "0xaa07a0e9209e16ac99708c3ec70159c6ef3128a3": 729.42558
+          },
+          "incentives": {}
+        },
+        "4663:0x750a4e760873c863daf22890b8db55f4c71f1114": {
+          "active": false,
+          "firstSeen": 1793649549,
+          "firstActive": false,
+          "usd": 1076.8696,
+          "rawFees": {
+            "0x39dbed3a2bd333467115de45665cc57f813c4571": "2653875797102417871490",
+            "0x5fc5360d0400a0fd4f2af552add042d716f1d168": "583729065"
+          },
+          "rawIncentives": {},
+          "fees": {
+            "0x39dbed3a2bd333467115de45665cc57f813c4571": 2653.8758,
+            "0x5fc5360d0400a0fd4f2af552add042d716f1d168": 583.72906
+          },
+          "incentives": {}
+        }
+      },
+      "unread": [],
+      "complete": true,
+      "lastAllocated": {
+        "8453": 1793856171,
+        "1": 1793855855,
+        "4663": 1793855848
+      }
     }
   ],
   "gauges": [
     {
       "chainId": 8453,
-      "gauge": "0xe7977774210874fc95e2975b799906cc3bbfa399"
+      "gauge": "0xfa66e7f39cd27f2c16ad25080e57e30ba2abf043"
     },
     {
       "chainId": 8453,
       "gauge": "0xdef20c7f935b5baab283302eb248d023575c1862"
+    },
+    {
+      "chainId": 8453,
+      "gauge": "0xe300153b7a51c02a47cb8b78c76f97e7bc5ddbe7"
+    },
+    {
+      "chainId": 8453,
+      "gauge": "0xe0fa8cec2386ec254926dfacaf5d57481369ee8c"
+    },
+    {
+      "chainId": 8453,
+      "gauge": "0xd8c0e093327b5dfb3e654ec520ff2100c3c20f76"
+    },
+    {
+      "chainId": 8453,
+      "gauge": "0x2e45bbaeebd8e00bbb838bc885e5332cd8829d4f"
+    },
+    {
+      "chainId": 8453,
+      "gauge": "0xcba7452690663d6789c0115fe889c9da85bf8c56"
+    },
+    {
+      "chainId": 8453,
+      "gauge": "0xaa3b00f22de3c2a4a2485a9bdcfe56c185b49b88"
+    },
+    {
+      "chainId": 8453,
+      "gauge": "0x9376bbef9bcb2558c4d9fc2eadaa3cf7356a6941"
+    },
+    {
+      "chainId": 8453,
+      "gauge": "0x9f4594cc94c373141242fa2ca199c5f78e1662e5"
+    },
+    {
+      "chainId": 8453,
+      "gauge": "0x1e417f2af612d2e9a951ede32ca4b05a287b50de"
+    },
+    {
+      "chainId": 8453,
+      "gauge": "0x2cd47ba367766a8a5ab641825fbf4a3a29e92ec9"
+    },
+    {
+      "chainId": 8453,
+      "gauge": "0x2f68e89ad5176d1fca1b4cac7265536a539807e7"
+    },
+    {
+      "chainId": 8453,
+      "gauge": "0x46a9dca72d78366571be583aa69c1dc16e6889fb"
+    },
+    {
+      "chainId": 8453,
+      "gauge": "0x4a870ac2a047909c1ab791f8d7176d33bc2d60eb"
+    },
+    {
+      "chainId": 8453,
+      "gauge": "0x5aa337b53c6b866d255542f834ae80109ce292b4"
+    },
+    {
+      "chainId": 8453,
+      "gauge": "0x5c7974887d29ad70aef991dc4d5ed51a60d108a9"
+    },
+    {
+      "chainId": 8453,
+      "gauge": "0x6a5aa92f7db7a7f010fe73a747d121db8498e857"
+    },
+    {
+      "chainId": 8453,
+      "gauge": "0x6dca50a328ac12bf9a475f81c9d351ccf77f61d2"
+    },
+    {
+      "chainId": 8453,
+      "gauge": "0x79fc4cbd860e3528f092bd7d9261e0cd141a4803"
+    },
+    {
+      "chainId": 8453,
+      "gauge": "0xe7977774210874fc95e2975b799906cc3bbfa399"
     },
     {
       "chainId": 8453,
@@ -3424,10 +4740,6 @@
     },
     {
       "chainId": 8453,
-      "gauge": "0x2e45bbaeebd8e00bbb838bc885e5332cd8829d4f"
-    },
-    {
-      "chainId": 8453,
       "gauge": "0x74a30b3357121a822adb91a539f4b11b5fb7cb3f"
     },
     {
@@ -3437,10 +4749,6 @@
     {
       "chainId": 8453,
       "gauge": "0x9d32ce3252b817ba708e959562c1a43ffe70c893"
-    },
-    {
-      "chainId": 8453,
-      "gauge": "0x9f4594cc94c373141242fa2ca199c5f78e1662e5"
     },
     {
       "chainId": 8453,
@@ -3465,10 +4773,6 @@
     {
       "chainId": 8453,
       "gauge": "0x4262b2d1415345b98e656a56c2f12cdbb1118539"
-    },
-    {
-      "chainId": 8453,
-      "gauge": "0x46a9dca72d78366571be583aa69c1dc16e6889fb"
     },
     {
       "chainId": 8453,
@@ -3500,31 +4804,11 @@
     },
     {
       "chainId": 8453,
-      "gauge": "0x6a5aa92f7db7a7f010fe73a747d121db8498e857"
-    },
-    {
-      "chainId": 8453,
-      "gauge": "0xcba7452690663d6789c0115fe889c9da85bf8c56"
-    },
-    {
-      "chainId": 8453,
       "gauge": "0x02256e78b5116f24fe16aeea83b827c1c79b5596"
     },
     {
       "chainId": 8453,
-      "gauge": "0x2f68e89ad5176d1fca1b4cac7265536a539807e7"
-    },
-    {
-      "chainId": 8453,
       "gauge": "0x1dd07350114baf9fa8d9caf91cd5a3480d34ec6f"
-    },
-    {
-      "chainId": 8453,
-      "gauge": "0xaa3b00f22de3c2a4a2485a9bdcfe56c185b49b88"
-    },
-    {
-      "chainId": 8453,
-      "gauge": "0x1e417f2af612d2e9a951ede32ca4b05a287b50de"
     },
     {
       "chainId": 8453,
@@ -3533,10 +4817,6 @@
     {
       "chainId": 8453,
       "gauge": "0xabb3fb6659e05847631896cb87a6d1b8bc0c6d8c"
-    },
-    {
-      "chainId": 8453,
-      "gauge": "0x9376bbef9bcb2558c4d9fc2eadaa3cf7356a6941"
     },
     {
       "chainId": 8453,
@@ -3591,5 +4871,5 @@
       "gauge": "0x750a4e760873c863daf22890b8db55f4c71f1114"
     }
   ],
-  "generation": "2dfb36eaf8198541d3051964e7cd7c6c277a1d6afed630c9001d79b638c949a2"
+  "generation": "bd756052c44519520fe51f0a7e1a6927b250e4303511c9ec45835be9586157e0"
 }
