@@ -2294,9 +2294,13 @@
     },
     "1793836800": {
       "tokens": [
+        "0x0c1c1c109fe34733fca54b82d7b46b75cfb71f6e",
+        "0x22af33fe49fd1fa80c7149773dde5890d3c76f3b",
         "0x311935cd80b76769bf2ecc9d8ab7635b2139cf82",
         "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee",
         "0x4200000000000000000000000000000000000006",
+        "0x5b2193fdc451c1f847be09ca9d13a4bf60f8c86b",
+        "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42",
         "0x6985884c4392d348587b19cb9eaaf157f13271cd",
         "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
         "0xb095274743941e953c746f9c228da9c18bb6ec29",
@@ -2307,23 +2311,25 @@
         "0xb2000000000000000000004c27f6523082f41d01",
         "0xb20000000000000000000078ee7ce2fe4908108c",
         "0xb2000000000000000000007b9fcbd005511acbd5",
+        "0xb2000000000000000000008501b13360000cb2ec",
         "0xb200000000000000000000c2e324d24d7eecd1fb",
         "0xb200000000000000000000d9192b6b456483c2e8",
         "0xbaa5cc21fd487b8fcc2f632f3f4e8d37262a0842",
         "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
         "0xed664536023d8e4b1640c394777d34abaff1df8f",
         "0xed6e000def95780fb89734c07ee2ce9f6dcaf110",
-        "0xfb31f85a8367210b2e4ed2360d2da9dc2d2ccc95"
+        "0xfb31f85a8367210b2e4ed2360d2da9dc2d2ccc95",
+        "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2"
       ]
     }
   },
-  "lastUpdated": "2026-11-05T02:30:32.624339+00:00",
+  "lastUpdated": "2026-11-06T02:34:06.725118+00:00",
   "previousEpoch": 1793232000,
   "state": {
-    "last_block": 53528242,
-    "last_block_hash": "0xb87e77e55599018c4b1ff7a69782764e233e22dcdad7cf54d8a5bfbf6993f700",
-    "last_block_timestamp": 1793845831,
-    "last_update": 1793845832,
+    "last_block": 53710351,
+    "last_block_hash": "0x52492cd0154ae6e4d978e55460e63d45d15d1dd4554c71594f461d277311198e",
+    "last_block_timestamp": 1793932445,
+    "last_update": 1793932446,
     "start_block": 35164965,
     "start_block_hash": "0xbe61dd5b23c067f7592af7e343095dc1cd96284e96c354f07e4f1e6c875c02f0",
     "version": 2
@@ -2331,5 +2337,5 @@
   "summary": {
     "totalEpochs": 61
   },
-  "updateTimestamp": 1793845832
+  "updateTimestamp": 1793932446
 }
