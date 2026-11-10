@@ -1,61 +1,61 @@
 {
-  "aeroPrice_1e18": "580133450766616600",
+  "aeroPrice_1e18": "551470844943204300",
   "annualisation": "usdPerDay_x365",
-  "apyPct": 19.03298711754186,
+  "apyPct": 19.760413217431978,
   "apySource": "measured-7d",
   "apyWindow": {
-    "days": 6.273218,
+    "days": 7.273773,
     "from": 1793649636,
-    "to": 1794191642
+    "to": 1794278090
   },
   "distributor": "0x781a80fa817b5a146c440f03ef8643f4aca6588a",
   "epoch": 1793836800,
   "epochEnd": 1794441600,
   "epochStart": 1793836800,
-  "estimatedAnnualUSD_1e18": "544432777378829976000000",
-  "estimatedAnnualUSD_human": "544432.7774",
-  "estimatedWeeklyUSD_1e18": "10469861103439038000000",
-  "estimatedWeeklyUSD_human": "10469.8611",
+  "estimatedAnnualUSD_1e18": "537313783656055660800000",
+  "estimatedAnnualUSD_human": "537313.7837",
+  "estimatedWeeklyUSD_1e18": "10332957378001070400000",
+  "estimatedWeeklyUSD_human": "10332.9574",
   "fundedRealized": {
-    "apyPct": 20.109201413546554,
-    "asOfBlock": 54573364,
-    "asOfBlockHash": "0x7488c5a0ba11dbfdc86868d64759481c485f5205865d2e49967560aca318a19a",
+    "apyPct": 20.842814068299937,
+    "asOfBlock": 55006363,
+    "asOfBlockHash": "0x54d24670fbeb90829b12a7dd3953a9051d74bf6df5d83a4a53bd8e11869c683b",
     "basis": "distributor fundings booked to the last completed epoch, at current prices; payouts don't carry the period they pay for (catch-ups, partial or test payouts), so this is NOT the headline apyPct",
     "dexPricedTokens": [],
     "epoch": 1793232000,
     "epochEnd": 1793836800,
     "excludedTokens": [],
     "fundedTokenCount": 22,
-    "fundedUSD_1e18": "8857567576749298496217",
-    "fundedUSD_human": "8857.5676",
-    "stakedUSD_1e18": "2290461488344757988801785",
+    "fundedUSD_1e18": "8727114100185606949021",
+    "fundedUSD_human": "8727.1141",
+    "stakedUSD_1e18": "2177296845438236842851696",
     "unpricedTokens": [],
-    "weeklyYieldPct": 0.3867154117989722
+    "weeklyYieldPct": 0.40082334746730647
   },
   "fundedRealizedStatus": "available",
-  "iaeroAeroRatio_1e18": "838016658778217009",
+  "iaeroAeroRatio_1e18": "838016658778217029",
   "iaeroPriceRoute": {
     "aeroPerIaero": 0.838016658778217,
     "aeroPerIaeroV2": 0.8395903989820819,
-    "aeroPriceUsd": 0.5801334507666166,
+    "aeroPriceUsd": 0.5514708449432043,
     "aeroSource": "llama",
     "clPool": "0x361d728c97e591ef47a68cae2dc5c8ef475608eb",
     "v2Pool": "0x72decb30dfe4f6cf7db3ba1d58411ddda5ed903b"
   },
   "iaeroPriceSource": "route",
-  "iaeroPrice_1e18": "486161496056917300",
-  "lastUpdated": "2026-11-09T02:34:03.299295+00:00",
+  "iaeroPrice_1e18": "462141754892904270",
+  "lastUpdated": "2026-11-10T02:34:51.355547+00:00",
   "live": {
-    "accruedUSD": 26566.19405061727,
-    "aeroPriceUsd": 0.5801334507666166,
+    "accruedUSD": 27669.441462633706,
+    "aeroPriceUsd": 0.5514708449432043,
     "alerts": [],
-    "annualUSD": 538233.3815974202,
-    "asOf": 1794191642,
+    "annualUSD": 531088.7548756715,
+    "asOf": 1794278090,
     "chains": [
       {
         "allocationAero": 4853405.556766722,
-        "block": 55006284,
-        "blockTimestamp": 1794191632,
+        "block": 55438537,
+        "blockTimestamp": 1794278083,
         "chainId": 8453,
         "claimsScanned": true,
         "gaugeListRead": true,
@@ -65,8 +65,8 @@
       },
       {
         "allocationAero": 0.0,
-        "block": 26374366,
-        "blockTimestamp": 1794191591,
+        "block": 26381548,
+        "blockTimestamp": 1794278039,
         "chainId": 1,
         "claimsScanned": true,
         "gaugeListRead": true,
@@ -76,8 +76,8 @@
       },
       {
         "allocationAero": 0.0,
-        "block": 109713736,
-        "blockTimestamp": 1794191629,
+        "block": 110548084,
+        "blockTimestamp": 1794278080,
         "chainId": 4663,
         "claimsScanned": true,
         "gaugeListRead": true,
@@ -86,7 +86,7 @@
         "unreadGauges": []
       }
     ],
-    "claimedUSD": 20832.26517839062,
+    "claimedUSD": 20591.4261886231,
     "definitions": {
       "accruedUSD": "fees + incentives earned by the stake since allocation (claimed + unclaimed), current prices; feesUSD/incentivesUSD are the unclaimed parts, claimedUSD what was already claimed",
       "alerts": "gauge_no_earnings_24h (allocated gauge < $1/day over 24h), rate_drop / fees_rate_drop (24h < 50% of 7d), negative_delta (cumulative fell: claims not scanned?)",
@@ -99,366 +99,372 @@
       "trailing": "24h / 7d rates from the change in per-gauge cumulative earnings since the complete history point closest to 24 h (20-36 h old) / 7 d (6-8 d old) before this run, valued at current prices; null until such a point exists or when the two points share no fully measured chain; partial when a chain or gauge is left out",
       "usdPerDay": "sum over gauges of accruedUSD / days since allocation on that chain"
     },
-    "elapsedDays": 18.01584490740741,
+    "elapsedDays": 19.016435185185184,
     "excludedTokens": [],
     "feesOnly": {
       "basis": "since allocation",
-      "positionAprPct": 16.929296372916987,
-      "projectedStakerApyPct": 16.618223971697965,
+      "positionAprPct": 17.543853494126132,
+      "projectedStakerApyPct": 17.221488729942365,
       "trailing": {
         "24h": {
           "claimsComplete": true,
           "complete": true,
           "partial": false,
-          "positionAprPct": 11.204139645424602,
-          "projectedStakerApyPct": 10.998265842620185,
-          "snapshotAgeHours": 24.06,
-          "snapshotAsOf": 1794105043,
-          "usdPerDay": 864.2912962471672
+          "positionAprPct": 15.262841421471379,
+          "projectedStakerApyPct": 14.982389793369594,
+          "snapshotAgeHours": 24.01,
+          "snapshotAsOf": 1794191642,
+          "usdPerDay": 1119.210221336551
         },
         "7d": {
           "claimsComplete": true,
           "complete": true,
           "partial": false,
-          "positionAprPct": 18.604612472896292,
-          "projectedStakerApyPct": 18.26275647674564,
-          "snapshotAgeHours": 150.56,
+          "positionAprPct": 18.92951877513092,
+          "projectedStakerApyPct": 18.581692691306152,
+          "snapshotAgeHours": 174.57,
           "snapshotAsOf": 1793649636,
-          "usdPerDay": 1435.1663884287814
+          "usdPerDay": 1388.084322772599
         }
       },
-      "usdPerDay": 1305.9319117533535
+      "usdPerDay": 1286.4747532942683
     },
-    "feesUSD": 5531.874553922699,
+    "feesUSD": 6615.222700194926,
     "gauges": [
       {
-        "accruedUSD": 131.00011838116848,
+        "accruedUSD": 281.8312338041781,
         "active": true,
         "allocationAero": 306264.27127264487,
         "allocationShare": 0.063102963,
         "chainId": 8453,
         "claimedUSD": 0.0,
-        "feesUSD": 131.00011838116848,
+        "feesUSD": 281.8312338041781,
         "gauge": "0xd882383f6b22294fcfb87ed3872d136b97c57a8f",
         "incentivesUSD": 0.0,
         "label": "USDC/KNTQ CL1",
         "pool": "0x2acfe5952ea0e78c73ea7ca5d709c3c1c13ab661",
         "tokens": [
           {
-            "amount": 69.364859,
+            "amount": 146.009963,
             "symbol": "USDC",
             "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-            "usd": 69.34603921778853
+            "usd": 145.9807610074
           },
           {
-            "amount": 148.87075144878926,
+            "amount": 340.42739204188194,
             "symbol": "KNTQ",
             "token": "0xb80194e3868511b8f43e1d5d6e255cd9e7c3e7dd",
-            "usd": 61.65407916337996
+            "usd": 135.85047279677812
           }
         ],
         "truncated": false,
-        "usdPerDay": 7.27138355455682,
-        "usdPerDay24h": 130.6990869193981,
-        "usdPerDay7d": 20.88244452668966,
+        "usdPerDay": 14.820403038721981,
+        "usdPerDay24h": 152.98710376733032,
+        "usdPerDay7d": 38.74622263631227,
         "votingRewardsManager": "0xd96fab64050cb855b3fd868af00d23c497802fc3"
       },
       {
-        "accruedUSD": 129.25278836640422,
+        "accruedUSD": 312.63253924579874,
         "active": true,
         "allocationAero": 490846.9190034241,
         "allocationShare": 0.101134536,
         "chainId": 8453,
         "claimedUSD": 0.0,
-        "feesUSD": 129.25278836640422,
+        "feesUSD": 312.63253924579874,
         "gauge": "0xc4b5393d65a94b35442512e6b94670267a59acc5",
         "incentivesUSD": 0.0,
         "label": "USDC/AMDc CL10",
         "pool": "0x138cb591c4a7d854d796e1906af8228d84cb7642",
         "tokens": [
           {
-            "amount": 65.612576,
+            "amount": 152.866294,
             "symbol": "USDC",
             "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-            "usd": 65.59477427145251
+            "usd": 152.83572074120002
           },
           {
-            "amount": 0.13965116,
+            "amount": 0.31342959,
             "symbol": "AMDc",
             "token": "0xb2000000000000000000000d8ce462e99ee7a47b",
-            "usd": 63.6580140949517
+            "usd": 159.79681850459875
           }
         ],
         "truncated": false,
-        "usdPerDay": 7.174395041181806,
-        "usdPerDay24h": 128.95577217816975,
-        "usdPerDay7d": 20.60390644173187,
+        "usdPerDay": 16.44012330393849,
+        "usdPerDay24h": 175.73665308747866,
+        "usdPerDay7d": 42.98079316996473,
         "votingRewardsManager": "0xf8f0d5ffee36e2a68d3ec7fc47d4b5113b7a5257"
       },
       {
-        "accruedUSD": 27.988578773048072,
+        "accruedUSD": 95.05315301772129,
         "active": true,
         "allocationAero": 187202.81696146645,
         "allocationShare": 0.038571435,
         "chainId": 8453,
         "claimedUSD": 0.0,
-        "feesUSD": 0.7930061382574101,
+        "feesUSD": 85.4519149937988,
         "gauge": "0x93f12d770f03dd296ada46b590a129ce7816580b",
-        "incentivesUSD": 27.19557263479066,
+        "incentivesUSD": 9.601238023922482,
         "label": "WETH/VEIL v2",
         "pool": "0x0b09f2f7b096016b797943807558fa38119edc8c",
         "tokens": [
           {
-            "amount": 0.000184717132792655,
+            "amount": 0.01653893319050663,
             "symbol": "WETH",
             "token": "0x4200000000000000000000000000000000000006",
-            "usd": 0.3975343358677779
+            "usd": 35.01515052304172
           },
           {
-            "amount": 3637.3583399340328,
+            "amount": 59490.623550082535,
             "symbol": "VEIL",
             "token": "0x767a739d1a152639e9ea1d8c1bd55fdc5b217d7f",
-            "usd": 27.591044437180294
+            "usd": 60.03800249467956
           }
         ],
         "truncated": false,
-        "usdPerDay": 1.5535534923227645,
-        "usdPerDay24h": 27.92426247406267,
-        "usdPerDay7d": 4.461598591143555,
+        "usdPerDay": 4.99847379869455,
+        "usdPerDay24h": 90.94073329999912,
+        "usdPerDay7d": 13.06792926885837,
         "votingRewardsManager": "0x3b4553685f094e88c243aca630004c19b4567a7f"
       },
       {
-        "accruedUSD": 47.188619781976286,
+        "accruedUSD": 80.64641395729365,
         "active": true,
         "allocationAero": 159721.75238961412,
         "allocationShare": 0.03290921200000001,
         "chainId": 8453,
         "claimedUSD": 0.0,
-        "feesUSD": 47.188619781976286,
+        "feesUSD": 80.64641395729365,
         "gauge": "0x7d5d8e2c3072ea92a5e650db5f2454822b450a6f",
         "incentivesUSD": 0.0,
         "label": "AERO/wstETH CL200",
         "pool": "0x656485a0ce4c7c8275c751f6aafbf60f658c552c",
         "tokens": [
           {
-            "amount": 47.58700283021489,
+            "amount": 91.64125238578875,
             "symbol": "AERO",
             "token": "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee",
-            "usd": 27.606812163533316
+            "usd": 50.537478884844354
           },
           {
-            "amount": 0.007308567726732274,
+            "amount": 0.011368422258133615,
             "symbol": "wstETH",
             "token": "0xc1cba3fcea344f92d9239c08c0568f6f2f0ee452",
-            "usd": 19.58180761844297
+            "usd": 30.108935072449288
           }
         ],
         "truncated": false,
-        "usdPerDay": 2.6192843035951188,
-        "usdPerDay24h": 47.080182786899975,
-        "usdPerDay7d": 7.522235453413341,
+        "usdPerDay": 4.240879700740205,
+        "usdPerDay24h": 35.027580879996364,
+        "usdPerDay7d": 11.087287479927204,
         "votingRewardsManager": "0x68dfc0022433ece5392e540c595a466162bb2071"
       },
       {
-        "accruedUSD": 58.40680681297804,
+        "accruedUSD": 119.46561543174386,
         "active": true,
         "allocationAero": 256449.47477963028,
         "allocationShare": 0.052839078000000005,
         "chainId": 8453,
         "claimedUSD": 0.0,
-        "feesUSD": 58.40680681297804,
+        "feesUSD": 119.46561543174386,
         "gauge": "0x7c9ed6df00a0732f62b9f388bb68ab5bfbcd7cd6",
         "incentivesUSD": 0.0,
         "label": "WETH/B3 CL100",
         "pool": "0x4cd38b038513dc5a73fba933dafa39f7233c44fa",
         "tokens": [
           {
-            "amount": 0.010531412816274559,
+            "amount": 0.024623019244645484,
             "symbol": "WETH",
             "token": "0x4200000000000000000000000000000000000006",
-            "usd": 22.66491546491558
+            "usd": 52.13025019521249
           },
           {
-            "amount": 64803.36379264012,
+            "amount": 119377.46410498726,
             "symbol": "B3",
             "token": "0xb3b32f9f8827d4634fe7d973fa1034ec9fddb3b3",
-            "usd": 35.74189134806246
+            "usd": 67.33536523653136
           }
         ],
         "truncated": false,
-        "usdPerDay": 3.2419687843207092,
-        "usdPerDay24h": 58.27259100730149,
-        "usdPerDay7d": 9.310502298205744,
+        "usdPerDay": 6.282229780101685,
+        "usdPerDay24h": 60.58292563948612,
+        "usdPerDay7d": 16.42416019836403,
         "votingRewardsManager": "0xad101d2d1a02a6a6f0eabc7fa6a98f0cb7bd5b08"
       },
       {
-        "accruedUSD": 331.52798369069586,
+        "accruedUSD": 967.2892707667722,
         "active": true,
         "allocationAero": 2530747.32997497,
         "allocationShare": 0.521437432,
         "chainId": 8453,
         "claimedUSD": 0.0,
-        "feesUSD": 157.40993166618375,
+        "feesUSD": 514.8188275169833,
         "gauge": "0x77e3e1b150d4509aade60b73c48f77cab00272b1",
-        "incentivesUSD": 174.11805202451217,
+        "incentivesUSD": 452.47044324978873,
         "label": "RSGP/USDC CL100",
         "pool": "0x8e859b6cf564c4ac2b848693c85c496e81dbf6c8",
         "tokens": [
           {
-            "amount": 233016.25984468905,
+            "amount": 643599.85142848,
             "symbol": "RSGP",
             "token": "0x44b63af715d5ef02cc3646a6ce96875e11d69e85",
-            "usd": 240.89019682821205
+            "usd": 685.7221734511539
           },
           {
-            "amount": 90.662385,
+            "amount": 281.623422,
             "symbol": "USDC",
             "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-            "usd": 90.63778686248382
+            "usd": 281.5670973156
+          },
+          {
+            "amount": 1.1983338984e-08,
+            "symbol": "WELL",
+            "token": "0xa88594d404727625a9437c3f886c7643872296ae",
+            "usd": 1.826005622322647e-11
           }
         ],
         "truncated": false,
-        "usdPerDay": 18.402022519320454,
-        "usdPerDay24h": 330.7661496192349,
-        "usdPerDay7d": 52.84815627663924,
+        "usdPerDay": 50.8659620663468,
+        "usdPerDay24h": 628.0294053810197,
+        "usdPerDay7d": 132.98315070673289,
         "votingRewardsManager": "0x4ad4efa871b9a9d943cd69fd779c4d0230eb021f"
       },
       {
-        "accruedUSD": 24.33622424282362,
+        "accruedUSD": 40.406967616769805,
         "active": true,
         "allocationAero": 111813.59200254752,
         "allocationShare": 0.023038172000000003,
         "chainId": 8453,
         "claimedUSD": 0.0,
-        "feesUSD": 24.33622424282362,
+        "feesUSD": 40.406967616769805,
         "gauge": "0x25d0daf0efc41400e385b69cd5376c3dd609a5b8",
         "incentivesUSD": 0.0,
         "label": "AERO/WETH v2",
         "pool": "0xc04ba378e83ff61cdb542ee4da88e1241cc54e60",
         "tokens": [
           {
-            "amount": 24.93105178481131,
+            "amount": 47.37296529469241,
             "symbol": "AERO",
             "token": "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee",
-            "usd": 14.4633371031638
+            "usd": 26.124809198529118
           },
           {
-            "amount": 0.00458750663849577,
+            "amount": 0.006745984534325378,
             "symbol": "WETH",
             "token": "0x4200000000000000000000000000000000000006",
-            "usd": 9.872887139659817
+            "usd": 14.282158418240689
           }
         ],
         "truncated": false,
-        "usdPerDay": 1.3508233650933306,
-        "usdPerDay24h": 24.280300864674654,
-        "usdPerDay7d": 3.8793846831584164,
+        "usdPerDay": 2.124844494947664,
+        "usdPerDay24h": 16.936440476251946,
+        "usdPerDay7d": 5.555159171695798,
         "votingRewardsManager": "0x005a0149377cc0c441572d823035a0411d0d131b"
       },
       {
-        "accruedUSD": 164.21537140342008,
+        "accruedUSD": 197.80927074680463,
         "active": true,
         "allocationAero": 79551.04449087418,
         "allocationShare": 0.016390768,
         "chainId": 8453,
-        "claimedUSD": 0.6600839263262592,
-        "feesUSD": 163.55528747709383,
+        "claimedUSD": 0.6791832664278059,
+        "feesUSD": 197.1300874803768,
         "gauge": "0x4a870ac2a047909c1ab791f8d7176d33bc2d60eb",
         "incentivesUSD": 0.0,
         "label": "USDC/DIEM CL100",
         "pool": "0xf69cd40bc4c661d0dbabb3d74b4f2a228ad63270",
         "tokens": [
           {
-            "amount": 80.05988,
+            "amount": 95.440229,
             "symbol": "USDC",
             "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-            "usd": 80.03815848960991
+            "usd": 95.4211409542
           },
           {
-            "amount": 0.05115263915286667,
+            "amount": 0.05972753937998771,
             "symbol": "DIEM",
             "token": "0xf4d97f2da56e8c3098f3a8d538db630a2606a024",
-            "usd": 84.17721291381018
+            "usd": 102.38812979260463
           }
         ],
         "truncated": false,
-        "usdPerDay": 9.115052457845103,
-        "usdPerDay24h": 28.722036496137154,
-        "usdPerDay7d": 26.17721591505536,
+        "usdPerDay": 10.402016404257964,
+        "usdPerDay24h": 30.06012363034114,
+        "usdPerDay7d": 27.194863892224284,
         "votingRewardsManager": "0xf7542d06c4f573f7eaa3843da299abea5eb9ecb2"
       },
       {
-        "accruedUSD": 176.2831327087793,
+        "accruedUSD": 205.7656713683021,
         "active": true,
         "allocationAero": 160029.75435965208,
         "allocationShare": 0.032972673,
         "chainId": 8453,
-        "claimedUSD": 9.474770004389642,
-        "feesUSD": 166.80836270438965,
+        "claimedUSD": 9.158049924648001,
+        "feesUSD": 196.60762144365407,
         "gauge": "0x5aa337b53c6b866d255542f834ae80109ce292b4",
         "incentivesUSD": 0.0,
         "label": "UP/cbBTC CL100",
         "pool": "0xc6d8e2ec135ff406a4abe0571476aee128fd7359",
         "tokens": [
           {
-            "amount": 1537.9847570056277,
+            "amount": 1818.3888018164373,
             "symbol": "UP",
             "token": "0x5b2193fdc451c1f847be09ca9d13a4bf60f8c86b",
-            "usd": 97.84913174938598
+            "usd": 110.60548840055309
           },
           {
-            "amount": 0.00104107,
+            "amount": 0.00127302,
             "symbol": "cbBTC",
             "token": "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
-            "usd": 78.43400095939332
+            "usd": 95.16018296774901
           }
         ],
         "truncated": false,
-        "usdPerDay": 9.784893998299163,
-        "usdPerDay24h": 17.951451377362645,
-        "usdPerDay7d": 28.10091155086573,
+        "usdPerDay": 10.820412415077907,
+        "usdPerDay24h": 34.375400981941276,
+        "usdPerDay7d": 28.28871167376021,
         "votingRewardsManager": "0x6f2df205f826752eafbfdfec66e5f24e585c20a1"
       },
       {
-        "accruedUSD": 535.0700554969243,
+        "accruedUSD": 613.5328226384871,
         "active": true,
         "allocationAero": 247292.1516830173,
         "allocationShare": 0.050952295,
         "chainId": 8453,
-        "claimedUSD": 147.43617978482814,
-        "feesUSD": 387.63387571209614,
+        "claimedUSD": 145.88075290665148,
+        "feesUSD": 467.6520697318356,
         "gauge": "0x9f4594cc94c373141242fa2ca199c5f78e1662e5",
         "incentivesUSD": 0.0,
         "label": "SOL/USDC CL10",
         "pool": "0x868eed6bad4bd368cd053b766f84cc727697589a",
         "tokens": [
           {
-            "amount": 2.874788477,
+            "amount": 3.347215829,
             "symbol": "SOL",
             "token": "0x311935cd80b76769bf2ecc9d8ab7635b2139cf82",
-            "usd": 252.79567578057168
+            "usd": 287.59508822548713
           },
           {
-            "amount": 282.350986,
+            "amount": 326.002935,
             "symbol": "USDC",
             "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-            "usd": 282.2743797163526
+            "usd": 325.937734413
           }
         ],
         "truncated": false,
-        "usdPerDay": 29.699970123350944,
-        "usdPerDay24h": 92.31250211404834,
-        "usdPerDay7d": 85.29435614169263,
+        "usdPerDay": 32.26329312848613,
+        "usdPerDay24h": 84.18773094778257,
+        "usdPerDay7d": 84.34863311549499,
         "votingRewardsManager": "0x272c6f180f8871c1324e12e2a7c68e3ab861bf4e"
       },
       {
-        "accruedUSD": 469.7683675482789,
+        "accruedUSD": 560.1492286822908,
         "active": true,
         "allocationAero": 323486.4498488816,
         "allocationShare": 0.06665143600000001,
         "chainId": 8453,
-        "claimedUSD": 92.2050457594979,
-        "feesUSD": 377.56332178878097,
+        "claimedUSD": 91.95764254187054,
+        "feesUSD": 468.1915861404202,
         "gauge": "0x6a5aa92f7db7a7f010fe73a747d121db8498e857",
         "incentivesUSD": 0.0,
         "label": "cbBTC/EDGE CL200",
@@ -468,35 +474,35 @@
             "amount": 24.732124230033072,
             "symbol": "AERO",
             "token": "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee",
-            "usd": 14.347932574357737
+            "usd": 13.639045446376635
           },
           {
-            "amount": 0.00297881,
+            "amount": 0.00359708,
             "symbol": "cbBTC",
             "token": "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
-            "usd": 224.42293639990623
+            "usd": 268.8872059744785
           },
           {
-            "amount": 2852.9992301564907,
+            "amount": 3376.2830795863197,
             "symbol": "EDGE",
             "token": "0xed6e000def95780fb89734c07ee2ce9f6dcaf110",
-            "usd": 230.9974985740149
+            "usd": 277.6229772614356
           }
         ],
         "truncated": false,
-        "usdPerDay": 26.07528927800264,
-        "usdPerDay24h": 98.32237574029125,
-        "usdPerDay7d": 61.62593566364443,
+        "usdPerDay": 29.45605857393697,
+        "usdPerDay24h": 89.19534083418922,
+        "usdPerDay7d": 65.6098549413242,
         "votingRewardsManager": "0x351dedd326478d6f1fedf6f74daf3694ca92a7ff"
       },
       {
-        "accruedUSD": 185.17780428729935,
+        "accruedUSD": 182.94324549565044,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 1.0671313725559106,
-        "feesUSD": 184.11067291474345,
+        "claimedUSD": 1.054211783630028,
+        "feesUSD": 181.88903371202042,
         "gauge": "0xfa66e7f39cd27f2c16ad25080e57e30ba2abf043",
         "incentivesUSD": 0.0,
         "label": "cbETH/cbBTC CL10",
@@ -506,31 +512,31 @@
             "amount": 0.0380804208336165,
             "symbol": "cbETH",
             "token": "0x2ae3f1ec7f1f5012cfeab0185bfc7aa3cf0dec22",
-            "usd": 93.83282256348942
+            "usd": 92.31150975118642
           },
           {
             "amount": 0.00121244,
             "symbol": "cbBTC",
             "token": "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
-            "usd": 91.34498172380995
+            "usd": 90.63173574446404
           }
         ],
         "truncated": false,
-        "usdPerDay": 10.278607816564934,
-        "usdPerDay24h": 3.541356500121178,
-        "usdPerDay7d": 29.518791840722546,
+        "usdPerDay": 9.620270240669134,
+        "usdPerDay24h": 0.0,
+        "usdPerDay7d": 25.151079332495613,
         "votingRewardsManager": "0x03083fe7831aec75839b28932b065bbd74dce6f6"
       },
       {
-        "accruedUSD": 839.380157141407,
+        "accruedUSD": 854.2269774907393,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 357.75212754578973,
-        "feesUSD": 481.5966169064949,
+        "claimedUSD": 361.58324025537433,
+        "feesUSD": 492.6138765503978,
         "gauge": "0xdef20c7f935b5baab283302eb248d023575c1862",
-        "incentivesUSD": 0.03141268912239445,
+        "incentivesUSD": 0.029860684967180178,
         "label": "USDC/SNDKc CL10",
         "pool": "0x2836e062a3fe75943a7f4a552e2365b98e414e75",
         "tokens": [
@@ -538,35 +544,35 @@
             "amount": 80.39151946166582,
             "symbol": "AERO",
             "token": "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee",
-            "usd": 46.63780959766781
+            "usd": 44.333579163792905
           },
           {
             "amount": 422.459578,
             "symbol": "USDC",
             "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-            "usd": 422.3449580416273
+            "usd": 422.37508608440004
           },
           {
             "amount": 0.43900609,
             "symbol": "SNDKc",
             "token": "0xb200000000000000000000397293cb8cda9a10c5",
-            "usd": 370.39738950211193
+            "usd": 387.51831224254636
           }
         ],
         "truncated": false,
-        "usdPerDay": 46.59121797814139,
-        "usdPerDay24h": 7.512439341966784,
-        "usdPerDay7d": 107.37594609395093,
+        "usdPerDay": 44.92045797080978,
+        "usdPerDay24h": 0.0,
+        "usdPerDay7d": 94.6520559805057,
         "votingRewardsManager": "0xeae4e8a98950c9bfd3409b6b393d728cbe88a88f"
       },
       {
-        "accruedUSD": 98.43898477948628,
+        "accruedUSD": 96.66991872545952,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 0.29852138234566716,
-        "feesUSD": 98.14046339714062,
+        "claimedUSD": 0.2929480866393441,
+        "feesUSD": 96.37697063882018,
         "gauge": "0xe300153b7a51c02a47cb8b78c76f97e7bc5ddbe7",
         "incentivesUSD": 0.0,
         "label": "WETH/cbXRP CL100",
@@ -576,29 +582,29 @@
             "amount": 0.022763186696796944,
             "symbol": "WETH",
             "token": "0x4200000000000000000000000000000000000006",
-            "usd": 48.98922026850146
+            "usd": 48.19273404102976
           },
           {
             "amount": 44.289311,
             "symbol": "cbXRP",
             "token": "0xcb585250f852c6c6bf90434ab21a00f02833a4af",
-            "usd": 49.44976451098482
+            "usd": 48.47718468442976
           }
         ],
         "truncated": false,
-        "usdPerDay": 5.46402265813312,
-        "usdPerDay24h": 1.1650318357528509,
-        "usdPerDay7d": 15.69194489534731,
+        "usdPerDay": 5.083493188080306,
+        "usdPerDay24h": 0.0,
+        "usdPerDay7d": 13.290202589019566,
         "votingRewardsManager": "0x7731193d889d0a731d3f289f79bf764faf0038af"
       },
       {
-        "accruedUSD": 65.53288613863425,
+        "accruedUSD": 64.567909989443,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 1.5354859162618189,
-        "feesUSD": 63.997400222372434,
+        "claimedUSD": 1.513485722279614,
+        "feesUSD": 63.054424267163384,
         "gauge": "0xe0fa8cec2386ec254926dfacaf5d57481369ee8c",
         "incentivesUSD": 0.0,
         "label": "BNKR/WETH CL200",
@@ -608,29 +614,29 @@
             "amount": 142246.87307741356,
             "symbol": "BNKR",
             "token": "0x22af33fe49fd1fa80c7149773dde5890d3c76f3b",
-            "usd": 35.403774880572506
+            "usd": 34.9286498053825
           },
           {
             "amount": 0.01399970403319108,
             "symbol": "WETH",
             "token": "0x4200000000000000000000000000000000000006",
-            "usd": 30.129111258061744
+            "usd": 29.639260184060504
           }
         ],
         "truncated": false,
-        "usdPerDay": 3.6375138926562194,
-        "usdPerDay24h": 3.2610261547805393,
-        "usdPerDay7d": 10.446455135880413,
+        "usdPerDay": 3.39537402045494,
+        "usdPerDay24h": 0.0,
+        "usdPerDay7d": 8.876811068253007,
         "votingRewardsManager": "0x14206d7547fab5fbcec73e28b3424eb8d58812f2"
       },
       {
-        "accruedUSD": 53.58441465762736,
+        "accruedUSD": 53.39162960466103,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 0.369960760702679,
-        "feesUSD": 53.21445389692468,
+        "claimedUSD": 0.36725225301913944,
+        "feesUSD": 53.02437735164189,
         "gauge": "0xd8c0e093327b5dfb3e654ec520ff2100c3c20f76",
         "incentivesUSD": 0.0,
         "label": "WETH/GOOGLc CL50",
@@ -640,29 +646,29 @@
             "amount": 0.012687363457292954,
             "symbol": "WETH",
             "token": "0x4200000000000000000000000000000000000006",
-            "usd": 27.304790463424855
+            "usd": 26.86085832021208
           },
           {
             "amount": 0.09143122,
             "symbol": "GOOGLc",
             "token": "0xb2000000000000000000002d0ba3164cc74f58b7",
-            "usd": 26.279624194202505
+            "usd": 26.530771284448946
           }
         ],
         "truncated": false,
-        "usdPerDay": 2.9742937360431845,
-        "usdPerDay24h": 1.060669451822674,
-        "usdPerDay7d": 8.541775232043564,
+        "usdPerDay": 2.8076571178943124,
+        "usdPerDay24h": 0.0,
+        "usdPerDay7d": 7.340293478667831,
         "votingRewardsManager": "0x2de071c888167e369511554ff8fcf260584bf2c5"
       },
       {
-        "accruedUSD": 580.3386248677507,
+        "accruedUSD": 586.6936983201617,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 479.8648461681837,
-        "feesUSD": 100.47377869956684,
+        "claimedUSD": 484.87295784982103,
+        "feesUSD": 101.8207404703407,
         "gauge": "0x2e45bbaeebd8e00bbb838bc885e5332cd8829d4f",
         "incentivesUSD": 0.0,
         "label": "USDC/AMZNc CL10",
@@ -672,31 +678,31 @@
             "amount": 329.094033,
             "symbol": "USDC",
             "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-            "usd": 329.0047445891614
+            "usd": 329.0282141934
           },
           {
             "amount": 0.96150433,
             "symbol": "AMZNc",
             "token": "0xb200000000000000000000d9192b6b456483c2e8",
-            "usd": 251.33388027858922
+            "usd": 257.6654841267618
           }
         ],
         "truncated": false,
-        "usdPerDay": 32.21267877528953,
-        "usdPerDay24h": 1.817491560581647,
-        "usdPerDay7d": 92.51052052666144,
+        "usdPerDay": 30.851928482222966,
+        "usdPerDay24h": 0.0,
+        "usdPerDay7d": 80.65878415104682,
         "votingRewardsManager": "0x7cb2aa9d8fc0f7a5e1e59d77844acdba99184547"
       },
       {
-        "accruedUSD": 679.9683427269256,
+        "accruedUSD": 655.3739752652502,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 21.963245183838232,
-        "feesUSD": 658.0046054825245,
+        "claimedUSD": 21.171894028717745,
+        "feesUSD": 634.2016134871658,
         "gauge": "0xcba7452690663d6789c0115fe889c9da85bf8c56",
-        "incentivesUSD": 0.000492060562756829,
+        "incentivesUSD": 0.0004677493668881749,
         "label": "USDC/cbZEC CL200",
         "pool": "0xe7030be388b8e247abe0c9fa876673e83fbcbd3c",
         "tokens": [
@@ -704,35 +710,35 @@
             "amount": 6.091993133807976,
             "symbol": "AERO",
             "token": "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee",
-            "usd": 3.5341689987625555
+            "usd": 3.3595566008892837
           },
           {
             "amount": 338.246267,
             "symbol": "USDC",
             "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-            "usd": 338.1544954434719
+            "usd": 338.17861774659997
           },
           {
             "amount": 0.27305634,
             "symbol": "cbZEC",
             "token": "0xb2000000000000000000008501b13360000cb2ec",
-            "usd": 338.27967828469116
+            "usd": 313.83580091776105
           }
         ],
         "truncated": false,
-        "usdPerDay": 37.742795090745325,
-        "usdPerDay24h": 15.420168100617541,
-        "usdPerDay7d": 105.62550189941324,
+        "usdPerDay": 34.46355580754807,
+        "usdPerDay24h": 0.0,
+        "usdPerDay7d": 87.80764972951859,
         "votingRewardsManager": "0x39686eb0f6d6abb4e55297427687b13d256fae26"
       },
       {
-        "accruedUSD": 874.3868260632826,
+        "accruedUSD": 860.7015770419757,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 691.1777341065879,
-        "feesUSD": 183.20909195669466,
+        "claimedUSD": 681.2755302835571,
+        "feesUSD": 179.4260467584185,
         "gauge": "0xaa3b00f22de3c2a4a2485a9bdcfe56c185b49b88",
         "incentivesUSD": 0.0,
         "label": "CHIP/USDC CL200",
@@ -742,35 +748,35 @@
             "amount": 9029.650478217414,
             "symbol": "CHIP",
             "token": "0x0c1c1c109fe34733fca54b82d7b46b75cfb71f6e",
-            "usd": 311.1210769039678
+            "usd": 297.99424509538534
           },
           {
             "amount": 20.854169314381,
             "symbol": "AERO",
             "token": "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee",
-            "usd": 12.098201207223136
+            "usd": 11.500466372390333
           },
           {
             "amount": 551.317129,
             "symbol": "USDC",
             "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-            "usd": 551.1675479520917
+            "usd": 551.2068655742
           }
         ],
         "truncated": false,
-        "usdPerDay": 48.534322456548736,
-        "usdPerDay24h": 6.578332488550843,
-        "usdPerDay7d": 29.55024098825437,
+        "usdPerDay": 45.260931855014974,
+        "usdPerDay24h": 0.0,
+        "usdPerDay7d": 24.95850133288686,
         "votingRewardsManager": "0x8425b338a3cc209e1238b68ba53f676b9165c441"
       },
       {
-        "accruedUSD": 595.8876037896507,
+        "accruedUSD": 584.8716055185698,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 520.4162490385265,
-        "feesUSD": 75.47135475112421,
+        "claimedUSD": 510.2329330214187,
+        "feesUSD": 74.63867249715103,
         "gauge": "0x9376bbef9bcb2558c4d9fc2eadaa3cf7356a6941",
         "incentivesUSD": 0.0,
         "label": "VIRTUAL/WETH CL100",
@@ -780,35 +786,35 @@
             "amount": 414.66384754125215,
             "symbol": "VIRTUAL",
             "token": "0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b",
-            "usd": 226.48711246120664
+            "usd": 225.21942833336414
           },
           {
             "amount": 194.60967204017211,
             "symbol": "AERO",
             "token": "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee",
-            "usd": 112.8995805932246
+            "usd": 107.3215602741136
           },
           {
             "amount": 0.1191849571592059,
             "symbol": "WETH",
             "token": "0x4200000000000000000000000000000000000006",
-            "usd": 256.50091073521946
+            "usd": 252.33061691109202
           }
         ],
         "truncated": false,
-        "usdPerDay": 33.07575119858215,
-        "usdPerDay24h": 1.8731063062579827,
-        "usdPerDay7d": 12.1452593948272,
+        "usdPerDay": 30.75611174349943,
+        "usdPerDay24h": 0.0,
+        "usdPerDay7d": 10.358916584061772,
         "votingRewardsManager": "0xcf816ce0e5bb63df34a7890a74f3bedc873eb4c7"
       },
       {
-        "accruedUSD": 875.1656422817643,
+        "accruedUSD": 854.4445169115866,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 408.19946281573306,
-        "feesUSD": 466.9661794660313,
+        "claimedUSD": 398.85312754025654,
+        "feesUSD": 455.59138937133014,
         "gauge": "0x1e417f2af612d2e9a951ede32ca4b05a287b50de",
         "incentivesUSD": 0.0,
         "label": "AERO/USDC CL100",
@@ -818,29 +824,29 @@
             "amount": 724.0650390388461,
             "symbol": "AERO",
             "token": "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee",
-            "usd": 420.0543496770707
+            "usd": 399.30075887258664
           },
           {
             "amount": 455.234805,
             "symbol": "USDC",
             "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-            "usd": 455.1112926046936
+            "usd": 455.143758039
           }
         ],
         "truncated": false,
-        "usdPerDay": 48.57755197048408,
-        "usdPerDay24h": 10.411426270769407,
-        "usdPerDay7d": 75.08522107472785,
+        "usdPerDay": 44.93189751869185,
+        "usdPerDay24h": 0.0,
+        "usdPerDay7d": 63.182497545822834,
         "votingRewardsManager": "0x95353c63852e85402eb93a73f7076d3e3d83f027"
       },
       {
-        "accruedUSD": 211.3956785533491,
+        "accruedUSD": 210.31783944657514,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 2.095914363905863,
-        "feesUSD": 209.29976418944324,
+        "claimedUSD": 2.090610226802479,
+        "feesUSD": 208.22722921977265,
         "gauge": "0x2cd47ba367766a8a5ab641825fbf4a3a29e92ec9",
         "incentivesUSD": 0.0,
         "label": "WETH/EURC CL100",
@@ -850,29 +856,29 @@
             "amount": 0.04890040971902857,
             "symbol": "WETH",
             "token": "0x4200000000000000000000000000000000000006",
-            "usd": 105.23978803383224
+            "usd": 103.52875770324984
           },
           {
             "amount": 95.223279,
             "symbol": "EURC",
             "token": "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42",
-            "usd": 106.15589051951684
+            "usd": 106.78908174332531
           }
         ],
         "truncated": false,
-        "usdPerDay": 11.733875354712422,
-        "usdPerDay24h": 4.7901257423804475,
-        "usdPerDay7d": 33.69812626983716,
+        "usdPerDay": 11.059793142009283,
+        "usdPerDay24h": 0.0,
+        "usdPerDay7d": 28.91454478479585,
         "votingRewardsManager": "0x7b80b53c8528aa775a49694dfe7fcd6e595ba019"
       },
       {
-        "accruedUSD": 584.254004327197,
+        "accruedUSD": 579.645723028276,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 362.58112342098593,
-        "feesUSD": 221.6728809062111,
+        "claimedUSD": 359.81338216588466,
+        "feesUSD": 219.83234086239145,
         "gauge": "0x2f68e89ad5176d1fca1b4cac7265536a539807e7",
         "incentivesUSD": 0.0,
         "label": "WETH/USDT CL100",
@@ -882,31 +888,31 @@
             "amount": 0.13219051919327032,
             "symbol": "WETH",
             "token": "0x4200000000000000000000000000000000000006",
-            "usd": 284.4905042701218
+            "usd": 279.8651445020806
           },
           {
             "amount": 300.056396,
             "symbol": "USDT",
             "token": "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2",
-            "usd": 299.76350005707525
+            "usd": 299.7805785261955
           }
         ],
         "truncated": false,
-        "usdPerDay": 32.43000854691942,
-        "usdPerDay24h": 3.9185772135768677,
-        "usdPerDay7d": 35.70560318048032,
+        "usdPerDay": 30.481303008875763,
+        "usdPerDay24h": 0.0,
+        "usdPerDay7d": 30.538902077652278,
         "votingRewardsManager": "0x5f2fdf050de1e109f740a19acd80d894c540c3b0"
       },
       {
-        "accruedUSD": 1476.4604949276236,
+        "accruedUSD": 1458.2818818736666,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 1034.345613919196,
-        "feesUSD": 442.037799613589,
+        "claimedUSD": 1019.8218677561571,
+        "feesUSD": 438.3830454456867,
         "gauge": "0x46a9dca72d78366571be583aa69c1dc16e6889fb",
-        "incentivesUSD": 0.07708139483867688,
+        "incentivesUSD": 0.07696867182303171,
         "label": "WETH/USDC CL50",
         "pool": "0x4a7af46bc8abc00048c6c7920a1488daf568366c",
         "tokens": [
@@ -914,41 +920,41 @@
             "amount": 258.23724989785177,
             "symbol": "AERO",
             "token": "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee",
-            "usd": 149.81206689972186
+            "usd": 142.41031439697772
           },
           {
             "amount": 0.30934143013479737,
             "symbol": "WETH",
             "token": "0x4200000000000000000000000000000000000006",
-            "usd": 665.7413859009139
+            "usd": 654.9174976654659
           },
           {
             "amount": 661.053914,
             "symbol": "USDC",
             "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-            "usd": 660.8745596284799
+            "usd": 660.9217032171999
           },
           {
             "amount": 2.9540831112489943,
             "symbol": "WOO",
             "token": "0xf3df0a31ec5ea438150987805e841f960b9471b6",
-            "usd": 0.03248249850783067
+            "usd": 0.03236659402303172
           }
         ],
         "truncated": false,
-        "usdPerDay": 81.9534416795829,
-        "usdPerDay24h": 9.719544738737383,
-        "usdPerDay7d": 71.25500452180566,
+        "usdPerDay": 76.68534442300447,
+        "usdPerDay24h": 0.0,
+        "usdPerDay7d": 60.946129385242735,
         "votingRewardsManager": "0x623de2a4cb208e8498ae888ec1ec805a105fef48"
       },
       {
-        "accruedUSD": 131.07920879293667,
+        "accruedUSD": 132.08179500581193,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
         "claimedUSD": 0.0,
-        "feesUSD": 131.07920879293667,
+        "feesUSD": 132.08179500581193,
         "gauge": "0x5c7974887d29ad70aef991dc4d5ed51a60d108a9",
         "incentivesUSD": 0.0,
         "label": "msUSD/msETH CL200",
@@ -958,29 +964,29 @@
             "amount": 71.36131648004694,
             "symbol": "msUSD",
             "token": "0x526728dbc96689597f85ae4cd716d4f7fccbae9d",
-            "usd": 56.788057973708554
+            "usd": 57.94124371075031
           },
           {
             "amount": 0.04023010523839269,
             "symbol": "msETH",
             "token": "0x7ba6f01772924a82d9626c126347a28299e98c98",
-            "usd": 74.29115081922811
+            "usd": 74.14055129506163
           }
         ],
         "truncated": false,
-        "usdPerDay": 7.2757736018831975,
-        "usdPerDay24h": 0.26556285652205935,
-        "usdPerDay7d": 20.89505215755864,
+        "usdPerDay": 6.9456653531315204,
+        "usdPerDay24h": 0.0,
+        "usdPerDay7d": 18.158635458605005,
         "votingRewardsManager": "0xf35a9b45e4e9cf25324798e256172db92aea3666"
       },
       {
-        "accruedUSD": 95.79413399855395,
+        "accruedUSD": 99.33450933341524,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 0.23304566924711428,
-        "feesUSD": 95.56108832930684,
+        "claimedUSD": 0.2407945778532682,
+        "feesUSD": 99.09371475556199,
         "gauge": "0x6dca50a328ac12bf9a475f81c9d351ccf77f61d2",
         "incentivesUSD": 0.0,
         "label": "VVV/DIEM CL100",
@@ -990,29 +996,29 @@
             "amount": 2.607594542453727,
             "symbol": "VVV",
             "token": "0xacfe6019ed1a7dc6f7b508c02d1b04ec88cc21bf",
-            "usd": 53.829449509360195
+            "usd": 55.61931106703329
           },
           {
             "amount": 0.025501014924758283,
             "symbol": "DIEM",
             "token": "0xf4d97f2da56e8c3098f3a8d538db630a2606a024",
-            "usd": 41.96468448919375
+            "usd": 43.71519826638196
           }
         ],
         "truncated": false,
-        "usdPerDay": 5.317215733754854,
-        "usdPerDay24h": 1.979776396544093,
-        "usdPerDay7d": 15.270334973183067,
+        "usdPerDay": 5.223613593508952,
+        "usdPerDay24h": 0.0,
+        "usdPerDay7d": 13.656531116688058,
         "votingRewardsManager": "0x40293b3aa4cda39c16879ed176fe8d4ccaded196"
       },
       {
-        "accruedUSD": 425.24587842040694,
+        "accruedUSD": 422.27249764603084,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 2.1550270949652996,
-        "feesUSD": 423.0908513254417,
+        "claimedUSD": 2.1399452076324,
+        "feesUSD": 420.1325524383985,
         "gauge": "0x79fc4cbd860e3528f092bd7d9261e0cd141a4803",
         "incentivesUSD": 0.0,
         "label": "MSTRc/cbBTC CL10",
@@ -1022,28 +1028,28 @@
             "amount": 1.69822214,
             "symbol": "MSTRc",
             "token": "0xb2000000000000000000004884b426556b92883d",
-            "usd": 215.06291677852363
+            "usd": 213.73070062522507
           },
           {
             "amount": 0.0027898,
             "symbol": "cbBTC",
             "token": "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
-            "usd": 210.18296164188328
+            "usd": 208.54179702080577
           }
         ],
         "truncated": false,
-        "usdPerDay": 23.60399307420561,
-        "usdPerDay24h": 6.5471252647252065,
-        "usdPerDay7d": 67.7875224545912,
+        "usdPerDay": 22.205660184670343,
+        "usdPerDay24h": 0.0,
+        "usdPerDay7d": 58.054119786996445,
         "votingRewardsManager": "0x60ee4d688c5c36c4e856da519617d9407189c80c"
       },
       {
-        "accruedUSD": 621.890889653332,
+        "accruedUSD": 627.1789198973497,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 621.890889653332,
+        "claimedUSD": 627.1789198973497,
         "feesUSD": 0.0,
         "gauge": "0xe7977774210874fc95e2975b799906cc3bbfa399",
         "incentivesUSD": 0.0,
@@ -1054,28 +1060,28 @@
             "amount": 340.768136,
             "symbol": "USDC",
             "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-            "usd": 340.6756802205667
+            "usd": 340.69998237280004
           },
           {
             "amount": 0.81702204,
             "symbol": "AAPLc",
             "token": "0xb200000000000000000000c2e324d24d7eecd1fb",
-            "usd": 281.21520943276533
+            "usd": 286.4789375245497
           }
         ],
         "truncated": false,
-        "usdPerDay": 34.51910764382939,
+        "usdPerDay": 32.98088804709074,
         "usdPerDay24h": 0.0,
-        "usdPerDay7d": 99.1342768641821,
+        "usdPerDay7d": 86.22470169516149,
         "votingRewardsManager": "0xbe46863020ed49f89e04cf23b0bc05fee2420a11"
       },
       {
-        "accruedUSD": 478.1833659238897,
+        "accruedUSD": 476.8144458947099,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 478.1833659238897,
+        "claimedUSD": 476.8144458947099,
         "feesUSD": 0.0,
         "gauge": "0xa958059616fae8cc0778662b3f033afa582d7576",
         "incentivesUSD": 0.0,
@@ -1086,28 +1092,28 @@
             "amount": 254.336166,
             "symbol": "USDC",
             "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-            "usd": 254.2671605796528
+            "usd": 254.2852987668
           },
           {
             "amount": 1.76813122,
             "symbol": "MSTRc",
             "token": "0xb2000000000000000000004884b426556b92883d",
-            "usd": 223.91620534423691
+            "usd": 222.52914712790988
           }
         ],
         "truncated": false,
-        "usdPerDay": 26.542378022319646,
+        "usdPerDay": 25.073808063993702,
         "usdPerDay24h": 0.0,
-        "usdPerDay7d": 56.94157483379705,
+        "usdPerDay7d": 48.96945265687209,
         "votingRewardsManager": "0xbe91f4e0b11c629d2534c00c5fd858f2b34989d4"
       },
       {
-        "accruedUSD": 171.17464464816862,
+        "accruedUSD": 174.0443762552997,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 171.17464464816862,
+        "claimedUSD": 174.0443762552997,
         "feesUSD": 0.0,
         "gauge": "0x0ccf7cb21169934f4686cb895518aa179bfcea53",
         "incentivesUSD": 0.0,
@@ -1118,28 +1124,28 @@
             "amount": 83.967249,
             "symbol": "USDC",
             "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-            "usd": 83.94446735866377
+            "usd": 83.95045555019999
           },
           {
             "amount": 0.63550006,
             "symbol": "SPCXc",
             "token": "0xb2000000000000000000007b9fcbd005511acbd5",
-            "usd": 87.23017728950485
+            "usd": 90.09392070509973
           }
         ],
         "truncated": false,
-        "usdPerDay": 9.501338712001695,
+        "usdPerDay": 9.152313488854606,
         "usdPerDay24h": 0.0,
-        "usdPerDay7d": 27.286578557436208,
+        "usdPerDay7d": 23.927660749168428,
         "votingRewardsManager": "0xe1717637e87a9e6170caa73a606db66d4a7d45db"
       },
       {
-        "accruedUSD": 184.11800208003064,
+        "accruedUSD": 184.27436570282785,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 184.11800208003064,
+        "claimedUSD": 184.27436570282785,
         "feesUSD": 0.0,
         "gauge": "0x230ec639ae09b4cdea38b5665910e3b10f1b8eb8",
         "incentivesUSD": 0.0,
@@ -1150,28 +1156,28 @@
             "amount": 93.281614,
             "symbol": "USDC",
             "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-            "usd": 93.25630522427231
+            "usd": 93.2629576772
           },
           {
             "amount": 0.50238705,
             "symbol": "NVDAc",
             "token": "0xb20000000000000000000078ee7ce2fe4908108c",
-            "usd": 90.86169685575834
+            "usd": 91.01140802562784
           }
         ],
         "truncated": false,
-        "usdPerDay": 10.219781699182397,
+        "usdPerDay": 9.690268649635627,
         "usdPerDay24h": 0.0,
-        "usdPerDay7d": 29.349851071232877,
+        "usdPerDay7d": 25.33408204375233,
         "votingRewardsManager": "0xfecfdb37189cf5ad415b34a34e4efe9d2c52e63f"
       },
       {
-        "accruedUSD": 894.9902404696822,
+        "accruedUSD": 891.4502935947428,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 894.9902404696822,
+        "claimedUSD": 891.4502935947428,
         "feesUSD": 0.0,
         "gauge": "0x74a30b3357121a822adb91a539f4b11b5fb7cb3f",
         "incentivesUSD": 0.0,
@@ -1182,28 +1188,28 @@
             "amount": 437.752,
             "symbol": "USDC",
             "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-            "usd": 437.6332309659184
+            "usd": 437.6644496
           },
           {
             "amount": 0.00607059,
             "symbol": "cbBTC",
             "token": "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
-            "usd": 457.35700950376383
+            "usd": 453.7858439947428
           }
         ],
         "truncated": false,
-        "usdPerDay": 49.677949886307985,
+        "usdPerDay": 46.87788667611215,
         "usdPerDay24h": 0.0,
-        "usdPerDay7d": 48.74955122800002,
+        "usdPerDay7d": 41.88700166534324,
         "votingRewardsManager": "0x45bf43ecd849c6aedbaa86cae629ebbb392b89a1"
       },
       {
-        "accruedUSD": 40.418962669200226,
+        "accruedUSD": 39.796106256567015,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 40.418962669200226,
+        "claimedUSD": 39.796106256567015,
         "feesUSD": 0.0,
         "gauge": "0x81189366762ce456db7cf81181785bf22b5baec6",
         "incentivesUSD": 0.0,
@@ -1214,28 +1220,28 @@
             "amount": 0.231350749,
             "symbol": "SOL",
             "token": "0x311935cd80b76769bf2ecc9d8ab7635b2139cf82",
-            "usd": 20.34392074537191
+            "usd": 19.87781561416831
           },
           {
             "amount": 0.00026646,
             "symbol": "cbBTC",
             "token": "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
-            "usd": 20.075041923828312
+            "usd": 19.918290642398706
           }
         ],
         "truncated": false,
-        "usdPerDay": 2.2435230141541425,
+        "usdPerDay": 2.0927216835871687,
         "usdPerDay24h": 0.0,
-        "usdPerDay7d": 6.443099107055825,
+        "usdPerDay7d": 5.471177811848425,
         "votingRewardsManager": "0xf56b5fede125344482e5398a6b9683eeac5ecdbc"
       },
       {
-        "accruedUSD": 115.96146333212988,
+        "accruedUSD": 119.08957449147962,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 115.96146333212988,
+        "claimedUSD": 119.08957449147962,
         "feesUSD": 0.0,
         "gauge": "0x9d32ce3252b817ba708e959562c1a43ffe70c893",
         "incentivesUSD": 0.0,
@@ -1246,28 +1252,28 @@
             "amount": 56.858902,
             "symbol": "USDC",
             "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-            "usd": 56.84347528151675
+            "usd": 56.8475302196
           },
           {
             "amount": 0.16464281,
             "symbol": "TSLAc",
             "token": "0xb2000000000000000000001e800a7f5189430cd0",
-            "usd": 59.117988050613135
+            "usd": 62.24204427187962
           }
         ],
         "truncated": false,
-        "usdPerDay": 6.436637522587191,
+        "usdPerDay": 6.262455256822096,
         "usdPerDay24h": 0.0,
-        "usdPerDay7d": 18.48516516772143,
+        "usdPerDay7d": 16.37246200368498,
         "votingRewardsManager": "0x1550c95a4033988a9b944f31f040bccc6016a9dc"
       },
       {
-        "accruedUSD": 210.52344051853675,
+        "accruedUSD": 207.3377640263178,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 210.52344051853675,
+        "claimedUSD": 207.3377640263178,
         "feesUSD": 0.0,
         "gauge": "0x694fdc6b6bfdf5186e04516f699d643dc4c5c9b4",
         "incentivesUSD": 0.0,
@@ -1278,28 +1284,28 @@
             "amount": 0.043442813014694805,
             "symbol": "WETH",
             "token": "0x4200000000000000000000000000000000000006",
-            "usd": 93.49435842213047
+            "usd": 91.97428995765219
           },
           {
             "amount": 56.70068609986835,
             "symbol": "MORPHO",
             "token": "0xbaa5cc21fd487b8fcc2f632f3f4e8d37262a0842",
-            "usd": 117.02908209640627
+            "usd": 115.36347406866562
           }
         ],
         "truncated": false,
-        "usdPerDay": 11.68546030455545,
+        "usdPerDay": 10.9030826233849,
         "usdPerDay24h": 0.0,
-        "usdPerDay7d": 9.456507035156106,
+        "usdPerDay7d": 8.029008341471165,
         "votingRewardsManager": "0xc64eb9546032fb2dd372c9c94196afacf2c1d70f"
       },
       {
-        "accruedUSD": 76.53955380144991,
+        "accruedUSD": 71.11103761207069,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 76.53955380144991,
+        "claimedUSD": 71.11103761207069,
         "feesUSD": 0.0,
         "gauge": "0x8971783f2b9ece611663b7e33e5b2ea96d73b9f3",
         "incentivesUSD": 0.0,
@@ -1310,37 +1316,37 @@
             "amount": 13.517739625488534,
             "symbol": "AERO",
             "token": "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee",
-            "usd": 7.842092935499295
+            "usd": 7.454639292990397
           },
           {
             "amount": 36.098268,
             "symbol": "USDC",
             "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-            "usd": 36.08847396953897
+            "usd": 36.0910483464
           },
           {
             "amount": 913.0622713706624,
             "symbol": "LAPTOP",
             "token": "0xb095274743941e953c746f9c228da9c18bb6ec29",
-            "usd": 32.60898689641165
+            "usd": 27.5653499726803
           }
         ],
         "truncated": false,
-        "usdPerDay": 4.248457632424436,
+        "usdPerDay": 3.7394515280902896,
         "usdPerDay24h": 0.0,
-        "usdPerDay7d": 0.09657019466731563,
+        "usdPerDay7d": 0.07884229027019284,
         "votingRewardsManager": "0xe793cf9fb174d5a21cd118a48576fce48fe270ff"
       },
       {
-        "accruedUSD": 79.7349222634414,
+        "accruedUSD": 75.60496638617761,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 79.7240141107717,
+        "claimedUSD": 75.59423558259247,
         "feesUSD": 0.0,
         "gauge": "0xb3b8d636d59b71eab86cd36ab4c94c1c2dfbce70",
-        "incentivesUSD": 0.010908152669699508,
+        "incentivesUSD": 0.010730803585126293,
         "label": "WETH/ZRO CL100",
         "pool": "0x0f21a72a02dc78217c2987826d061500aecf7707",
         "tokens": [
@@ -1348,34 +1354,34 @@
             "amount": 17.274214881172323,
             "symbol": "AERO",
             "token": "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee",
-            "usd": 10.02134988829854
+            "usd": 9.526225876250574
           },
           {
             "amount": 0.0156394593152847,
             "symbol": "WETH",
             "token": "0x4200000000000000000000000000000000000006",
-            "usd": 33.65806938553809
+            "usd": 33.11084310673763
           },
           {
             "amount": 22.486786910456665,
             "symbol": "ZRO",
             "token": "0x6985884c4392d348587b19cb9eaaf157f13271cd",
-            "usd": 36.05550298960477
+            "usd": 32.96789740318939
           }
         ],
         "truncated": false,
-        "usdPerDay": 4.425821973559371,
+        "usdPerDay": 3.9757696776458875,
         "usdPerDay24h": 0.0,
-        "usdPerDay7d": 0.8016837503872277,
+        "usdPerDay7d": 0.6580937583005633,
         "votingRewardsManager": "0x3aff1746fd7c8afe01870a109a576500052ed77d"
       },
       {
-        "accruedUSD": 721.7287520908637,
+        "accruedUSD": 710.1779734884542,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 721.7287520908637,
+        "claimedUSD": 710.1779734884541,
         "feesUSD": 0.0,
         "gauge": "0x14018f5afaeca44bb49d5036267d836723b57c91",
         "incentivesUSD": 0.0,
@@ -1386,34 +1392,34 @@
             "amount": 242.008244718039,
             "symbol": "AERO",
             "token": "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee",
-            "usd": 140.3970781222478
+            "usd": 133.46049119787872
           },
           {
             "amount": 0.13247526844321025,
             "symbol": "WETH",
             "token": "0x4200000000000000000000000000000000000006",
-            "usd": 285.1033202133553
+            "usd": 280.46799703997544
           },
           {
             "amount": 296.308747,
             "symbol": "USDC",
             "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-            "usd": 296.2283537552607
+            "usd": 296.2494852506
           }
         ],
         "truncated": false,
-        "usdPerDay": 40.06077737681441,
+        "usdPerDay": 37.345483870800386,
         "usdPerDay24h": 0.0,
         "usdPerDay7d": 0.0,
         "votingRewardsManager": "0x50936374116ea5ba61770f6a4f341f256665d4b3"
       },
       {
-        "accruedUSD": 493.82412733219587,
+        "accruedUSD": 476.36023502461137,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 493.82412733219587,
+        "claimedUSD": 476.3602350246114,
         "feesUSD": 0.0,
         "gauge": "0x347f2eedd83dc6b14116f0260403d67a21f47c30",
         "incentivesUSD": 0.0,
@@ -1424,34 +1430,34 @@
             "amount": 574.8904764439707,
             "symbol": "AERO",
             "token": "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee",
-            "usd": 333.51319591230504
+            "usd": 317.0353367943578
           },
           {
             "amount": 0.04763612,
             "symbol": "SPCXc",
             "token": "0xb2000000000000000000007b9fcbd005511acbd5",
-            "usd": 6.538641700496656
+            "usd": 6.753303560630057
           },
           {
             "amount": 0.00204105,
             "symbol": "cbBTC",
             "token": "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
-            "usd": 153.7722897193942
+            "usd": 152.57159466962352
           }
         ],
         "truncated": false,
-        "usdPerDay": 27.410544988048535,
+        "usdPerDay": 25.049922889633983,
         "usdPerDay24h": 0.0,
         "usdPerDay7d": 0.0,
         "votingRewardsManager": "0xd54d3290d59d6e1f50848ed3f75783f677dda043"
       },
       {
-        "accruedUSD": 440.5373098598246,
+        "accruedUSD": 431.1414399197661,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 440.53730985982463,
+        "claimedUSD": 431.1414399197662,
         "feesUSD": 0.0,
         "gauge": "0x4262b2d1415345b98e656a56c2f12cdbb1118539",
         "incentivesUSD": 0.0,
@@ -1462,34 +1468,34 @@
             "amount": 285.5130685581604,
             "symbol": "AERO",
             "token": "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee",
-            "usd": 165.63568170161116
+            "usd": 157.45213316009574
           },
           {
             "amount": 118.589413,
             "symbol": "USDC",
             "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-            "usd": 118.55723781854037
+            "usd": 118.5656951174
           },
           {
             "amount": 0.00207519,
             "symbol": "cbBTC",
             "token": "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
-            "usd": 156.34439033967305
+            "usd": 155.12361164227042
           }
         ],
         "truncated": false,
-        "usdPerDay": 24.452769888060754,
+        "usdPerDay": 22.672043194281137,
         "usdPerDay24h": 0.0,
         "usdPerDay7d": 0.0,
         "votingRewardsManager": "0x1aa768ab1195a9586175fd680704da70ab793172"
       },
       {
-        "accruedUSD": 464.6909058890826,
+        "accruedUSD": 445.4038343341869,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 464.6909058890826,
+        "claimedUSD": 445.4038343341869,
         "feesUSD": 0.0,
         "gauge": "0x4a3b6a77b545584d870d4a6de446aac4610c60d5",
         "incentivesUSD": 0.0,
@@ -1500,31 +1506,31 @@
             "amount": 673.0848405511178,
             "symbol": "AERO",
             "token": "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee",
-            "usd": 390.47903120761794
+            "usd": 371.1866657371869
           },
           {
             "amount": 74.232015,
             "symbol": "USDC",
             "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-            "usd": 74.21187468146466
+            "usd": 74.21716859700001
           }
         ],
         "truncated": false,
-        "usdPerDay": 25.79345616469089,
+        "usdPerDay": 23.42204677147798,
         "usdPerDay24h": 0.0,
         "usdPerDay7d": 0.0,
         "votingRewardsManager": "0xdb23a1d51be45df0940e1402bae1c340175932ea"
       },
       {
-        "accruedUSD": 447.1395708190082,
+        "accruedUSD": 435.69321312796046,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 447.1395708031563,
+        "claimedUSD": 435.6932131123341,
         "feesUSD": 0.0,
         "gauge": "0x5b14d6d194e49330647eb4717010ade1b1b3f8b5",
-        "incentivesUSD": 1.585190914211682e-08,
+        "incentivesUSD": 1.5626297980778522e-08,
         "label": "WETH/cbBTC CL10",
         "pool": "0xbb5507daae822ba89c4da61bbfdf4b49a1666bac",
         "tokens": [
@@ -1532,40 +1538,40 @@
             "amount": 289.73038334281927,
             "symbol": "AERO",
             "token": "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee",
-            "usd": 168.0822870806044
+            "usd": 159.77785930778302
           },
           {
             "amount": 0.052952278647553856,
             "symbol": "WETH",
             "token": "0x4200000000000000000000000000000000000006",
-            "usd": 113.95991593519297
+            "usd": 112.107110296958
           },
           {
             "amount": 7.680262959e-09,
             "symbol": "MORPHO",
             "token": "0xbaa5cc21fd487b8fcc2f632f3f4e8d37262a0842",
-            "usd": 1.585190914211682e-08
+            "usd": 1.5626297980778522e-08
           },
           {
             "amount": 0.00219137,
             "symbol": "cbBTC",
             "token": "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
-            "usd": 165.0973677873589
+            "usd": 163.80824350759312
           }
         ],
         "truncated": false,
-        "usdPerDay": 24.81923957033855,
+        "usdPerDay": 22.911403156538437,
         "usdPerDay24h": 0.0,
         "usdPerDay7d": 0.0,
         "votingRewardsManager": "0xe13a18e7eb6411e8f761910832e60e0fb845a212"
       },
       {
-        "accruedUSD": 452.76348102748153,
+        "accruedUSD": 434.604459641905,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 452.76348102748153,
+        "claimedUSD": 434.604459641905,
         "feesUSD": 0.0,
         "gauge": "0xb1b27a2fa4e67a6d0ee1aa9de97c8b1ddf54fdd4",
         "incentivesUSD": 0.0,
@@ -1576,31 +1582,31 @@
             "amount": 561.4922070284732,
             "symbol": "AERO",
             "token": "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee",
-            "usd": 325.74041164199167
+            "usd": 309.64658183901673
           },
           {
             "amount": 0.05902216502680713,
             "symbol": "WETH",
             "token": "0x4200000000000000000000000000000000000006",
-            "usd": 127.02306938548986
+            "usd": 124.95787780288825
           }
         ],
         "truncated": false,
-        "usdPerDay": 25.131404236352132,
+        "usdPerDay": 22.85414986613711,
         "usdPerDay24h": 0.0,
         "usdPerDay7d": 0.0,
         "votingRewardsManager": "0x5426e4b968f43ac88e90d1a71c38a148618e1542"
       },
       {
-        "accruedUSD": 395.446354263221,
+        "accruedUSD": 381.18610205130864,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 395.1681232917877,
+        "claimedUSD": 380.9216176146623,
         "feesUSD": 0.0,
         "gauge": "0xd424ba8ca9d4e278753de76651a0095451e65cd1",
-        "incentivesUSD": 0.2782309714333301,
+        "incentivesUSD": 0.2644844366463422,
         "label": "AERO/USDC v2",
         "pool": "0xf634058dc94e6bf8e828e27621320c423bc8b18e",
         "tokens": [
@@ -1608,28 +1614,28 @@
             "amount": 497.78659941375645,
             "symbol": "AERO",
             "token": "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee",
-            "usd": 288.78265766328195
+            "usd": 274.5147965801086
           },
           {
             "amount": 106.692644,
             "symbol": "USDC",
             "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-            "usd": 106.66369659993903
+            "usd": 106.6713054712
           }
         ],
         "truncated": false,
-        "usdPerDay": 21.949919989632512,
+        "usdPerDay": 20.045087227929706,
         "usdPerDay24h": 0.0,
         "usdPerDay7d": 0.0,
         "votingRewardsManager": "0x09ad4a8e715a25aa8ac91f6840005a8affcda139"
       },
       {
-        "accruedUSD": 225.33934421269524,
+        "accruedUSD": 222.9779761211144,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 225.33934421269524,
+        "claimedUSD": 222.9779761211144,
         "feesUSD": 0.0,
         "gauge": "0xfc8922e268cccbe8160e5c1ad546af9705cf0a61",
         "incentivesUSD": 0.0,
@@ -1640,34 +1646,34 @@
             "amount": 111.32286706261786,
             "symbol": "AERO",
             "token": "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee",
-            "usd": 64.58211901826982
+            "usd": 61.39131556052188
           },
           {
             "amount": 0.04238252627344858,
             "symbol": "WETH",
             "token": "0x4200000000000000000000000000000000000006",
-            "usd": 91.21248895426763
+            "usd": 89.72952003115944
           },
           {
             "amount": 3.368871060899222,
             "symbol": "VVV",
             "token": "0xacfe6019ed1a7dc6f7b508c02d1b04ec88cc21bf",
-            "usd": 69.54473624015779
+            "usd": 71.8571405294331
           }
         ],
         "truncated": false,
-        "usdPerDay": 12.507842145113301,
+        "usdPerDay": 11.725540247145066,
         "usdPerDay24h": 0.0,
         "usdPerDay7d": 0.0,
         "votingRewardsManager": "0x76ee14bf2a644feab94828d7b804e331eb479d19"
       },
       {
-        "accruedUSD": 177.52253426801673,
+        "accruedUSD": 177.25507278963454,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 177.52253426801673,
+        "claimedUSD": 177.25507278963454,
         "feesUSD": 0.0,
         "gauge": "0x8b5670678192519c9847d235011c82a34aee495d",
         "incentivesUSD": 0.0,
@@ -1678,34 +1684,34 @@
             "amount": 98.34558125483471,
             "symbol": "AERO",
             "token": "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee",
-            "usd": 57.05356142101595
+            "usd": 54.234720791034256
           },
           {
             "amount": 67.703701,
             "symbol": "USDC",
             "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-            "usd": 67.68533191620023
+            "usd": 67.6901602598
           },
           {
             "amount": 0.07555969,
             "symbol": "MUc",
             "token": "0xb200000000000000000000fd2f87532b90095211",
-            "usd": 52.78364093080056
+            "usd": 55.3301917388003
           }
         ],
         "truncated": false,
-        "usdPerDay": 9.853689082049458,
+        "usdPerDay": 9.321151470477794,
         "usdPerDay24h": 0.0,
         "usdPerDay7d": 0.0,
         "votingRewardsManager": "0x262b12f6b39b4a1bea64fd7474fcfb8648c20176"
       },
       {
-        "accruedUSD": 26.5870866717855,
+        "accruedUSD": 26.646070590951226,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 26.587086671785507,
+        "claimedUSD": 26.64607059095123,
         "feesUSD": 0.0,
         "gauge": "0x9ce9f01445d390c9d828a600a924f7860e2c80b2",
         "incentivesUSD": 0.0,
@@ -1716,34 +1722,34 @@
             "amount": 9.798941867225412,
             "symbol": "AERO",
             "token": "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee",
-            "usd": 5.684693959294952
+            "usd": 5.4038307510681385
           },
           {
             "amount": 12.890711,
             "symbol": "USDC",
             "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-            "usd": 12.887213546432466
+            "usd": 12.8881328578
           },
           {
             "amount": 1328.9709075716808,
             "symbol": "Basecat",
             "token": "0xb2000000000000000000004c27f6523082f41d01",
-            "usd": 8.015179166058084
+            "usd": 8.354106982083088
           }
         ],
         "truncated": false,
-        "usdPerDay": 1.4757612983698551,
+        "usdPerDay": 1.401212705297675,
         "usdPerDay24h": 0.0,
         "usdPerDay7d": 0.0,
         "votingRewardsManager": "0x2c863a009f771c4f9b5133faaec20720a1c2e7ac"
       },
       {
-        "accruedUSD": 15.695665699133757,
+        "accruedUSD": 16.011930730725172,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 15.695665699133757,
+        "claimedUSD": 16.011930730725172,
         "feesUSD": 0.0,
         "gauge": "0x02256e78b5116f24fe16aeea83b827c1c79b5596",
         "incentivesUSD": 0.0,
@@ -1754,34 +1760,34 @@
             "amount": 5.579586619566625,
             "symbol": "AERO",
             "token": "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee",
-            "usd": 3.236904839460427
+            "usd": 3.0769793475262035
           },
           {
             "amount": 6.986207,
             "symbol": "USDC",
             "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-            "usd": 6.98431153165883
+            "usd": 6.984809758600001
           },
           {
             "amount": 0.04403356,
             "symbol": "SKHYc",
             "token": "0xb200000000000000000000187f7071d6e321a7d2",
-            "usd": 5.474449328014501
+            "usd": 5.950141624598968
           }
         ],
         "truncated": false,
-        "usdPerDay": 0.8712145214283186,
+        "usdPerDay": 0.8420048539486159,
         "usdPerDay24h": 0.0,
         "usdPerDay7d": 0.0,
         "votingRewardsManager": "0x4d22c68f996ed9abf0d1bb02ac070462a1b4e40e"
       },
       {
-        "accruedUSD": 107.78042854567337,
+        "accruedUSD": 108.74820609959357,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 107.78042854567337,
+        "claimedUSD": 108.74820609959357,
         "feesUSD": 0.0,
         "gauge": "0x1dd07350114baf9fa8d9caf91cd5a3480d34ec6f",
         "incentivesUSD": 0.0,
@@ -1792,28 +1798,28 @@
             "amount": 56.466497,
             "symbol": "USDC",
             "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-            "usd": 56.451176747193244
+            "usd": 56.455203700599995
           },
           {
             "amount": 113.67881848959287,
             "symbol": "POD",
             "token": "0xed664536023d8e4b1640c394777d34abaff1df8f",
-            "usd": 51.329251798480136
+            "usd": 52.29300239899357
           }
         ],
         "truncated": false,
-        "usdPerDay": 5.9825353237448375,
+        "usdPerDay": 5.718643112685716,
         "usdPerDay24h": 0.0,
         "usdPerDay7d": 0.0,
         "votingRewardsManager": "0x716f912dc08b800db659da250e5c67c50376a99c"
       },
       {
-        "accruedUSD": 54.82084025205063,
+        "accruedUSD": 53.65932627801544,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 54.82084025205063,
+        "claimedUSD": 53.65932627801544,
         "feesUSD": 0.0,
         "gauge": "0xfcb69fa140fb835169bc6c74ee9363f752edcb7a",
         "incentivesUSD": 0.0,
@@ -1824,37 +1830,37 @@
             "amount": 41.31996800632847,
             "symbol": "AERO",
             "token": "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee",
-            "usd": 23.97109562507753
+            "usd": 22.78675766947613
           },
           {
             "amount": 16.965418,
             "symbol": "USDC",
             "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-            "usd": 16.960815014042996
+            "usd": 16.9620249164
           },
           {
             "amount": 8.097212811306544,
             "symbol": "WHUF",
             "token": "0xeeee77bc7e82c0d4166d52f58239d4c5bf41eeee",
-            "usd": 13.8889296129301
+            "usd": 13.910543692139312
           }
         ],
         "truncated": false,
-        "usdPerDay": 3.0429236338236043,
+        "usdPerDay": 2.821734239644395,
         "usdPerDay24h": 0.0,
         "usdPerDay7d": 0.0,
         "votingRewardsManager": "0xa9278a4113f5d239e76569fadc9cb71ee19c4451"
       },
       {
-        "accruedUSD": 450.08366677830395,
+        "accruedUSD": 444.67539254064087,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 449.825426697341,
+        "claimedUSD": 444.42135102962334,
         "feesUSD": 0.0,
         "gauge": "0xabb3fb6659e05847631896cb87a6d1b8bc0c6d8c",
-        "incentivesUSD": 0.25824008096293954,
+        "incentivesUSD": 0.25404151101753447,
         "label": "WETH/cbBTC CL1",
         "pool": "0xec3c3755b9ded4a2960ef50c9b48c1694ce274c2",
         "tokens": [
@@ -1862,28 +1868,28 @@
             "amount": 0.10414210392732248,
             "symbol": "WETH",
             "token": "0x4200000000000000000000000000000000000006",
-            "usd": 224.12681214087934
+            "usd": 220.48286928775892
           },
           {
             "amount": 0.00299917,
             "symbol": "cbBTC",
             "token": "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf",
-            "usd": 225.95685463742458
+            "usd": 224.19252325288195
           }
         ],
         "truncated": false,
-        "usdPerDay": 24.982656605422218,
+        "usdPerDay": 23.383740864695117,
         "usdPerDay24h": 0.0,
         "usdPerDay7d": 0.0,
         "votingRewardsManager": "0xb4f9417e8b700c65400d28499fae2bf415cce012"
       },
       {
-        "accruedUSD": 43.2620060134399,
+        "accruedUSD": 42.30967799360646,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 43.2620060134399,
+        "claimedUSD": 42.30967799360646,
         "feesUSD": 0.0,
         "gauge": "0xaa63309011db42ab09331f1c86298d6194c4e551",
         "incentivesUSD": 0.0,
@@ -1894,34 +1900,34 @@
             "amount": 7.978979032006138,
             "symbol": "AERO",
             "token": "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee",
-            "usd": 4.628872639432199
+            "usd": 4.4001743085645355
           },
           {
             "amount": 22.114946,
             "symbol": "USDC",
             "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-            "usd": 22.108945865734054
+            "usd": 22.1105230108
           },
           {
             "amount": 783.5938349076455,
             "symbol": "EDEL",
             "token": "0xfb31f85a8367210b2e4ed2360d2da9dc2d2ccc95",
-            "usd": 16.524187508273652
+            "usd": 15.798980674241927
           }
         ],
         "truncated": false,
-        "usdPerDay": 2.4013309526022986,
+        "usdPerDay": 2.224900596856763,
         "usdPerDay24h": 0.0,
         "usdPerDay7d": 0.0,
         "votingRewardsManager": "0xf37519b920b3c036ed8b772e028bd541f9c5e955"
       },
       {
-        "accruedUSD": 87.08574729230682,
+        "accruedUSD": 86.52227744423146,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 8453,
-        "claimedUSD": 87.08574729230683,
+        "claimedUSD": 86.52227744423146,
         "feesUSD": 0.0,
         "gauge": "0xa06fd10bb776e511c46243c03baa3427f5bf656f",
         "incentivesUSD": 0.0,
@@ -1932,34 +1938,34 @@
             "amount": 7.845971064391199,
             "symbol": "AERO",
             "token": "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee",
-            "usd": 4.5517102682002895
+            "usd": 4.326824292279746
           },
           {
             "amount": 42.020498,
             "symbol": "USDC",
             "token": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
-            "usd": 42.00909717496874
+            "usd": 42.012093900400004
           },
           {
             "amount": 0.5416663975128869,
             "symbol": "cbHYPE",
             "token": "0xb200000000000000000000451d033a5000cb479e",
-            "usd": 40.524939849137795
+            "usd": 40.18335925155171
           }
         ],
         "truncated": false,
-        "usdPerDay": 4.833841972990152,
+        "usdPerDay": 4.549868395504375,
         "usdPerDay24h": 0.0,
         "usdPerDay7d": 0.0,
         "votingRewardsManager": "0xf4c0b2ecb1467fced4e679da10ddb31423783e86"
       },
       {
-        "accruedUSD": 577.0576818255109,
+        "accruedUSD": 573.5101403900078,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 1,
-        "claimedUSD": 577.0576818255109,
+        "claimedUSD": 573.5101403900078,
         "feesUSD": 0.0,
         "gauge": "0xbc694fc46324791d75762e44d5d8cdcc00e2f053",
         "incentivesUSD": 0.0,
@@ -1970,40 +1976,40 @@
             "amount": 134.0465558910613,
             "symbol": "USDe",
             "token": "0x4c9edd5852cd905f086c759e8383e09bff1e68b3",
-            "usd": 133.9004105611286
+            "usd": 133.9626782694108
           },
           {
             "amount": 115.640131,
             "symbol": "USDC",
             "token": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-            "usd": 115.60875600534563
+            "usd": 115.6209002196749
           },
           {
             "amount": 0.10367755679309908,
             "symbol": "WETH",
             "token": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-            "usd": 223.12704869884888
+            "usd": 219.4993603974021
           },
           {
             "amount": 104.556852,
             "symbol": "USDT",
             "token": "0xdac17f958d2ee523a2206206994597c13d831ec7",
-            "usd": 104.4214665601878
+            "usd": 104.42720150352001
           }
         ],
         "truncated": false,
-        "usdPerDay": 32.031408178795466,
+        "usdPerDay": 30.159464368132383,
         "usdPerDay24h": 0.0,
-        "usdPerDay7d": 29.422371050293975,
+        "usdPerDay7d": 25.37977180366165,
         "votingRewardsManager": "0x2652fe9aa927597dd4c15921640671d262e43bcc"
       },
       {
-        "accruedUSD": 381.8823126279526,
+        "accruedUSD": 379.45026621971033,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 1,
-        "claimedUSD": 381.8823126279526,
+        "claimedUSD": 379.4502662197103,
         "feesUSD": 0.0,
         "gauge": "0x9ce6331e5d7a42db5876a9e5b1205e07502fce06",
         "incentivesUSD": 0.0,
@@ -2014,43 +2020,43 @@
             "amount": 90.393895,
             "symbol": "USDC",
             "token": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-            "usd": 90.36936970806296
+            "usd": 90.37886263085235
           },
           {
             "amount": 0.07016776212212039,
             "symbol": "WETH",
             "token": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-            "usd": 151.0097861136491
+            "usd": 148.55460895031092
           },
           {
             "amount": 53.858715,
             "symbol": "USDT",
             "token": "0xdac17f958d2ee523a2206206994597c13d831ec7",
-            "usd": 53.78897604288224
+            "usd": 53.7919301934
           },
           {
             "amount": 86.72212,
             "symbol": "USDG",
             "token": "0xe343167631d89b6ffc58b88d6b7fb0228795491d",
-            "usd": 86.71418076335826
+            "usd": 86.72486444514702
           }
         ],
         "truncated": false,
-        "usdPerDay": 21.197583217940895,
+        "usdPerDay": 19.954340782447808,
         "usdPerDay24h": 0.0,
-        "usdPerDay7d": 13.261471345921509,
+        "usdPerDay7d": 11.43826405645521,
         "votingRewardsManager": "0x46daf47fc787ca293f743151042a22b8fd79bbf4"
       },
       {
-        "accruedUSD": 362.54160139313365,
+        "accruedUSD": 359.4539854883165,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 1,
-        "claimedUSD": 362.4572731139258,
+        "claimedUSD": 359.36964681938355,
         "feesUSD": 0.0,
         "gauge": "0x3142ce317ea21b4e4121a8bbf04f51230da5c649",
-        "incentivesUSD": 0.084328279207872,
+        "incentivesUSD": 0.08433866893297717,
         "label": "USDC/USDT CL1",
         "pool": "0x2d90ebffc87bbe29e4d78e7627adfe9d0f3d7978",
         "tokens": [
@@ -2058,40 +2064,40 @@
             "amount": 52.573052,
             "symbol": "USDC",
             "token": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-            "usd": 52.55878810033818
+            "usd": 52.56430918031198
           },
           {
             "amount": 0.08858781008069413,
             "symbol": "WETH",
             "token": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-            "usd": 190.6520294787183
+            "usd": 187.55233295595156
           },
           {
             "amount": 119.401062,
             "symbol": "USDT",
             "token": "0xdac17f958d2ee523a2206206994597c13d831ec7",
-            "usd": 119.24645553486928
+            "usd": 119.25300468312
           },
           {
             "amount": 0.084336,
             "symbol": "USDG",
             "token": "0xe343167631d89b6ffc58b88d6b7fb0228795491d",
-            "usd": 0.084328279207872
+            "usd": 0.08433866893297717
           }
         ],
         "truncated": false,
-        "usdPerDay": 20.12401598966851,
+        "usdPerDay": 18.902786374353944,
         "usdPerDay24h": 0.0,
-        "usdPerDay7d": 11.51362537616199,
+        "usdPerDay7d": 9.930455589614631,
         "votingRewardsManager": "0x96a9bcdd396941a8de29624571a19d78e6b59b3b"
       },
       {
-        "accruedUSD": 1476.7004470858478,
+        "accruedUSD": 1464.912374704904,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 1,
-        "claimedUSD": 1476.7004470858478,
+        "claimedUSD": 1464.912374704904,
         "feesUSD": 0.0,
         "gauge": "0x9de929252c9017fe8a4cd5986475a658ad87ce33",
         "incentivesUSD": 0.0,
@@ -2102,28 +2108,28 @@
             "amount": 747.032699,
             "symbol": "USDC",
             "token": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-            "usd": 746.8300172256447
+            "usd": 746.9084685827054
           },
           {
             "amount": 0.33913944268391716,
             "symbol": "WETH",
             "token": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-            "usd": 729.8704298602032
+            "usd": 718.0039061221987
           }
         ],
         "truncated": false,
-        "usdPerDay": 81.9689196906302,
+        "usdPerDay": 77.03607914814562,
         "usdPerDay24h": 0.0,
-        "usdPerDay7d": 16.874934563999556,
+        "usdPerDay7d": 14.449016757375963,
         "votingRewardsManager": "0x9f6c3fc350e32ec9a11ac06f9c6852c72115950e"
       },
       {
-        "accruedUSD": 4138.454819807638,
+        "accruedUSD": 4101.980298377998,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 1,
-        "claimedUSD": 4138.454819807638,
+        "claimedUSD": 4101.980298377998,
         "feesUSD": 0.0,
         "gauge": "0x430d74920f5bf2a6a2a27af16ab66dfe77bffa2a",
         "incentivesUSD": 0.0,
@@ -2134,28 +2140,28 @@
             "amount": 1.0453884347201374,
             "symbol": "WETH",
             "token": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-            "usd": 2249.806451829305
+            "usd": 2213.228203726198
           },
           {
             "amount": 1891.097055,
             "symbol": "USDT",
             "token": "0xdac17f958d2ee523a2206206994597c13d831ec7",
-            "usd": 1888.648367978333
+            "usd": 1888.7520946518
           }
         ],
         "truncated": false,
-        "usdPerDay": 229.7179982829605,
+        "usdPerDay": 215.71288794228218,
         "usdPerDay24h": 0.0,
-        "usdPerDay7d": 16.477144957734335,
+        "usdPerDay7d": 14.110217787949402,
         "votingRewardsManager": "0x067af5806d5b736faa54bdee90501a6b96b7f65d"
       },
       {
-        "accruedUSD": 927.5367616215956,
+        "accruedUSD": 920.1195953271185,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 4663,
-        "claimedUSD": 927.5367616215956,
+        "claimedUSD": 920.1195953271185,
         "feesUSD": 0.0,
         "gauge": "0xe033f4bd3d7ccf537a2f954ecdc8eb1218e3b7a6",
         "incentivesUSD": 0.0,
@@ -2166,28 +2172,28 @@
             "amount": 0.23791754539879317,
             "symbol": "WETH",
             "token": "0x0bd7d308f8e1639fab988df18a8011f41eacad73",
-            "usd": 511.4557099726047
+            "usd": 503.9914467752258
           },
           {
             "amount": 416.11498,
             "symbol": "USDG",
             "token": "0x5fc5360d0400a0fd4f2af552add042d716f1d168",
-            "usd": 416.0810516489908
+            "usd": 416.12814855189265
           }
         ],
         "truncated": false,
-        "usdPerDay": 51.48459892102607,
+        "usdPerDay": 48.38558154679047,
         "usdPerDay24h": 0.0,
-        "usdPerDay7d": 59.590090063161725,
+        "usdPerDay7d": 51.04413861801943,
         "votingRewardsManager": "0x0fd6cc0e3d1a15f39a197e075b92a3e589ee3fcc"
       },
       {
-        "accruedUSD": 69.04380228281993,
+        "accruedUSD": 64.98233167279452,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 4663,
-        "claimedUSD": 69.04380228281993,
+        "claimedUSD": 64.98233167279452,
         "feesUSD": 0.0,
         "gauge": "0x045ccb9d8a98cb748b39253005be2d6d5b955c14",
         "incentivesUSD": 0.0,
@@ -2198,28 +2204,28 @@
             "amount": 464.95510911791763,
             "symbol": "CASHCAT",
             "token": "0x020bfc650a365f8bb26819deaabf3e21291018b4",
-            "usd": 34.42990200643587
+            "usd": 30.873591974175042
           },
           {
             "amount": 0.016101597909381073,
             "symbol": "WETH",
             "token": "0x0bd7d308f8e1639fab988df18a8011f41eacad73",
-            "usd": 34.61390027638406
+            "usd": 34.10873969861948
           }
         ],
         "truncated": false,
-        "usdPerDay": 3.8324006288430055,
+        "usdPerDay": 3.4171730764377033,
         "usdPerDay24h": 0.0,
         "usdPerDay7d": 0.0,
         "votingRewardsManager": "0x245972644b6d857aa644c41b9c1f5c5a3456e796"
       },
       {
-        "accruedUSD": 224.48915560415193,
+        "accruedUSD": 227.96389433865676,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 4663,
-        "claimedUSD": 224.48915560415193,
+        "claimedUSD": 227.96389433865676,
         "feesUSD": 0.0,
         "gauge": "0x220d17d3260f130a4f91a1ba2d21f8f75f624942",
         "incentivesUSD": 0.0,
@@ -2230,28 +2236,28 @@
             "amount": 2301.8771340520966,
             "symbol": "AI",
             "token": "0x2e8c31162b855a2ffa90f6f8634643ad6f111e18",
-            "usd": 71.3411966943585
+            "usd": 74.79860035791546
           },
           {
             "amount": 153.160447,
             "symbol": "USDG",
             "token": "0x5fc5360d0400a0fd4f2af552add042d716f1d168",
-            "usd": 153.14795890979343
+            "usd": 153.1652939807413
           }
         ],
         "truncated": false,
-        "usdPerDay": 12.460675001380428,
+        "usdPerDay": 11.987752087081232,
         "usdPerDay24h": 0.0,
         "usdPerDay7d": 0.0,
         "votingRewardsManager": "0x3085e309cb3820783059f622c7275fc972f7dcb8"
       },
       {
-        "accruedUSD": 26.65308772832222,
+        "accruedUSD": 26.67665604468943,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 4663,
-        "claimedUSD": 26.65308772832222,
+        "claimedUSD": 26.67665604468943,
         "feesUSD": 0.0,
         "gauge": "0x5874f5b8728776993de4c90c61473d76eeab90db",
         "incentivesUSD": 0.0,
@@ -2262,28 +2268,28 @@
             "amount": 12.853791,
             "symbol": "USDG",
             "token": "0x5fc5360d0400a0fd4f2af552add042d716f1d168",
-            "usd": 12.852742953297026
+            "usd": 12.854197776544792
           },
           {
             "amount": 0.07625342454981321,
             "symbol": "NVDA",
             "token": "0xd0601ce157db5bdc3162bbac2a2c8af5320d9eec",
-            "usd": 13.800344775025195
+            "usd": 13.822458268144638
           }
         ],
         "truncated": false,
-        "usdPerDay": 1.4794276501780457,
+        "usdPerDay": 1.402823636189502,
         "usdPerDay24h": 0.0,
         "usdPerDay7d": 0.0,
         "votingRewardsManager": "0x80988ca88790c08dd261617a594ef760f3c42225"
       },
       {
-        "accruedUSD": 34.723272597358545,
+        "accruedUSD": 37.95319133877254,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 4663,
-        "claimedUSD": 34.723272597358545,
+        "claimedUSD": 37.95319133877254,
         "feesUSD": 0.0,
         "gauge": "0xd1900b7cdb51671dba4b8b0a876cde1fb2c6a97d",
         "incentivesUSD": 0.0,
@@ -2294,28 +2300,28 @@
             "amount": 15.644254,
             "symbol": "USDG",
             "token": "0x5fc5360d0400a0fd4f2af552add042d716f1d168",
-            "usd": 15.64297843010586
+            "usd": 15.644749084725431
           },
           {
             "amount": 729.4255772328713,
             "symbol": "ORBIO",
             "token": "0xaa07a0e9209e16ac99708c3ec70159c6ef3128a3",
-            "usd": 19.080294167252685
+            "usd": 22.308442254047108
           }
         ],
         "truncated": false,
-        "usdPerDay": 1.927377799856722,
+        "usdPerDay": 1.995813635324496,
         "usdPerDay24h": 0.0,
         "usdPerDay7d": 0.0,
         "votingRewardsManager": "0x86985861b79cc9471a856a4fa113efcdfef783f9"
       },
       {
-        "accruedUSD": 1002.1390687076025,
+        "accruedUSD": 981.962202463051,
         "active": false,
         "allocationAero": 0.0,
         "allocationShare": 0.0,
         "chainId": 4663,
-        "claimedUSD": 1002.1390687076025,
+        "claimedUSD": 981.962202463051,
         "feesUSD": 0.0,
         "gauge": "0x750a4e760873c863daf22890b8db55f4c71f1114",
         "incentivesUSD": 0.0,
@@ -2326,17 +2332,17 @@
             "amount": 2653.875797102418,
             "symbol": "PONS",
             "token": "0x39dbed3a2bd333467115de45665cc57f813c4571",
-            "usd": 418.45759864064615
+            "usd": 398.21466452443275
           },
           {
             "amount": 583.729065,
             "symbol": "USDG",
             "token": "0x5fc5360d0400a0fd4f2af552add042d716f1d168",
-            "usd": 583.6814700669563
+            "usd": 583.7475379386183
           }
         ],
         "truncated": false,
-        "usdPerDay": 55.62553437267476,
+        "usdPerDay": 51.63764848008731,
         "usdPerDay24h": 0.0,
         "usdPerDay7d": 0.0,
         "votingRewardsManager": "0xaf3a13a07268c83fcf420d48e4cff9bdcb2a59f9"
@@ -9790,24 +9796,1291 @@
           "8453:0xfde4c96c8593536e31f229ea8f37b2ada2699bb2": 6
         },
         "unread": []
+      },
+      {
+        "accruedUSD": 27669.441,
+        "asOf": 1794278090,
+        "blocks": {
+          "1": {
+            "hash": "0xeb93dd8c26d2b3308e79db76c34b7313e20b9991ae32027c9bfc0df121fdf9ef",
+            "number": 26381548
+          },
+          "4663": {
+            "hash": "0x1b410a7342214dcb35fe9f84c0751bdb8d33e244b8d882cb5db9af8c9ca11e20",
+            "number": 110548084
+          },
+          "8453": {
+            "hash": "0xd778ae26fcad629612f0ad6a3346cad8e6d1a4049fb8aa86722788b84d116648",
+            "number": 55438537
+          }
+        },
+        "chains": [
+          1,
+          4663,
+          8453
+        ],
+        "complete": true,
+        "feesCumUSD": 24464.005,
+        "gauges": {
+          "1:0x3142ce317ea21b4e4121a8bbf04f51230da5c649": {
+            "active": false,
+            "fees": {
+              "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": 52.573052,
+              "0xdac17f958d2ee523a2206206994597c13d831ec7": 51.43458
+            },
+            "firstActive": true,
+            "firstSeen": 1793649503,
+            "incentives": {
+              "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": 0.08858781,
+              "0xdac17f958d2ee523a2206206994597c13d831ec7": 67.966482,
+              "0xe343167631d89b6ffc58b88d6b7fb0228795491d": 0.084336
+            },
+            "rawFees": {
+              "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": "52573052",
+              "0xdac17f958d2ee523a2206206994597c13d831ec7": "51434580"
+            },
+            "rawIncentives": {
+              "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": "88587810080694131",
+              "0xdac17f958d2ee523a2206206994597c13d831ec7": "67966482",
+              "0xe343167631d89b6ffc58b88d6b7fb0228795491d": "84336"
+            },
+            "usd": 359.45399
+          },
+          "1:0x430d74920f5bf2a6a2a27af16ab66dfe77bffa2a": {
+            "active": false,
+            "fees": {
+              "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": 0.9050297,
+              "0xdac17f958d2ee523a2206206994597c13d831ec7": 1891.0971
+            },
+            "firstActive": true,
+            "firstSeen": 1793649503,
+            "incentives": {
+              "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": 0.14035873
+            },
+            "rawFees": {
+              "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": "905029700554740564",
+              "0xdac17f958d2ee523a2206206994597c13d831ec7": "1891097055"
+            },
+            "rawIncentives": {
+              "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": "140358734165396917"
+            },
+            "usd": 4101.9803
+          },
+          "1:0x9ce6331e5d7a42db5876a9e5b1205e07502fce06": {
+            "active": false,
+            "fees": {
+              "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": 90.393895,
+              "0xe343167631d89b6ffc58b88d6b7fb0228795491d": 86.72212
+            },
+            "firstActive": true,
+            "firstSeen": 1793649503,
+            "incentives": {
+              "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": 0.070167762,
+              "0xdac17f958d2ee523a2206206994597c13d831ec7": 53.858715
+            },
+            "rawFees": {
+              "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": "90393895",
+              "0xe343167631d89b6ffc58b88d6b7fb0228795491d": "86722120"
+            },
+            "rawIncentives": {
+              "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": "70167762122120388",
+              "0xdac17f958d2ee523a2206206994597c13d831ec7": "53858715"
+            },
+            "usd": 379.45027
+          },
+          "1:0x9de929252c9017fe8a4cd5986475a658ad87ce33": {
+            "active": false,
+            "fees": {
+              "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": 747.0327,
+              "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": 0.33913944
+            },
+            "firstActive": true,
+            "firstSeen": 1793649503,
+            "incentives": {},
+            "rawFees": {
+              "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": "747032699",
+              "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": "339139442683917156"
+            },
+            "rawIncentives": {},
+            "usd": 1464.9124
+          },
+          "1:0xbc694fc46324791d75762e44d5d8cdcc00e2f053": {
+            "active": false,
+            "fees": {
+              "0x4c9edd5852cd905f086c759e8383e09bff1e68b3": 134.04656,
+              "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": 115.64013
+            },
+            "firstActive": true,
+            "firstSeen": 1793649503,
+            "incentives": {
+              "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": 0.10367756,
+              "0xdac17f958d2ee523a2206206994597c13d831ec7": 104.55685
+            },
+            "rawFees": {
+              "0x4c9edd5852cd905f086c759e8383e09bff1e68b3": "134046555891061289530",
+              "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": "115640131"
+            },
+            "rawIncentives": {
+              "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": "103677556793099073",
+              "0xdac17f958d2ee523a2206206994597c13d831ec7": "104556852"
+            },
+            "usd": 573.51014
+          },
+          "4663:0x045ccb9d8a98cb748b39253005be2d6d5b955c14": {
+            "active": false,
+            "fees": {
+              "0x020bfc650a365f8bb26819deaabf3e21291018b4": 464.95511,
+              "0x0bd7d308f8e1639fab988df18a8011f41eacad73": 0.016101598
+            },
+            "firstActive": false,
+            "firstSeen": 1793649549,
+            "incentives": {},
+            "rawFees": {
+              "0x020bfc650a365f8bb26819deaabf3e21291018b4": "464955109117917634708",
+              "0x0bd7d308f8e1639fab988df18a8011f41eacad73": "16101597909381073"
+            },
+            "rawIncentives": {},
+            "usd": 64.982332
+          },
+          "4663:0x220d17d3260f130a4f91a1ba2d21f8f75f624942": {
+            "active": false,
+            "fees": {
+              "0x2e8c31162b855a2ffa90f6f8634643ad6f111e18": 2301.8771,
+              "0x5fc5360d0400a0fd4f2af552add042d716f1d168": 153.16045
+            },
+            "firstActive": false,
+            "firstSeen": 1793649549,
+            "incentives": {},
+            "rawFees": {
+              "0x2e8c31162b855a2ffa90f6f8634643ad6f111e18": "2301877134052096814170",
+              "0x5fc5360d0400a0fd4f2af552add042d716f1d168": "153160447"
+            },
+            "rawIncentives": {},
+            "usd": 227.96389
+          },
+          "4663:0x5874f5b8728776993de4c90c61473d76eeab90db": {
+            "active": false,
+            "fees": {
+              "0x5fc5360d0400a0fd4f2af552add042d716f1d168": 11.531666,
+              "0xd0601ce157db5bdc3162bbac2a2c8af5320d9eec": 0.076253425
+            },
+            "firstActive": false,
+            "firstSeen": 1793649549,
+            "incentives": {
+              "0x5fc5360d0400a0fd4f2af552add042d716f1d168": 1.322125
+            },
+            "rawFees": {
+              "0x5fc5360d0400a0fd4f2af552add042d716f1d168": "11531666",
+              "0xd0601ce157db5bdc3162bbac2a2c8af5320d9eec": "76253424549813205"
+            },
+            "rawIncentives": {
+              "0x5fc5360d0400a0fd4f2af552add042d716f1d168": "1322125"
+            },
+            "usd": 26.676656
+          },
+          "4663:0x750a4e760873c863daf22890b8db55f4c71f1114": {
+            "active": false,
+            "fees": {
+              "0x39dbed3a2bd333467115de45665cc57f813c4571": 2653.8758,
+              "0x5fc5360d0400a0fd4f2af552add042d716f1d168": 583.72906
+            },
+            "firstActive": false,
+            "firstSeen": 1793649549,
+            "incentives": {},
+            "rawFees": {
+              "0x39dbed3a2bd333467115de45665cc57f813c4571": "2653875797102417871490",
+              "0x5fc5360d0400a0fd4f2af552add042d716f1d168": "583729065"
+            },
+            "rawIncentives": {},
+            "usd": 981.9622
+          },
+          "4663:0xd1900b7cdb51671dba4b8b0a876cde1fb2c6a97d": {
+            "active": false,
+            "fees": {
+              "0x5fc5360d0400a0fd4f2af552add042d716f1d168": 15.644254,
+              "0xaa07a0e9209e16ac99708c3ec70159c6ef3128a3": 729.42558
+            },
+            "firstActive": false,
+            "firstSeen": 1793649549,
+            "incentives": {},
+            "rawFees": {
+              "0x5fc5360d0400a0fd4f2af552add042d716f1d168": "15644254",
+              "0xaa07a0e9209e16ac99708c3ec70159c6ef3128a3": "729425577232871278349"
+            },
+            "rawIncentives": {},
+            "usd": 37.953191
+          },
+          "4663:0xe033f4bd3d7ccf537a2f954ecdc8eb1218e3b7a6": {
+            "active": false,
+            "fees": {
+              "0x0bd7d308f8e1639fab988df18a8011f41eacad73": 0.17707669,
+              "0x5fc5360d0400a0fd4f2af552add042d716f1d168": 416.11498
+            },
+            "firstActive": false,
+            "firstSeen": 1793649549,
+            "incentives": {
+              "0x0bd7d308f8e1639fab988df18a8011f41eacad73": 0.060840852
+            },
+            "rawFees": {
+              "0x0bd7d308f8e1639fab988df18a8011f41eacad73": "177076693376770525",
+              "0x5fc5360d0400a0fd4f2af552add042d716f1d168": "416114980"
+            },
+            "rawIncentives": {
+              "0x0bd7d308f8e1639fab988df18a8011f41eacad73": "60840852022022643"
+            },
+            "usd": 920.1196
+          },
+          "8453:0x02256e78b5116f24fe16aeea83b827c1c79b5596": {
+            "active": false,
+            "fees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 6.986207,
+              "0xb200000000000000000000187f7071d6e321a7d2": 0.04403356
+            },
+            "firstActive": false,
+            "firstSeen": 1793649547,
+            "incentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 5.5795866
+            },
+            "rawFees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "6986207",
+              "0xb200000000000000000000187f7071d6e321a7d2": "4403356"
+            },
+            "rawIncentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "5579586619566624859"
+            },
+            "usd": 16.011931
+          },
+          "8453:0x0ccf7cb21169934f4686cb895518aa179bfcea53": {
+            "active": false,
+            "fees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 83.967249,
+              "0xb2000000000000000000007b9fcbd005511acbd5": 0.63550006
+            },
+            "firstActive": true,
+            "firstSeen": 1793759683,
+            "incentives": {},
+            "rawFees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "83967249",
+              "0xb2000000000000000000007b9fcbd005511acbd5": "63550006"
+            },
+            "rawIncentives": {},
+            "usd": 174.04438
+          },
+          "8453:0x14018f5afaeca44bb49d5036267d836723b57c91": {
+            "active": false,
+            "fees": {
+              "0x4200000000000000000000000000000000000006": 0.13247527,
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 296.30875
+            },
+            "firstActive": false,
+            "firstSeen": 1793649547,
+            "incentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 242.00824
+            },
+            "rawFees": {
+              "0x4200000000000000000000000000000000000006": "132475268443210257",
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "296308747"
+            },
+            "rawIncentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "242008244718039008820"
+            },
+            "usd": 710.17797
+          },
+          "8453:0x1dd07350114baf9fa8d9caf91cd5a3480d34ec6f": {
+            "active": false,
+            "fees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 56.466497,
+              "0xed664536023d8e4b1640c394777d34abaff1df8f": 113.67882
+            },
+            "firstActive": false,
+            "firstSeen": 1793649547,
+            "incentives": {},
+            "rawFees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "56466497",
+              "0xed664536023d8e4b1640c394777d34abaff1df8f": "113678818489592873939"
+            },
+            "rawIncentives": {},
+            "usd": 108.74821
+          },
+          "8453:0x1e417f2af612d2e9a951ede32ca4b05a287b50de": {
+            "active": false,
+            "fees": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 724.06504,
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 455.2348
+            },
+            "firstActive": false,
+            "firstSeen": 1793649547,
+            "incentives": {},
+            "rawFees": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "724065039038846090228",
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "455234805"
+            },
+            "rawIncentives": {},
+            "usd": 854.44452
+          },
+          "8453:0x230ec639ae09b4cdea38b5665910e3b10f1b8eb8": {
+            "active": false,
+            "fees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 93.281614,
+              "0xb20000000000000000000078ee7ce2fe4908108c": 0.50238705
+            },
+            "firstActive": true,
+            "firstSeen": 1793759683,
+            "incentives": {},
+            "rawFees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "93281614",
+              "0xb20000000000000000000078ee7ce2fe4908108c": "50238705"
+            },
+            "rawIncentives": {},
+            "usd": 184.27437
+          },
+          "8453:0x25d0daf0efc41400e385b69cd5376c3dd609a5b8": {
+            "active": true,
+            "fees": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 47.372965,
+              "0x4200000000000000000000000000000000000006": 0.0067459845
+            },
+            "firstActive": true,
+            "firstSeen": 1794191632,
+            "incentives": {},
+            "rawFees": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "47372965294692413287",
+              "0x4200000000000000000000000000000000000006": "6745984534325378"
+            },
+            "rawIncentives": {},
+            "usd": 40.406968
+          },
+          "8453:0x2cd47ba367766a8a5ab641825fbf4a3a29e92ec9": {
+            "active": false,
+            "fees": {
+              "0x4200000000000000000000000000000000000006": 0.04890041,
+              "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42": 95.223279
+            },
+            "firstActive": true,
+            "firstSeen": 1793932435,
+            "incentives": {},
+            "rawFees": {
+              "0x4200000000000000000000000000000000000006": "48900409719028575",
+              "0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42": "95223279"
+            },
+            "rawIncentives": {},
+            "usd": 210.31784
+          },
+          "8453:0x2e45bbaeebd8e00bbb838bc885e5332cd8829d4f": {
+            "active": false,
+            "fees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 329.09403,
+              "0xb200000000000000000000d9192b6b456483c2e8": 0.96150433
+            },
+            "firstActive": true,
+            "firstSeen": 1793759683,
+            "incentives": {},
+            "rawFees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "329094033",
+              "0xb200000000000000000000d9192b6b456483c2e8": "96150433"
+            },
+            "rawIncentives": {},
+            "usd": 586.6937
+          },
+          "8453:0x2f68e89ad5176d1fca1b4cac7265536a539807e7": {
+            "active": false,
+            "fees": {
+              "0x4200000000000000000000000000000000000006": 0.13219052,
+              "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2": 300.0564
+            },
+            "firstActive": false,
+            "firstSeen": 1793649547,
+            "incentives": {},
+            "rawFees": {
+              "0x4200000000000000000000000000000000000006": "132190519193270318",
+              "0xfde4c96c8593536e31f229ea8f37b2ada2699bb2": "300056396"
+            },
+            "rawIncentives": {},
+            "usd": 579.64572
+          },
+          "8453:0x347f2eedd83dc6b14116f0260403d67a21f47c30": {
+            "active": false,
+            "fees": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 332.6356,
+              "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": 0.00204105
+            },
+            "firstActive": false,
+            "firstSeen": 1793649547,
+            "incentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 242.25488,
+              "0xb2000000000000000000007b9fcbd005511acbd5": 0.04763612
+            },
+            "rawFees": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "332635598361333472922",
+              "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": "204105"
+            },
+            "rawIncentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "242254878082637251812",
+              "0xb2000000000000000000007b9fcbd005511acbd5": "4763612"
+            },
+            "usd": 476.36024
+          },
+          "8453:0x4262b2d1415345b98e656a56c2f12cdbb1118539": {
+            "active": false,
+            "fees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 118.58941,
+              "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": 0.00207519
+            },
+            "firstActive": false,
+            "firstSeen": 1793649547,
+            "incentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 285.51307
+            },
+            "rawFees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "118589413",
+              "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": "207519"
+            },
+            "rawIncentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "285513068558160390813"
+            },
+            "usd": 431.14144
+          },
+          "8453:0x46a9dca72d78366571be583aa69c1dc16e6889fb": {
+            "active": false,
+            "fees": {
+              "0x4200000000000000000000000000000000000006": 0.30934143,
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 661.0093
+            },
+            "firstActive": false,
+            "firstSeen": 1793649547,
+            "incentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 258.23725,
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 0.044611,
+              "0xf3df0a31ec5ea438150987805e841f960b9471b6": 2.9540831
+            },
+            "rawFees": {
+              "0x4200000000000000000000000000000000000006": "309341430134797370",
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "661009303"
+            },
+            "rawIncentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "258237249897851747700",
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "44611",
+              "0xf3df0a31ec5ea438150987805e841f960b9471b6": "2954083111248994188"
+            },
+            "usd": 1458.2819
+          },
+          "8453:0x4a3b6a77b545584d870d4a6de446aac4610c60d5": {
+            "active": false,
+            "fees": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 458.56675,
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 74.232015
+            },
+            "firstActive": false,
+            "firstSeen": 1793649547,
+            "incentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 214.5181
+            },
+            "rawFees": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "458566745452843929449",
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "74232015"
+            },
+            "rawIncentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "214518095098273914362"
+            },
+            "usd": 445.40383
+          },
+          "8453:0x4a870ac2a047909c1ab791f8d7176d33bc2d60eb": {
+            "active": true,
+            "fees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 95.440229,
+              "0xf4d97f2da56e8c3098f3a8d538db630a2606a024": 0.059727539
+            },
+            "firstActive": true,
+            "firstSeen": 1793932435,
+            "incentives": {},
+            "rawFees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "95440229",
+              "0xf4d97f2da56e8c3098f3a8d538db630a2606a024": "59727539379987709"
+            },
+            "rawIncentives": {},
+            "usd": 197.80927
+          },
+          "8453:0x5aa337b53c6b866d255542f834ae80109ce292b4": {
+            "active": true,
+            "fees": {
+              "0x5b2193fdc451c1f847be09ca9d13a4bf60f8c86b": 1818.3888,
+              "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": 0.00127302
+            },
+            "firstActive": true,
+            "firstSeen": 1793932435,
+            "incentives": {},
+            "rawFees": {
+              "0x5b2193fdc451c1f847be09ca9d13a4bf60f8c86b": "1818388801816437277438",
+              "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": "127302"
+            },
+            "rawIncentives": {},
+            "usd": 205.76567
+          },
+          "8453:0x5b14d6d194e49330647eb4717010ade1b1b3f8b5": {
+            "active": false,
+            "fees": {
+              "0x4200000000000000000000000000000000000006": 0.052952279,
+              "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": 0.00219137
+            },
+            "firstActive": false,
+            "firstSeen": 1793649547,
+            "incentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 289.73038,
+              "0xbaa5cc21fd487b8fcc2f632f3f4e8d37262a0842": 7.680263e-09
+            },
+            "rawFees": {
+              "0x4200000000000000000000000000000000000006": "52952278647553853",
+              "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": "219137"
+            },
+            "rawIncentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "289730383342819258654",
+              "0xbaa5cc21fd487b8fcc2f632f3f4e8d37262a0842": "7680262959"
+            },
+            "usd": 435.69321
+          },
+          "8453:0x5c7974887d29ad70aef991dc4d5ed51a60d108a9": {
+            "active": false,
+            "fees": {
+              "0x526728dbc96689597f85ae4cd716d4f7fccbae9d": 71.361316,
+              "0x7ba6f01772924a82d9626c126347a28299e98c98": 0.040230105
+            },
+            "firstActive": true,
+            "firstSeen": 1793932435,
+            "incentives": {},
+            "rawFees": {
+              "0x526728dbc96689597f85ae4cd716d4f7fccbae9d": "71361316480046931417",
+              "0x7ba6f01772924a82d9626c126347a28299e98c98": "40230105238392690"
+            },
+            "rawIncentives": {},
+            "usd": 132.0818
+          },
+          "8453:0x694fdc6b6bfdf5186e04516f699d643dc4c5c9b4": {
+            "active": false,
+            "fees": {
+              "0x4200000000000000000000000000000000000006": 0.043442813,
+              "0xbaa5cc21fd487b8fcc2f632f3f4e8d37262a0842": 56.700686
+            },
+            "firstActive": true,
+            "firstSeen": 1793649547,
+            "incentives": {},
+            "rawFees": {
+              "0x4200000000000000000000000000000000000006": "43442813014694807",
+              "0xbaa5cc21fd487b8fcc2f632f3f4e8d37262a0842": "56700686099868348920"
+            },
+            "rawIncentives": {},
+            "usd": 207.33776
+          },
+          "8453:0x6a5aa92f7db7a7f010fe73a747d121db8498e857": {
+            "active": true,
+            "fees": {
+              "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": 0.00359708,
+              "0xed6e000def95780fb89734c07ee2ce9f6dcaf110": 3376.2831
+            },
+            "firstActive": false,
+            "firstSeen": 1793649547,
+            "incentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 24.732124
+            },
+            "rawFees": {
+              "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": "359708",
+              "0xed6e000def95780fb89734c07ee2ce9f6dcaf110": "3376283079586319683941"
+            },
+            "rawIncentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "24732124230033070788"
+            },
+            "usd": 560.14923
+          },
+          "8453:0x6dca50a328ac12bf9a475f81c9d351ccf77f61d2": {
+            "active": false,
+            "fees": {
+              "0xacfe6019ed1a7dc6f7b508c02d1b04ec88cc21bf": 2.6075945,
+              "0xf4d97f2da56e8c3098f3a8d538db630a2606a024": 0.025501015
+            },
+            "firstActive": true,
+            "firstSeen": 1793932435,
+            "incentives": {},
+            "rawFees": {
+              "0xacfe6019ed1a7dc6f7b508c02d1b04ec88cc21bf": "2607594542453727084",
+              "0xf4d97f2da56e8c3098f3a8d538db630a2606a024": "25501014924758282"
+            },
+            "rawIncentives": {},
+            "usd": 99.334509
+          },
+          "8453:0x74a30b3357121a822adb91a539f4b11b5fb7cb3f": {
+            "active": false,
+            "fees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 437.752,
+              "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": 0.00607059
+            },
+            "firstActive": false,
+            "firstSeen": 1793649547,
+            "incentives": {},
+            "rawFees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "437752000",
+              "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": "607059"
+            },
+            "rawIncentives": {},
+            "usd": 891.45029
+          },
+          "8453:0x77e3e1b150d4509aade60b73c48f77cab00272b1": {
+            "active": true,
+            "fees": {
+              "0x44b63af715d5ef02cc3646a6ce96875e11d69e85": 219003.3,
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 281.53851
+            },
+            "firstActive": true,
+            "firstSeen": 1794191632,
+            "incentives": {
+              "0x44b63af715d5ef02cc3646a6ce96875e11d69e85": 424596.55,
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 0.084916,
+              "0xa88594d404727625a9437c3f886c7643872296ae": 1.1983339e-08
+            },
+            "rawFees": {
+              "0x44b63af715d5ef02cc3646a6ce96875e11d69e85": "219003301500126597568889",
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "281538506"
+            },
+            "rawIncentives": {
+              "0x44b63af715d5ef02cc3646a6ce96875e11d69e85": "424596549928353427323503",
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "84916",
+              "0xa88594d404727625a9437c3f886c7643872296ae": "11983338984"
+            },
+            "usd": 967.28927
+          },
+          "8453:0x79fc4cbd860e3528f092bd7d9261e0cd141a4803": {
+            "active": false,
+            "fees": {
+              "0xb2000000000000000000004884b426556b92883d": 1.6982221,
+              "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": 0.0027898
+            },
+            "firstActive": true,
+            "firstSeen": 1793932435,
+            "incentives": {},
+            "rawFees": {
+              "0xb2000000000000000000004884b426556b92883d": "169822214",
+              "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": "278980"
+            },
+            "rawIncentives": {},
+            "usd": 422.2725
+          },
+          "8453:0x7c9ed6df00a0732f62b9f388bb68ab5bfbcd7cd6": {
+            "active": true,
+            "fees": {
+              "0x4200000000000000000000000000000000000006": 0.024623019,
+              "0xb3b32f9f8827d4634fe7d973fa1034ec9fddb3b3": 119377.46
+            },
+            "firstActive": true,
+            "firstSeen": 1794191632,
+            "incentives": {},
+            "rawFees": {
+              "0x4200000000000000000000000000000000000006": "24623019244645484",
+              "0xb3b32f9f8827d4634fe7d973fa1034ec9fddb3b3": "119377464104987262624288"
+            },
+            "rawIncentives": {},
+            "usd": 119.46562
+          },
+          "8453:0x7d5d8e2c3072ea92a5e650db5f2454822b450a6f": {
+            "active": true,
+            "fees": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 91.641252,
+              "0xc1cba3fcea344f92d9239c08c0568f6f2f0ee452": 0.011368422
+            },
+            "firstActive": true,
+            "firstSeen": 1794191632,
+            "incentives": {},
+            "rawFees": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "91641252385788745533",
+              "0xc1cba3fcea344f92d9239c08c0568f6f2f0ee452": "11368422258133615"
+            },
+            "rawIncentives": {},
+            "usd": 80.646414
+          },
+          "8453:0x81189366762ce456db7cf81181785bf22b5baec6": {
+            "active": false,
+            "fees": {
+              "0x311935cd80b76769bf2ecc9d8ab7635b2139cf82": 0.23135075,
+              "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": 0.00026646
+            },
+            "firstActive": true,
+            "firstSeen": 1793759683,
+            "incentives": {},
+            "rawFees": {
+              "0x311935cd80b76769bf2ecc9d8ab7635b2139cf82": "231350749",
+              "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": "26646"
+            },
+            "rawIncentives": {},
+            "usd": 39.796106
+          },
+          "8453:0x8971783f2b9ece611663b7e33e5b2ea96d73b9f3": {
+            "active": false,
+            "fees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 36.098268,
+              "0xb095274743941e953c746f9c228da9c18bb6ec29": 913.06227
+            },
+            "firstActive": true,
+            "firstSeen": 1793649547,
+            "incentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 13.51774
+            },
+            "rawFees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "36098268",
+              "0xb095274743941e953c746f9c228da9c18bb6ec29": "913062271370662396905"
+            },
+            "rawIncentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "13517739625488534040"
+            },
+            "usd": 71.111038
+          },
+          "8453:0x8b5670678192519c9847d235011c82a34aee495d": {
+            "active": false,
+            "fees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 67.703701,
+              "0xb200000000000000000000fd2f87532b90095211": 0.07555969
+            },
+            "firstActive": false,
+            "firstSeen": 1793649547,
+            "incentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 98.345581
+            },
+            "rawFees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "67703701",
+              "0xb200000000000000000000fd2f87532b90095211": "7555969"
+            },
+            "rawIncentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "98345581254834711137"
+            },
+            "usd": 177.25507
+          },
+          "8453:0x9376bbef9bcb2558c4d9fc2eadaa3cf7356a6941": {
+            "active": false,
+            "fees": {
+              "0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b": 414.66385,
+              "0x4200000000000000000000000000000000000006": 0.11238813
+            },
+            "firstActive": false,
+            "firstSeen": 1793649547,
+            "incentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 194.60967,
+              "0x4200000000000000000000000000000000000006": 0.0067968316
+            },
+            "rawFees": {
+              "0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b": "414663847541252152430",
+              "0x4200000000000000000000000000000000000006": "112388125606622864"
+            },
+            "rawIncentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "194609672040172121047",
+              "0x4200000000000000000000000000000000000006": "6796831552583041"
+            },
+            "usd": 584.87161
+          },
+          "8453:0x93f12d770f03dd296ada46b590a129ce7816580b": {
+            "active": true,
+            "fees": {
+              "0x4200000000000000000000000000000000000006": 0.016538933,
+              "0x767a739d1a152639e9ea1d8c1bd55fdc5b217d7f": 49976.922
+            },
+            "firstActive": true,
+            "firstSeen": 1794191632,
+            "incentives": {
+              "0x767a739d1a152639e9ea1d8c1bd55fdc5b217d7f": 9513.7015
+            },
+            "rawFees": {
+              "0x4200000000000000000000000000000000000006": "16538933190506631",
+              "0x767a739d1a152639e9ea1d8c1bd55fdc5b217d7f": "49976922008354394241367"
+            },
+            "rawIncentives": {
+              "0x767a739d1a152639e9ea1d8c1bd55fdc5b217d7f": "9513701541728138471655"
+            },
+            "usd": 95.053153
+          },
+          "8453:0x9ce9f01445d390c9d828a600a924f7860e2c80b2": {
+            "active": false,
+            "fees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 12.890711,
+              "0xb2000000000000000000004c27f6523082f41d01": 1328.9709
+            },
+            "firstActive": false,
+            "firstSeen": 1793649547,
+            "incentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 9.7989419
+            },
+            "rawFees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "12890711",
+              "0xb2000000000000000000004c27f6523082f41d01": "1328970907571680782394"
+            },
+            "rawIncentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "9798941867225413304"
+            },
+            "usd": 26.646071
+          },
+          "8453:0x9d32ce3252b817ba708e959562c1a43ffe70c893": {
+            "active": false,
+            "fees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 56.858902,
+              "0xb2000000000000000000001e800a7f5189430cd0": 0.16464281
+            },
+            "firstActive": true,
+            "firstSeen": 1793759683,
+            "incentives": {},
+            "rawFees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "56858902",
+              "0xb2000000000000000000001e800a7f5189430cd0": "16464281"
+            },
+            "rawIncentives": {},
+            "usd": 119.08957
+          },
+          "8453:0x9f4594cc94c373141242fa2ca199c5f78e1662e5": {
+            "active": true,
+            "fees": {
+              "0x311935cd80b76769bf2ecc9d8ab7635b2139cf82": 3.3472158,
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 326.00293
+            },
+            "firstActive": true,
+            "firstSeen": 1793759683,
+            "incentives": {},
+            "rawFees": {
+              "0x311935cd80b76769bf2ecc9d8ab7635b2139cf82": "3347215829",
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "326002935"
+            },
+            "rawIncentives": {},
+            "usd": 613.53282
+          },
+          "8453:0xa06fd10bb776e511c46243c03baa3427f5bf656f": {
+            "active": false,
+            "fees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 42.020498,
+              "0xb200000000000000000000451d033a5000cb479e": 0.5416664
+            },
+            "firstActive": false,
+            "firstSeen": 1793649547,
+            "incentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 7.8459711
+            },
+            "rawFees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "42020498",
+              "0xb200000000000000000000451d033a5000cb479e": "541666397512886964"
+            },
+            "rawIncentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "7845971064391198217"
+            },
+            "usd": 86.522277
+          },
+          "8453:0xa958059616fae8cc0778662b3f033afa582d7576": {
+            "active": false,
+            "fees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 254.33617,
+              "0xb2000000000000000000004884b426556b92883d": 1.7681312
+            },
+            "firstActive": false,
+            "firstSeen": 1793649547,
+            "incentives": {},
+            "rawFees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "254336166",
+              "0xb2000000000000000000004884b426556b92883d": "176813122"
+            },
+            "rawIncentives": {},
+            "usd": 476.81445
+          },
+          "8453:0xaa3b00f22de3c2a4a2485a9bdcfe56c185b49b88": {
+            "active": false,
+            "fees": {
+              "0x0c1c1c109fe34733fca54b82d7b46b75cfb71f6e": 9029.6505,
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 551.31713
+            },
+            "firstActive": false,
+            "firstSeen": 1793649547,
+            "incentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 20.854169
+            },
+            "rawFees": {
+              "0x0c1c1c109fe34733fca54b82d7b46b75cfb71f6e": "9029650478217414943916",
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "551317129"
+            },
+            "rawIncentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "20854169314380999365"
+            },
+            "usd": 860.70158
+          },
+          "8453:0xaa63309011db42ab09331f1c86298d6194c4e551": {
+            "active": false,
+            "fees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 22.114946,
+              "0xfb31f85a8367210b2e4ed2360d2da9dc2d2ccc95": 783.59383
+            },
+            "firstActive": false,
+            "firstSeen": 1793649547,
+            "incentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 7.978979
+            },
+            "rawFees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "22114946",
+              "0xfb31f85a8367210b2e4ed2360d2da9dc2d2ccc95": "783593834907645527725"
+            },
+            "rawIncentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "7978979032006138020"
+            },
+            "usd": 42.309678
+          },
+          "8453:0xabb3fb6659e05847631896cb87a6d1b8bc0c6d8c": {
+            "active": false,
+            "fees": {
+              "0x4200000000000000000000000000000000000006": 0.10402211,
+              "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": 0.00299917
+            },
+            "firstActive": false,
+            "firstSeen": 1793649547,
+            "incentives": {
+              "0x4200000000000000000000000000000000000006": 0.00011999307
+            },
+            "rawFees": {
+              "0x4200000000000000000000000000000000000006": "104022110852451382",
+              "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": "299917"
+            },
+            "rawIncentives": {
+              "0x4200000000000000000000000000000000000006": "119993074871105"
+            },
+            "usd": 444.67539
+          },
+          "8453:0xb1b27a2fa4e67a6d0ee1aa9de97c8b1ddf54fdd4": {
+            "active": false,
+            "fees": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 323.88645,
+              "0x4200000000000000000000000000000000000006": 0.059022165
+            },
+            "firstActive": false,
+            "firstSeen": 1793649547,
+            "incentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 237.60576
+            },
+            "rawFees": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "323886448852087524674",
+              "0x4200000000000000000000000000000000000006": "59022165026807126"
+            },
+            "rawIncentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "237605758176385702242"
+            },
+            "usd": 434.60446
+          },
+          "8453:0xb3b8d636d59b71eab86cd36ab4c94c1c2dfbce70": {
+            "active": false,
+            "fees": {
+              "0x4200000000000000000000000000000000000006": 0.015634391,
+              "0x6985884c4392d348587b19cb9eaaf157f13271cd": 22.486787
+            },
+            "firstActive": true,
+            "firstSeen": 1793649547,
+            "incentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 17.274215,
+              "0x4200000000000000000000000000000000000006": 5.0685501e-06
+            },
+            "rawFees": {
+              "0x4200000000000000000000000000000000000006": "15634390765216406",
+              "0x6985884c4392d348587b19cb9eaaf157f13271cd": "22486786910456663878"
+            },
+            "rawIncentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "17274214881172324180",
+              "0x4200000000000000000000000000000000000006": "5068550068293"
+            },
+            "usd": 75.604966
+          },
+          "8453:0xc4b5393d65a94b35442512e6b94670267a59acc5": {
+            "active": true,
+            "fees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 152.86629,
+              "0xb2000000000000000000000d8ce462e99ee7a47b": 0.31342959
+            },
+            "firstActive": true,
+            "firstSeen": 1794191632,
+            "incentives": {},
+            "rawFees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "152866294",
+              "0xb2000000000000000000000d8ce462e99ee7a47b": "31342959"
+            },
+            "rawIncentives": {},
+            "usd": 312.63254
+          },
+          "8453:0xcba7452690663d6789c0115fe889c9da85bf8c56": {
+            "active": false,
+            "fees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 338.24627,
+              "0xb2000000000000000000008501b13360000cb2ec": 0.27305634
+            },
+            "firstActive": false,
+            "firstSeen": 1793649547,
+            "incentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 6.0919931
+            },
+            "rawFees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "338246267",
+              "0xb2000000000000000000008501b13360000cb2ec": "27305634"
+            },
+            "rawIncentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "6091993133807975371"
+            },
+            "usd": 655.37398
+          },
+          "8453:0xd424ba8ca9d4e278753de76651a0095451e65cd1": {
+            "active": false,
+            "fees": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 179.39082,
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 98.337084
+            },
+            "firstActive": false,
+            "firstSeen": 1793649547,
+            "incentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 318.39577,
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 8.35556
+            },
+            "rawFees": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "179390824503774054608",
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "98337084"
+            },
+            "rawIncentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "318395774909982388921",
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "8355560"
+            },
+            "usd": 381.1861
+          },
+          "8453:0xd882383f6b22294fcfb87ed3872d136b97c57a8f": {
+            "active": true,
+            "fees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 146.00996,
+              "0xb80194e3868511b8f43e1d5d6e255cd9e7c3e7dd": 340.42739
+            },
+            "firstActive": true,
+            "firstSeen": 1794191632,
+            "incentives": {},
+            "rawFees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "146009963",
+              "0xb80194e3868511b8f43e1d5d6e255cd9e7c3e7dd": "340427392041881920439"
+            },
+            "rawIncentives": {},
+            "usd": 281.83123
+          },
+          "8453:0xd8c0e093327b5dfb3e654ec520ff2100c3c20f76": {
+            "active": false,
+            "fees": {
+              "0x4200000000000000000000000000000000000006": 0.012687363,
+              "0xb2000000000000000000002d0ba3164cc74f58b7": 0.09143122
+            },
+            "firstActive": true,
+            "firstSeen": 1793932435,
+            "incentives": {},
+            "rawFees": {
+              "0x4200000000000000000000000000000000000006": "12687363457292953",
+              "0xb2000000000000000000002d0ba3164cc74f58b7": "9143122"
+            },
+            "rawIncentives": {},
+            "usd": 53.39163
+          },
+          "8453:0xdef20c7f935b5baab283302eb248d023575c1862": {
+            "active": false,
+            "fees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 422.45958,
+              "0xb200000000000000000000397293cb8cda9a10c5": 0.43900609
+            },
+            "firstActive": false,
+            "firstSeen": 1793649547,
+            "incentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 80.391519
+            },
+            "rawFees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "422459578",
+              "0xb200000000000000000000397293cb8cda9a10c5": "43900609"
+            },
+            "rawIncentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "80391519461665819522"
+            },
+            "usd": 854.22698
+          },
+          "8453:0xe0fa8cec2386ec254926dfacaf5d57481369ee8c": {
+            "active": false,
+            "fees": {
+              "0x22af33fe49fd1fa80c7149773dde5890d3c76f3b": 142246.87,
+              "0x4200000000000000000000000000000000000006": 0.013999704
+            },
+            "firstActive": true,
+            "firstSeen": 1793932435,
+            "incentives": {},
+            "rawFees": {
+              "0x22af33fe49fd1fa80c7149773dde5890d3c76f3b": "142246873077413548448499",
+              "0x4200000000000000000000000000000000000006": "13999704033191080"
+            },
+            "rawIncentives": {},
+            "usd": 64.56791
+          },
+          "8453:0xe300153b7a51c02a47cb8b78c76f97e7bc5ddbe7": {
+            "active": false,
+            "fees": {
+              "0x4200000000000000000000000000000000000006": 0.022763187,
+              "0xcb585250f852c6c6bf90434ab21a00f02833a4af": 44.289311
+            },
+            "firstActive": true,
+            "firstSeen": 1793932435,
+            "incentives": {},
+            "rawFees": {
+              "0x4200000000000000000000000000000000000006": "22763186696796946",
+              "0xcb585250f852c6c6bf90434ab21a00f02833a4af": "44289311"
+            },
+            "rawIncentives": {},
+            "usd": 96.669919
+          },
+          "8453:0xe7977774210874fc95e2975b799906cc3bbfa399": {
+            "active": false,
+            "fees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 340.76814,
+              "0xb200000000000000000000c2e324d24d7eecd1fb": 0.81702204
+            },
+            "firstActive": true,
+            "firstSeen": 1793759683,
+            "incentives": {},
+            "rawFees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "340768136",
+              "0xb200000000000000000000c2e324d24d7eecd1fb": "81702204"
+            },
+            "rawIncentives": {},
+            "usd": 627.17892
+          },
+          "8453:0xfa66e7f39cd27f2c16ad25080e57e30ba2abf043": {
+            "active": false,
+            "fees": {
+              "0x2ae3f1ec7f1f5012cfeab0185bfc7aa3cf0dec22": 0.038080421,
+              "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": 0.00121244
+            },
+            "firstActive": true,
+            "firstSeen": 1793932435,
+            "incentives": {},
+            "rawFees": {
+              "0x2ae3f1ec7f1f5012cfeab0185bfc7aa3cf0dec22": "38080420833616500",
+              "0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": "121244"
+            },
+            "rawIncentives": {},
+            "usd": 182.94325
+          },
+          "8453:0xfc8922e268cccbe8160e5c1ad546af9705cf0a61": {
+            "active": false,
+            "fees": {
+              "0x4200000000000000000000000000000000000006": 0.042382526,
+              "0xacfe6019ed1a7dc6f7b508c02d1b04ec88cc21bf": 3.3688711
+            },
+            "firstActive": false,
+            "firstSeen": 1793649547,
+            "incentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 111.32287
+            },
+            "rawFees": {
+              "0x4200000000000000000000000000000000000006": "42382526273448582",
+              "0xacfe6019ed1a7dc6f7b508c02d1b04ec88cc21bf": "3368871060899222005"
+            },
+            "rawIncentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "111322867062617853699"
+            },
+            "usd": 222.97798
+          },
+          "8453:0xfcb69fa140fb835169bc6c74ee9363f752edcb7a": {
+            "active": false,
+            "fees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 16.965418,
+              "0xeeee77bc7e82c0d4166d52f58239d4c5bf41eeee": 8.0972128
+            },
+            "firstActive": false,
+            "firstSeen": 1793649547,
+            "incentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 41.319968
+            },
+            "rawFees": {
+              "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "16965418",
+              "0xeeee77bc7e82c0d4166d52f58239d4c5bf41eeee": "8097212811306543645"
+            },
+            "rawIncentives": {
+              "0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": "41319968006328472120"
+            },
+            "usd": 53.659326
+          }
+        },
+        "lastAllocated": {
+          "1": 1793855855,
+          "4663": 1793855848,
+          "8453": 1794126513
+        },
+        "schemaVersion": 2,
+        "units": {
+          "1:0x4c9edd5852cd905f086c759e8383e09bff1e68b3": 18,
+          "1:0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": 6,
+          "1:0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": 18,
+          "1:0xdac17f958d2ee523a2206206994597c13d831ec7": 6,
+          "1:0xe343167631d89b6ffc58b88d6b7fb0228795491d": 6,
+          "4663:0x020bfc650a365f8bb26819deaabf3e21291018b4": 18,
+          "4663:0x0bd7d308f8e1639fab988df18a8011f41eacad73": 18,
+          "4663:0x2e8c31162b855a2ffa90f6f8634643ad6f111e18": 18,
+          "4663:0x39dbed3a2bd333467115de45665cc57f813c4571": 18,
+          "4663:0x5fc5360d0400a0fd4f2af552add042d716f1d168": 6,
+          "4663:0xaa07a0e9209e16ac99708c3ec70159c6ef3128a3": 18,
+          "4663:0xd0601ce157db5bdc3162bbac2a2c8af5320d9eec": 18,
+          "8453:0x0b3e328455c4059eeb9e3f84b5543f74e24e7e1b": 18,
+          "8453:0x0c1c1c109fe34733fca54b82d7b46b75cfb71f6e": 18,
+          "8453:0x22af33fe49fd1fa80c7149773dde5890d3c76f3b": 18,
+          "8453:0x2ae3f1ec7f1f5012cfeab0185bfc7aa3cf0dec22": 18,
+          "8453:0x311935cd80b76769bf2ecc9d8ab7635b2139cf82": 9,
+          "8453:0x3f5bf3edac59d650d8fdf9657a71f2f904a3a4ee": 18,
+          "8453:0x4200000000000000000000000000000000000006": 18,
+          "8453:0x44b63af715d5ef02cc3646a6ce96875e11d69e85": 18,
+          "8453:0x526728dbc96689597f85ae4cd716d4f7fccbae9d": 18,
+          "8453:0x5b2193fdc451c1f847be09ca9d13a4bf60f8c86b": 18,
+          "8453:0x60a3e35cc302bfa44cb288bc5a4f316fdb1adb42": 6,
+          "8453:0x6985884c4392d348587b19cb9eaaf157f13271cd": 18,
+          "8453:0x767a739d1a152639e9ea1d8c1bd55fdc5b217d7f": 18,
+          "8453:0x7ba6f01772924a82d9626c126347a28299e98c98": 18,
+          "8453:0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": 6,
+          "8453:0xa88594d404727625a9437c3f886c7643872296ae": 18,
+          "8453:0xacfe6019ed1a7dc6f7b508c02d1b04ec88cc21bf": 18,
+          "8453:0xb095274743941e953c746f9c228da9c18bb6ec29": 18,
+          "8453:0xb2000000000000000000000d8ce462e99ee7a47b": 8,
+          "8453:0xb200000000000000000000187f7071d6e321a7d2": 8,
+          "8453:0xb2000000000000000000001e800a7f5189430cd0": 8,
+          "8453:0xb2000000000000000000002d0ba3164cc74f58b7": 8,
+          "8453:0xb200000000000000000000397293cb8cda9a10c5": 8,
+          "8453:0xb200000000000000000000451d033a5000cb479e": 18,
+          "8453:0xb2000000000000000000004884b426556b92883d": 8,
+          "8453:0xb2000000000000000000004c27f6523082f41d01": 18,
+          "8453:0xb20000000000000000000078ee7ce2fe4908108c": 8,
+          "8453:0xb2000000000000000000007b9fcbd005511acbd5": 8,
+          "8453:0xb2000000000000000000008501b13360000cb2ec": 8,
+          "8453:0xb200000000000000000000c2e324d24d7eecd1fb": 8,
+          "8453:0xb200000000000000000000d9192b6b456483c2e8": 8,
+          "8453:0xb200000000000000000000fd2f87532b90095211": 8,
+          "8453:0xb3b32f9f8827d4634fe7d973fa1034ec9fddb3b3": 18,
+          "8453:0xb80194e3868511b8f43e1d5d6e255cd9e7c3e7dd": 18,
+          "8453:0xbaa5cc21fd487b8fcc2f632f3f4e8d37262a0842": 18,
+          "8453:0xc1cba3fcea344f92d9239c08c0568f6f2f0ee452": 18,
+          "8453:0xcb585250f852c6c6bf90434ab21a00f02833a4af": 6,
+          "8453:0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf": 8,
+          "8453:0xed664536023d8e4b1640c394777d34abaff1df8f": 18,
+          "8453:0xed6e000def95780fb89734c07ee2ce9f6dcaf110": 18,
+          "8453:0xeeee77bc7e82c0d4166d52f58239d4c5bf41eeee": 18,
+          "8453:0xf3df0a31ec5ea438150987805e841f960b9471b6": 18,
+          "8453:0xf4d97f2da56e8c3098f3a8d538db630a2606a024": 18,
+          "8453:0xfb31f85a8367210b2e4ed2360d2da9dc2d2ccc95": 18,
+          "8453:0xfde4c96c8593536e31f229ea8f37b2ada2699bb2": 6
+        },
+        "unread": []
       }
     ],
     "historyReset": false,
     "iaeroPriceSource": "route",
-    "iaeroPriceUsd": 0.48616149605691733,
-    "incentivesUSD": 202.05431830395236,
+    "iaeroPriceUsd": 0.46214175489290427,
+    "incentivesUSD": 462.7925738156765,
     "measuredShareOfAllocation": 1.0,
     "method": "live_position",
-    "positionAprPct": 19.11596112513537,
+    "positionAprPct": 19.84257203767751,
     "priceBasis": "current",
-    "projectedStakerApyPct": 18.7647092007897,
+    "projectedStakerApyPct": 19.47796878458565,
     "readComplete": true,
     "schemaVersion": 2,
     "since": 1792635063,
     "stakeId": 1584,
     "stakedAero": 4853405.556766722,
-    "stakedAeroUSD": 2815622.9136169506,
-    "stakedIaeroUSD": 2294662.2869051187,
+    "stakedAeroUSD": 2676511.6632421874,
+    "stakedIaeroUSD": 2181290.095488647,
     "stakersShareBps": 8000,
     "stale": false,
     "trailing": {
@@ -9815,34 +11088,34 @@
         "claimsComplete": true,
         "complete": true,
         "partial": false,
-        "positionAprPct": 13.807928267924357,
-        "projectedStakerApyPct": 13.554210375133808,
-        "snapshotAgeHours": 24.06,
-        "snapshotAsOf": 1794105043,
-        "usdPerDay": 1065.1484718012885
+        "positionAprPct": 19.065550963816168,
+        "projectedStakerApyPct": 18.715225316002133,
+        "snapshotAgeHours": 24.01,
+        "snapshotAsOf": 1794191642,
+        "usdPerDay": 1398.0594389258165
       },
       "7d": {
         "claimsComplete": true,
         "complete": true,
         "partial": false,
-        "positionAprPct": 19.389260869484772,
-        "projectedStakerApyPct": 19.032987117541865,
-        "snapshotAgeHours": 150.56,
+        "positionAprPct": 20.130303477612326,
+        "projectedStakerApyPct": 19.760413217431978,
+        "snapshotAgeHours": 174.57,
         "snapshotAsOf": 1793649636,
-        "usdPerDay": 1495.694443348434
+        "usdPerDay": 1476.1367682858672
       }
     },
     "unknownMetadata": [],
     "unmeasuredChains": [],
     "unpricedTokens": [],
-    "usdPerDay": 1474.6120043764938
+    "usdPerDay": 1455.0376845908806
   },
-  "measuredUsdPerDay": 1495.694443348434,
-  "measurementGeneration": "14b9d33d0c710b51f7c4cfee05165384f2ca3a6b88426ab8ef5e8afc3fdf2285",
+  "measuredUsdPerDay": 1476.1367682858672,
+  "measurementGeneration": "814685407d96a052ed0911cfcc3f63964ec383bc7b818c80f3ea9dbccc649323",
   "method": "measured",
-  "pegWeeklyUSD_1e18": "1046986110343903800000",
+  "pegWeeklyUSD_1e18": "1033295737800107040000",
   "priceBasis": "current",
-  "protocolWeeklyUSD_1e18": "1046986110343903800000",
+  "protocolWeeklyUSD_1e18": "1033295737800107040000",
   "source": "ChainProcessingBot",
   "splitBps": {
     "peg": 1000,
@@ -9850,15 +11123,15 @@
     "stakers": 8000
   },
   "stakedAtEpochStart_1e18": "4719958913892414691363099",
-  "stakedUSD_1e18": "2294662286905118826895151",
-  "stakedUSD_human": "2294662.2869",
-  "stakersWeeklyUSD_1e18": "8375888882751230400000",
-  "stakersWeeklyUSD_human": "8375.8889",
+  "stakedUSD_1e18": "2181290095488646961201010",
+  "stakedUSD_human": "2181290.0955",
+  "stakersWeeklyUSD_1e18": "8266365902400856320000",
+  "stakersWeeklyUSD_human": "8266.3659",
   "stale": false,
-  "totalStaked_1e18": "32102687726625359986976",
-  "tvlUSD_1e18": "15607090692624222350949",
-  "updateTimestamp": 1794191643,
-  "updatedAt": "2026-11-09T02:33:52.000Z",
+  "totalStaked_1e18": "32000583676625359996976",
+  "tvlUSD_1e18": "14788805897912870477235",
+  "updateTimestamp": 1794278091,
+  "updatedAt": "2026-11-10T02:34:42.000Z",
   "usedFallbackPrice": false,
-  "weeklyYieldPct": 0.36501619129532337
+  "weeklyYieldPct": 0.37896682882746263
 }
